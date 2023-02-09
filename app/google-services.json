@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "546906599068",
+    "project_id": "aplicativo-conect-f253d",
+    "storage_bucket": "aplicativo-conect-f253d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546906599068:android:eaafb71eeab3d4098ac759",
+        "android_client_info": {
+          "package_name": "com.conect.aplicativoconect"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "546906599068-te1sv16m4sjc83jhjv6doe66hll7vtpb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8fOBRZMsi4uA7PaEWne7PEiAanSAZXbo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "546906599068-te1sv16m4sjc83jhjv6doe66hll7vtpb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
