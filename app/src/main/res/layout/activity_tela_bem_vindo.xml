@@ -11,28 +11,21 @@
     <TextView
         android:id="@+id/title_bem_vindo"
         style="@style/title_inicio"
-        android:text="@string/Title_bem_vindo"
-        />
+        android:text="@string/Title_bem_vindo" />
+
 
     <TextView
         android:id="@+id/msg_descricao"
         style="@style/Text_inicio"
-        android:text="@string/objetivo"
-        />
+        android:text="@string/objetivo" />
 
     <ImageView
         android:id="@+id/seta_clique"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_prox"
-        android:layout_marginTop="30sp"
         android:layout_marginLeft="200sp"
-        />
-
-
-
-
-
+        android:layout_marginTop="30sp"
+        android:src="@drawable/ic_prox" />
 
 
 </LinearLayout>
