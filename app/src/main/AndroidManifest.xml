@@ -6,11 +6,13 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AplicativoConect"
         tools:targetApi="31">
+        <activity
+            android:name=".view.formCadastro.FormCadastro"
+            android:exported="false" />
         <activity
             android:name=".tela_bem_vindo3"
             android:exported="false" />
@@ -21,7 +23,7 @@
             android:name=".tela_bem_vindo"
             android:exported="false" />
         <activity
-            android:name=".view.formCadastro.FormCadastro"
+            android:name=".splash_background"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

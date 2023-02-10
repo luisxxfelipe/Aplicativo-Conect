@@ -3,4 +3,6 @@
     <string name="titulo_form_cadastro">Cadastre-se</string>
     <string name="hint_email">E-mail</string>
     <string name="hint_senha">Senha</string>
+    <string name="Entrar">Entrar</string>
+    <string name="text_cadastro">Cadastre-se agora mesmo</string>
 </resources>

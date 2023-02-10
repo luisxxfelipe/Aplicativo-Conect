@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect
 
+import android.content.Intent
 import android.os.Binder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,6 +12,11 @@ class tela_bem_vindo : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTelaBemVindoBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        binding.setaClique.setOnClickListener{
+            val navegarSegundaTela = Intent(this,tela_bem_vindo2::class.java)
+            startActivity(navegarSegundaTela)
+        }
 
     }
 }
