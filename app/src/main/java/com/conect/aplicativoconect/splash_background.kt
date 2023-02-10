@@ -12,9 +12,9 @@ class splash_background : AppCompatActivity() {
         setContentView(R.layout.activity_splash_background)
 
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent= Intent(this,tela_boas_vindas::class.java)
+            val intent = Intent(this, tela_bem_vindo::class.java)
             startActivity(intent)
             finish()
-        },3000)
+        }, 3000)
     }
 }
