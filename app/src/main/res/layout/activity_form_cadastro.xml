@@ -8,11 +8,23 @@
     android:orientation="vertical"
     tools:context=".view.formCadastro.FormCadastro">
 
+    <ImageView
+        android:id="@+id/logo_conect"
+        android:layout_width="400dp"
+        android:layout_height="300dp"
+        android:src="@mipmap/ic_logo_conect_foreground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.454"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="161dp" />
+
     <View
         style="@style/ContainerComponents"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="220dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logo_conect"
+
+        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
