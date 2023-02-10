@@ -10,30 +10,16 @@
     tools:context=".tela_bem_vindo">
 
     <TextView
-        android:id="@+id/title_bem_vindo"
-        android:layout_width="325dp"
-        android:layout_height="90dp"
-        android:layout_marginTop="325dp"
-        android:layout_marginLeft="50dp"
-        android:text="Facilite seus agendamentos"
-        android:textStyle="bold"
-        android:textAlignment="center"
-        android:textColor="@color/black"
-        android:textSize="35dp" />
+        android:id="@+id/title_agend"
+        style="@style/title_inicio"
+        android:text="@string/title_agendamentos"
+        />
+
 
     <TextView
-        android:id="@+id/msg_descricao"
-        android:layout_width="325dp"
-        android:layout_height="100dp"
-        android:layout_marginLeft="50dp"
-        android:text="Com nosso app, tudo se torna prático.
-Você faz um agendamento com um unico
-clique, máximo né"
-        android:fontFamily="@font/coda"
-        android:textColor="@color/black"
-        android:textSize="20dp"
-        android:layout_marginTop="25dp"
-        android:textAlignment="center"
+        android:id="@+id/desc_agendamentos"
+        style="@style/Text_inicio"
+        android:text="@string/desc_agendamentos"
         />
 
     <ImageView
