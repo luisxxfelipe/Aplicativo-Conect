@@ -6,9 +6,10 @@
     <string name="desc_agendamentos">Com nosso app, tudo se torna prático. Você faz um agendamento com um unico clique, máximo né</string>
     <string name="title_negocio">Já possui seu próprio negócio?</string>
     <string name="desc_negocio">Inscreva-se já em nosso app e cresça seu negócio agora</string>
-    <string name="titulo_form_cadastro">Cadastre-se</string>
     <string name="hint_email">E-mail</string>
     <string name="hint_senha">Senha</string>
     <string name="Entrar">Entrar</string>
-    <string name="text_cadastro">Cadastre-se agora mesmo</string>
+    <string name="text_cadastro">Criar uma nova conta</string>
+    <string name="titulo_form_cadastro">Cadastre-se</string>
+    <string name="texto_botao_cadastrar">Cadastrar</string>
 </resources>

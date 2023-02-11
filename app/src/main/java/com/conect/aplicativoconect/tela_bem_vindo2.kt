@@ -4,7 +4,7 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import com.conect.aplicativoconect.databinding.ActivityFormCadastroBinding
+import com.conect.aplicativoconect.databinding.ActivityTelaLoginBinding
 import com.conect.aplicativoconect.databinding.ActivityTelaBemVindo2Binding
 
 class tela_bem_vindo2 : AppCompatActivity() {
