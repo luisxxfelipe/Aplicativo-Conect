@@ -4,28 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/borda_roxa"
+    android:background="@drawable/fundo_verde_agua"
     tools:context=".tela_cadastro">
 
     <ImageView
         android:id="@+id/logo_conect"
-        android:layout_width="350dp"
-        android:layout_height="100dp"
+        android:layout_width="450dp"
+        android:layout_height="160dp"
         android:scaleType="centerCrop"
         android:layout_gravity="center"
-        android:layout_marginTop="30dp"
-        android:src="@drawable/logo_conect_branco"
-        />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/titulo_form_cadastro"
-        android:textSize="25sp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:layout_marginTop="100dp"
-        android:layout_gravity="center"
+        android:layout_marginTop="200dp"
+        android:src="@drawable/logo_cadastrese"
         />
 
     <EditText
@@ -34,10 +23,11 @@
         android:layout_height="wrap_content"
         android:hint="@string/hint_email"
         android:background="@color/white"
+        android:drawableRight="@drawable/ic_email"
         android:padding="15dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:maxLines="1"
         android:inputType="textEmailAddress"
 
@@ -49,26 +39,25 @@
         android:layout_height="wrap_content"
         android:hint="@string/hint_senha"
         android:background="@color/white"
+        android:drawableRight="@drawable/ic_senha"
         android:padding="15dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
         android:layout_marginTop="10dp"
         android:maxLines="1"
         android:inputType="numberPassword"
-
         />
 
     <Button
         android:id="@+id/botao_cadastrar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/texto_botao_cadastrar"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:textAllCaps="false"
-        android:padding="15dp"
-        android:background="@color/white"
         android:layout_margin="20dp"
-        />
+        android:backgroundTint="@color/white"
+        android:padding="15dp"
+        android:text="@string/texto_botao_cadastrar"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        android:textSize="18sp" />
 
 </LinearLayout>

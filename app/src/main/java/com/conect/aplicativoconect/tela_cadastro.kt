@@ -3,6 +3,7 @@ package com.conect.aplicativoconect
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import com.conect.aplicativoconect.databinding.ActivityTelaCadastroBinding
 import com.google.android.material.snackbar.Snackbar
 
@@ -29,5 +30,8 @@ class tela_cadastro : AppCompatActivity() {
             } else {
             }
         }
+
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+        supportActionBar?.hide()
     }
 }

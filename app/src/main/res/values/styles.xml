@@ -23,7 +23,7 @@
         <item name="android:layout_width">325sp</item>
         <item name="android:layout_height">90sp</item>
         <item name="android:layout_marginTop">250sp</item>
-        <item name="android:layout_marginLeft">60sp</item>
+        <item name="android:layout_marginLeft">50sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAlignment">center</item>
         <item name="android:textColor">@color/white</item>
