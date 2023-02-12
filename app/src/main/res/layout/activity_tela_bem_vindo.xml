@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/fundo_verde_agua"
     android:orientation="vertical"
-    tools:context=".tela_bem_vindo">
+    tools:context=".view.telaLogin.tela_bem_vindo">
 
     <TextView
         android:id="@+id/title_bem_vindo"

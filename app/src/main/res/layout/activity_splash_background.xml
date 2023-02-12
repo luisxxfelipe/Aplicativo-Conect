@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:background="@drawable/tela_inicial_verde_agua"
     android:gravity="center"
-    tools:context=".splash_background">
+    tools:context=".view.telaLogin.splash_background">
 
     <ImageView
         android:layout_width="400dp"

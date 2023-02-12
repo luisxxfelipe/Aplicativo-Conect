@@ -1,11 +1,12 @@
-package com.conect.aplicativoconect
+package com.conect.aplicativoconect.view.telaLogin
 
 import android.content.Intent
-import android.os.Binder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import com.conect.aplicativoconect.databinding.ActivityTelaBemVindoBinding
+import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal
+import com.google.firebase.auth.FirebaseAuth
 
 class tela_bem_vindo : AppCompatActivity() {
     private lateinit var binding: ActivityTelaBemVindoBinding
@@ -17,9 +18,24 @@ class tela_bem_vindo : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.setaClique.setOnClickListener{
-            val navegarSegundaTela = Intent(this,tela_bem_vindo2::class.java)
+            val navegarSegundaTela = Intent(this, tela_bem_vindo2::class.java)
             startActivity(navegarSegundaTela)
         }
 
+    }
+
+    private fun navegarTelaPrincipal() {
+        val intent = Intent(this, telaPrincipal::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val usuario_total = FirebaseAuth.getInstance().currentUser // usuario atual que esta logado no sistema
+
+        if(usuario_total != null){
+            navegarTelaPrincipal()
+        }
     }
 }

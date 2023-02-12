@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.core.widget.NestedScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+<LinearLayout
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/fundo_verde_agua"
-    tools:context=".tela_cadastro">
+    tools:context=".view.formcadastro.tela_cadastro">
 
     <ImageView
         android:id="@+id/logo_conect"
@@ -61,3 +68,4 @@
         android:textSize="18sp" />
 
 </LinearLayout>
+</androidx.core.widget.NestedScrollView>

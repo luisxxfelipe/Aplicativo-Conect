@@ -1,4 +1,4 @@
-package com.conect.aplicativoconect
+package com.conect.aplicativoconect.view.telaLogin
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import com.conect.aplicativoconect.R
 
 class splash_background : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
