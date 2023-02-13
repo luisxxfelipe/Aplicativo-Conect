@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import com.conect.aplicativoconect.databinding.ActivityTelaBemVindo2Binding
-import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal
+import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal_deslogar
 import com.google.firebase.auth.FirebaseAuth
 
 class tela_bem_vindo2 : AppCompatActivity() {
@@ -25,7 +25,7 @@ class tela_bem_vindo2 : AppCompatActivity() {
     }
 
     private fun navegarTelaPrincipal() {
-        val intent = Intent(this, telaPrincipal::class.java)
+        val intent = Intent(this, telaPrincipal_deslogar::class.java)
         startActivity(intent)
         finish()
     }

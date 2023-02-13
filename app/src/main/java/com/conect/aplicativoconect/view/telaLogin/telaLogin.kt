@@ -7,14 +7,13 @@ import android.os.Bundle
 import android.view.View
 import com.conect.aplicativoconect.databinding.ActivityTelaLoginBinding
 import com.conect.aplicativoconect.view.formcadastro.tela_cadastro
-import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal
+import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal_deslogar
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
-import com.google.firebase.ktx.Firebase
 
 class telaLogin : AppCompatActivity() {
 
@@ -67,7 +66,7 @@ class telaLogin : AppCompatActivity() {
     }
 
     private fun navegarTelaPrincipal() {
-        val intent = Intent(this, telaPrincipal::class.java)
+        val intent = Intent(this, telaPrincipal_deslogar::class.java)
         startActivity(intent)
         finish()
     }
