@@ -8,6 +8,8 @@ import android.view.View
 import com.conect.aplicativoconect.databinding.ActivityTelaLoginBinding
 import com.conect.aplicativoconect.view.formcadastro.tela_cadastro
 import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal_deslogar
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
@@ -64,6 +66,7 @@ class telaLogin : AppCompatActivity() {
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         supportActionBar?.hide()
     }
+
 
     private fun navegarTelaPrincipal() {
         val intent = Intent(this, telaPrincipal_deslogar::class.java)
