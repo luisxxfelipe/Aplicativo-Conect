@@ -1,24 +1,36 @@
 package com.conect.aplicativoconect.view.telaLogin
 
+
+import android.app.Instrumentation.ActivityResult
 import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import com.conect.aplicativoconect.databinding.ActivityTelaLoginBinding
 import com.conect.aplicativoconect.view.formcadastro.tela_cadastro
 import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal_deslogar
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class telaLogin : AppCompatActivity() {
 
+    private lateinit var googleSignInCliente: GoogleSignInClient
     private  lateinit var binding: ActivityTelaLoginBinding
     private var auth = FirebaseAuth.getInstance() // recupera a instancia do servidor para autenticar o usuario
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +38,13 @@ class telaLogin : AppCompatActivity() {
 
         binding = ActivityTelaLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        auth = Firebase.auth
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken("546906599068-t73bdqvl46l97t71a5tfrisfa9pruej9.apps.googleusercontent.com").
+            requestEmail().build()
+
+        googleSignInCliente = GoogleSignIn.getClient(this, gso)
 
         binding.botaoEntrar.setOnClickListener{ view ->
             val email = binding.editEmail.text.toString()
@@ -63,8 +82,53 @@ class telaLogin : AppCompatActivity() {
             startActivity(intent)
         }
 
+        binding.logoGoogle.setOnClickListener{
+            signIn()
+        }
+
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
-        supportActionBar?.hide()
+                supportActionBar?.hide()
+    }
+
+    private fun signIn(){
+        val intent = googleSignInCliente.signInIntent
+        abreActivity.launch(intent)
+    }
+
+    var abreActivity = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ){
+        result: androidx.activity.result.ActivityResult ->
+        if (result.resultCode == RESULT_OK){
+
+            val intent = result.data
+            val task = GoogleSignIn.getSignedInAccountFromIntent(intent)
+
+            try {
+                val conta = task.getResult(ApiException::class.java)
+                loginComGoogle(conta.idToken!!)
+
+            } catch (exception: ApiException){
+
+            }
+        }
+    }
+
+    private fun loginComGoogle(token: String){
+        val credencial = GoogleAuthProvider.getCredential(token, null)
+        auth.signInWithCredential(credencial).addOnCompleteListener(this)
+        {
+            task: Task<AuthResult> ->
+            if (task.isSuccessful){
+                Toast.makeText(baseContext, "Autenticação efetuada com o Google!", Toast.LENGTH_LONG).show()
+                telaPrincipal_deslogar()
+            }
+            else{
+                Toast.makeText(baseContext, "Erro ao tentar autenticar com o Google!", Toast.LENGTH_LONG).show()
+
+            }
+        }
+
     }
 
 

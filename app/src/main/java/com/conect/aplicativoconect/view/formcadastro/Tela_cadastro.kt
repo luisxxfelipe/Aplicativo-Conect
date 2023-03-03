@@ -4,23 +4,38 @@ import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import com.conect.aplicativoconect.databinding.ActivityTelaCadastroBinding
+import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal_deslogar
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseNetworkException
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.*
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class tela_cadastro : AppCompatActivity() {
 
+    private lateinit var googleSignInCliente: GoogleSignInClient
     private lateinit var binding: ActivityTelaCadastroBinding
-    private val auth = FirebaseAuth.getInstance()
+    private var auth = FirebaseAuth.getInstance()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityTelaCadastroBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        auth = Firebase.auth
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken("546906599068-t73bdqvl46l97t71a5tfrisfa9pruej9.apps.googleusercontent.com").
+        requestEmail().build()
+
+        googleSignInCliente = GoogleSignIn.getClient(this, gso)
 
         binding.botaoCadastrar.setOnClickListener { view ->
             val email = binding.cadastroEmail.text.toString() // salvando na variavel email e senha o que o usuario insere
@@ -59,7 +74,55 @@ class tela_cadastro : AppCompatActivity() {
             }
         }
 
+        binding.logoGoogle.setOnClickListener{
+            signIn()
+        }
+
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN // comando para retirar o statusBar
         supportActionBar?.hide()
+    }
+
+
+    private fun signIn(){
+    val intent = googleSignInCliente.signInIntent
+    abreActivity.launch(intent)
+}
+
+
+    var abreActivity = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+){
+        result: androidx.activity.result.ActivityResult ->
+    if (result.resultCode == AppCompatActivity.RESULT_OK){
+
+        val intent = result.data
+        val task = GoogleSignIn.getSignedInAccountFromIntent(intent)
+
+        try {
+            val conta = task.getResult(ApiException::class.java)
+            loginComGoogle(conta.idToken!!)
+
+        } catch (exception: ApiException){
+
+        }
+    }
+}
+    private fun loginComGoogle(token: String) {
+    val credencial = GoogleAuthProvider.getCredential(token, null)
+    auth.signInWithCredential(credencial).addOnCompleteListener(this)
+    { task: Task<AuthResult> ->
+        if (task.isSuccessful) {
+            Toast.makeText(baseContext, "Autenticação efetuada com o Google!", Toast.LENGTH_LONG)
+                .show()
+            telaPrincipal_deslogar()
+        } else {
+            Toast.makeText(
+                baseContext,
+                "Erro ao tentar autenticar com o Google!",
+                Toast.LENGTH_LONG
+            ).show()
+
+        }
+    }
     }
 }

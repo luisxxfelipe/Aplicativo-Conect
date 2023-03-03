@@ -86,5 +86,28 @@
             app:layout_constraintTop_toBottomOf="@id/cadastro_senha"
             />
 
+        <TextView
+            android:id="@+id/text_outros"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Outros meios:"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/botao_cadastrar"
+            android:layout_marginTop="18dp"
+            android:textColor="@color/black"
+            />
+
+        <ImageView
+            android:id="@+id/logo_google"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:src="@drawable/logo_google"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_outros"
+            android:layout_marginTop="5dp"
+            />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
