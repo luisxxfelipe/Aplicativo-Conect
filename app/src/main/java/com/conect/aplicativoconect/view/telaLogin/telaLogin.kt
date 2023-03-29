@@ -1,17 +1,15 @@
 package com.conect.aplicativoconect.view.telaLogin
 
 
-import android.app.Instrumentation.ActivityResult
 import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import com.conect.aplicativoconect.databinding.ActivityTelaLoginBinding
 import com.conect.aplicativoconect.view.formcadastro.tela_cadastro
-import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal_deslogar
+import com.conect.aplicativoconect.view.telaprincipal.tela_inicial
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -85,9 +83,6 @@ class telaLogin : AppCompatActivity() {
         binding.logoGoogle.setOnClickListener{
             signIn()
         }
-
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
-                supportActionBar?.hide()
     }
 
     private fun signIn(){
@@ -121,7 +116,7 @@ class telaLogin : AppCompatActivity() {
             task: Task<AuthResult> ->
             if (task.isSuccessful){
                 Toast.makeText(baseContext, "Autenticação efetuada com o Google!", Toast.LENGTH_LONG).show()
-                telaPrincipal_deslogar()
+                navegarTelaPrincipal()
             }
             else{
                 Toast.makeText(baseContext, "Erro ao tentar autenticar com o Google!", Toast.LENGTH_LONG).show()
@@ -133,7 +128,7 @@ class telaLogin : AppCompatActivity() {
 
 
     private fun navegarTelaPrincipal() {
-        val intent = Intent(this, telaPrincipal_deslogar::class.java)
+        val intent = Intent(this, tela_inicial::class.java)
         startActivity(intent)
         finish()
     }

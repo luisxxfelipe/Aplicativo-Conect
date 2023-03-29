@@ -3,9 +3,8 @@ package com.conect.aplicativoconect.view.telaLogin
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import com.conect.aplicativoconect.databinding.ActivityTelaBemVindo2Binding
-import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal_deslogar
+import com.conect.aplicativoconect.view.telaprincipal.tela_inicial
 import com.google.firebase.auth.FirebaseAuth
 
 class tela_bem_vindo2 : AppCompatActivity() {
@@ -13,8 +12,6 @@ class tela_bem_vindo2 : AppCompatActivity() {
     private lateinit var binding: ActivityTelaBemVindo2Binding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
-        supportActionBar?.hide()
         binding = ActivityTelaBemVindo2Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -25,7 +22,7 @@ class tela_bem_vindo2 : AppCompatActivity() {
     }
 
     private fun navegarTelaPrincipal() {
-        val intent = Intent(this, telaPrincipal_deslogar::class.java)
+        val intent = Intent(this, tela_inicial::class.java)
         startActivity(intent)
         finish()
     }

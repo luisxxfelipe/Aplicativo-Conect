@@ -18,4 +18,11 @@
     <string name="texto_botao_deslogar">Deslogar</string>
     <string name="title_activity_tela_principal">tela_principal</string>
     <string name="text_categorias">Categorias</string>
+    <string name="populares">Populares</string>
+    <string name="Cabeleireiro">Cabeleireiro</string>
+    <string name="Manicure">Manicure</string>
+    <string name="Maquiadoras">Maquiadoras</string>
+    <string name="Barbeiro">Barbeiro</string>
+    <string name="ver_mais">Ver mais</string>
+
 </resources>

@@ -1,13 +1,13 @@
 package com.conect.aplicativoconect.view.formcadastro
 
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import com.conect.aplicativoconect.databinding.ActivityTelaCadastroBinding
-import com.conect.aplicativoconect.view.telaprincipal.telaPrincipal_deslogar
+import com.conect.aplicativoconect.view.telaprincipal.tela_inicial
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -76,10 +76,8 @@ class tela_cadastro : AppCompatActivity() {
 
         binding.logoGoogle.setOnClickListener{
             signIn()
+            tela_inicial()
         }
-
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN // comando para retirar o statusBar
-        supportActionBar?.hide()
     }
 
 
@@ -112,9 +110,8 @@ class tela_cadastro : AppCompatActivity() {
     auth.signInWithCredential(credencial).addOnCompleteListener(this)
     { task: Task<AuthResult> ->
         if (task.isSuccessful) {
-            Toast.makeText(baseContext, "Autenticação efetuada com o Google!", Toast.LENGTH_LONG)
-                .show()
-            telaPrincipal_deslogar()
+            Toast.makeText(baseContext, "Autenticação efetuada com o Google!", Toast.LENGTH_LONG).show()
+            navegarTelaPrincipal()
         } else {
             Toast.makeText(
                 baseContext,
@@ -124,5 +121,20 @@ class tela_cadastro : AppCompatActivity() {
 
         }
     }
+    }
+
+    private fun navegarTelaPrincipal() {
+        val intent = Intent(this, tela_inicial::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val usuario_total = FirebaseAuth.getInstance().currentUser // usuario atual que esta logado no sistema
+
+        if(usuario_total != null){
+            navegarTelaPrincipal()
+        }
     }
 }

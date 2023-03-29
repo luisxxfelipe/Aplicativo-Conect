@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.camera"
+        android:required="true"/>
 
     <application
         android:allowBackup="true"
@@ -12,8 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AplicativoConect"
         tools:targetApi="31">
+
         <activity
-            android:name=".view.telaprincipal.telaPrincipal_deslogar"
+            android:name=".view.telaprincipal.tela_inicial"
             android:exported="false" />
         <activity
             android:name=".view.formcadastro.tela_cadastro"
