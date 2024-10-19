@@ -16,8 +16,9 @@
         android:theme="@style/Theme.AplicativoConect"
         tools:targetApi="31">
 
+        <!-- Tela de Splash -->
         <activity
-            android:name=".view.ui.auth.LoginActivity"
+            android:name=".view.ui.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,19 +26,28 @@
             </intent-filter>
         </activity>
 
+        <!-- Tela de boas-vindas -->
+        <activity
+            android:name=".view.ui.WelcomeActivity"
+            android:exported="true" />
+
+        <!-- Tela de Login -->
+        <activity
+            android:name=".view.ui.auth.LoginActivity"
+            android:exported="true" />
+
+        <!-- Tela de Signup -->
         <activity
             android:name=".view.ui.auth.SignupActivity"
-            android:exported="true">
-        </activity>
+            android:exported="true" />
 
+        <!-- Tela de Home do Cliente -->
         <activity
             android:name=".view.ui.client.ClientHomeActivity"
-            android:exported="true">
-        </activity>
+            android:exported="true" />
 
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
     </application>
-
 </manifest>

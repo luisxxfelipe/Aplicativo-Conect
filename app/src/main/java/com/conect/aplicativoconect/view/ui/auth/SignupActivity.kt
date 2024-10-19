@@ -1,37 +1,53 @@
 package com.conect.aplicativoconect.view.ui.auth
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.auth.FirebaseAuth
 
 class SignupActivity : AppCompatActivity() {
 
-    private lateinit var emailInput: TextInputEditText
-    private lateinit var passwordInput: TextInputEditText
-    private lateinit var confirmPasswordInput: TextInputEditText
-    private lateinit var signupButton: MaterialButton
+    private lateinit var auth: FirebaseAuth
+    private lateinit var emailEditText: EditText
+    private lateinit var passwordEditText: EditText
+    private lateinit var signUpButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup)
 
-        emailInput = findViewById(R.id.emailInput)
-        passwordInput = findViewById(R.id.passwordInput)
-        confirmPasswordInput = findViewById(R.id.confirmPasswordInput)
-        signupButton = findViewById(R.id.signupButton)
+        auth = FirebaseAuth.getInstance()
 
-        signupButton.setOnClickListener {
-            registerUser()
+        emailEditText = findViewById(R.id.emailInput)
+        passwordEditText = findViewById(R.id.passwordInput)
+        signUpButton = findViewById(R.id.signupButton)
+
+        signUpButton.setOnClickListener {
+            val email = emailEditText.text.toString().trim()
+            val password = passwordEditText.text.toString().trim()
+
+            if (email.isNotEmpty() && password.isNotEmpty()) {
+                createUser(email, password)
+            } else {
+                Toast.makeText(this, "Por favor, insira email e senha", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    private fun registerUser() {
-        val email = emailInput.text.toString()
-        val password = passwordInput.text.toString()
-        val confirmPassword = confirmPasswordInput.text.toString()
-
-        // Aqui você pode adicionar a lógica para registro com o Firebase
+    private fun createUser(email: String, password: String) {
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Cadastro bem-sucedido, redirecionar para tela de login
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
+                } else {
+                    Toast.makeText(baseContext, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 }

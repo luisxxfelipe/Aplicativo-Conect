@@ -1,46 +1,73 @@
 package com.conect.aplicativoconect.view.ui.auth
 
+import com.conect.aplicativoconect.view.ui.client.ClientHomeActivity
 import android.content.Intent
 import android.os.Bundle
-import android.widget.TextView
+import android.util.Log
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.ui.client.ClientHomeActivity
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var emailInput: TextInputEditText
-    private lateinit var passwordInput: TextInputEditText
-    private lateinit var loginButton: MaterialButton
-    private lateinit var signupTextView: TextView
+    private lateinit var auth: FirebaseAuth
+    private lateinit var emailEditText: EditText
+    private lateinit var passwordEditText: EditText
+    private lateinit var loginButton: Button
+    private lateinit var signUpButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        try {
+            setContentView(R.layout.activity_login)
 
-        emailInput = findViewById(R.id.emailInput)
-        passwordInput = findViewById(R.id.passwordInput)
-        loginButton = findViewById(R.id.loginButton)
-        signupTextView = findViewById(R.id.signupTextView)
+            // Inicializar Firebase Auth
+            auth = FirebaseAuth.getInstance()
 
-        // Configura o clique do botão de login
-        loginButton.setOnClickListener {
-            // Aqui você pode adicionar a lógica de login, se necessário
-            // Por enquanto, vamos redirecionar para a tela inicial do cliente
-            startActivity(Intent(this, ClientHomeActivity::class.java))
-            finish()
-        }
+            // Referências aos componentes do layout
+            emailEditText = findViewById(R.id.emailInput)
+            passwordEditText = findViewById(R.id.passwordInput)
+            loginButton = findViewById(R.id.loginButton)
+            signUpButton = findViewById(R.id.signupButton)
 
-        // Configura o clique do texto de cadastro
-        signupTextView.setOnClickListener {
-            navigateToSignup()
+            // Lógica de login
+            loginButton.setOnClickListener {
+                val email = emailEditText.text.toString().trim()
+                val password = passwordEditText.text.toString().trim()
+
+                if (email.isNotEmpty() && password.isNotEmpty()) {
+                    loginUser(email, password)
+                } else {
+                    Toast.makeText(this, "Por favor, insira email e senha", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            // Botão de cadastro
+            signUpButton.setOnClickListener {
+                startActivity(Intent(this, SignupActivity::class.java))
+            }
+        } catch (e: Exception) {
+            Log.e("LoginActivity", "Erro ao inicializar: ${e.message}")
+            Toast.makeText(this, "Erro ao inicializar a tela de login.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun navigateToSignup() {
-        val intent = Intent(this, SignupActivity::class.java)
-        startActivity(intent)
+    private fun loginUser(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Login bem-sucedido, redirecionar para a tela inicial
+                    val intent = Intent(this, ClientHomeActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    // Se o login falhar, exibir mensagem ao usuário
+                    Log.w("LoginActivity", "signInWithEmail:failure", task.exception)
+                    Toast.makeText(baseContext, "Falha na autenticação.", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 }
