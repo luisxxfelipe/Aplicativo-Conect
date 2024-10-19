@@ -23,6 +23,12 @@
     <string name="Manicure">Manicure</string>
     <string name="Maquiadoras">Maquiadoras</string>
     <string name="Barbeiro">Barbeiro</string>
+    <string name="welcome_message">Bem-vindo ao ConectX</string>
+    <string name="my_bookings">Meus Agendamentos</string>
+    <string name="my_profile">Meu Perfil</string>
+    <string name="services">Serviços</string>
     <string name="ver_mais">Ver mais</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>
