@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
 
 class ClientBookingActivity : AppCompatActivity() {
 
