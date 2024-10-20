@@ -3,10 +3,14 @@ package com.conect.aplicativoconect.view.ui.client
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
+import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.ui.WelcomeActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
@@ -63,7 +67,6 @@ class ClientHomeActivity : AppCompatActivity() {
         Log.d("ClientHomeActivity", "Fragment ${fragment.javaClass.simpleName} carregado.")
     }
 
-
     private fun fetchUserName() {
         val user = FirebaseAuth.getInstance().currentUser
         user?.let {
@@ -77,6 +80,7 @@ class ClientHomeActivity : AppCompatActivity() {
                             val userName = userDocument.getString("name")
                             // Carregue o HomeFragment e passe o nome do usuário
                             loadFragment(HomeFragment(), userName) // Passando o nome do usuário
+                            fetchTodayBookings(userEmail) // Chama o método para buscar agendamentos
                         }
                     }
                     .addOnFailureListener { e ->
@@ -86,6 +90,41 @@ class ClientHomeActivity : AppCompatActivity() {
         }
     }
 
+    private fun fetchTodayBookings(userEmail: String) {
+        firestore.collection("bookings")
+            .whereEqualTo("userEmail", userEmail) // Substitua pelo seu campo de email
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    // Se não houver agendamentos, exiba a mensagem e a imagem
+                    updateBookingsView(emptyList())
+                } else {
+                    val bookings = querySnapshot.toObjects(Booking::class.java)
+                    updateBookingsView(bookings)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.w("ClientHomeActivity", "Erro ao buscar agendamentos", e)
+            }
+    }
+
+    private fun updateBookingsView(bookings: List<Booking>) {
+        val noBookingsMessage = findViewById<TextView>(R.id.noBookingsMessage)
+        val noBookingsImage = findViewById<ImageView>(R.id.noBookingsImage)
+        val recyclerView = findViewById<RecyclerView>(R.id.todayBookingsRecyclerView)
+
+        if (bookings.isEmpty()) {
+            noBookingsMessage.visibility = View.VISIBLE
+            noBookingsImage.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+        } else {
+            noBookingsMessage.visibility = View.GONE
+            noBookingsImage.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+            // Configure seu RecyclerView com os dados
+            // adapter.setData(bookings) // Exemplo de como definir os dados do adapter
+        }
+    }
 
     private fun logout() {
         FirebaseAuth.getInstance().signOut()
@@ -94,6 +133,4 @@ class ClientHomeActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
-
-
 }

@@ -8,10 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.conect.aplicativoconect.databinding.FragmentHomeClienteBinding
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.ui.BusinessAdapter
+import com.google.android.play.integrity.internal.o
 import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeFragment : Fragment() {
@@ -41,30 +43,31 @@ class HomeFragment : Fragment() {
         binding.userName.text = userName ?: "Nome do Usuário"
 
         // Configurar categorias
-        val categories = listOf("Manicure", "Barbearia", "Cabeleireiro") // Substitua por suas categorias
+        val categories = listOf("Manicure", "Barbearia", "Cabeleireiro", "Massagista", "Maquiagens")
         val categoriesPagerAdapter = CategoriesPagerAdapter(categories)
+
+
+        binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.categoriesRecyclerView.adapter = categoriesPagerAdapter
 
-        // Configuração do RecyclerView para estabelecimentos
+        // Definir layout manager para o RecyclerView de estabelecimentos
+        binding.establishmentsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         businessAdapter = BusinessAdapter(businessList)
-        binding.establishmentsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = businessAdapter
-        }
+        binding.establishmentsRecyclerView.adapter = businessAdapter
 
         // Buscar empresas
         fetchBusinesses()
     }
 
-
-
     private fun fetchBusinesses() {
         firestore.collection("business")
             .get()
             .addOnSuccessListener { querySnapshot ->
+                if (_binding == null) return@addOnSuccessListener
+
                 Log.d("HomeFragment", "Empresas encontradas: ${querySnapshot.size()}")
                 if (!querySnapshot.isEmpty) {
-                    businessList.clear() // Limpe a lista anterior
+                    businessList.clear()
                     for (document in querySnapshot.documents) {
                         val business = document.toObject(Business::class.java)
                         business?.let { businessList.add(it) }
@@ -79,16 +82,14 @@ class HomeFragment : Fragment() {
                 }
             }
             .addOnFailureListener { e ->
+                if (_binding == null) return@addOnFailureListener
+
                 Log.e("HomeFragment", "Erro ao buscar empresas", e)
-                Toast.makeText(
-                    requireContext(),
-                    "Erro ao buscar empresas: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Erro ao buscar empresas: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-        override fun onDestroyView() {
+    override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }

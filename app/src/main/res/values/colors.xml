@@ -11,5 +11,8 @@
     <color name="cinza">#BAB9B9</color>
     <color name="colorPrimary">#8264FF</color>
     <color name="light_beige">#F8F8F2</color>
+    <color name="colorCategory1">#338264FF</color>
+    <color name="colorCategory2">#332A9CFF</color>
+    <color name="colorCategory3">#33EE8265</color>
 
 </resources>
