@@ -29,7 +29,7 @@ class SplashActivity : AppCompatActivity() {
             val currentUser = auth.currentUser
             if (currentUser != null) {
                 // Primeiro, verificar se é um negócio
-                firestore.collection("businesses").document(currentUser.uid)
+                firestore.collection("business").document(currentUser.uid)
                     .get()
                     .addOnSuccessListener { businessDocument ->
                         if (businessDocument.exists()) {

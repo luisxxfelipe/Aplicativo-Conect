@@ -1,6 +1,7 @@
 package com.conect.aplicativoconect.view.ui.admin
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +11,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
+import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.data.repository.BookingRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,8 +28,10 @@ class AdminHomeFragment : Fragment() {
     private lateinit var todayProfitTextView: TextView
     private lateinit var monthProfitTextView: TextView
     private lateinit var noBookingsMessage: TextView
+    private lateinit var userNameTextView: TextView
 
     private val bookingRepository = BookingRepository()
+    private lateinit var firestore: FirebaseFirestore
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,9 +49,11 @@ class AdminHomeFragment : Fragment() {
         todayProfitTextView = view.findViewById(R.id.todayProfit)
         monthProfitTextView = view.findViewById(R.id.monthProfit)
         noBookingsMessage = view.findViewById(R.id.noBookingsMessage)
+        userNameTextView = view.findViewById(R.id.userName_business)
 
         setupRecyclerView()
         loadData()
+        loadBusinessName()
     }
 
     private fun setupRecyclerView() {
@@ -84,5 +92,28 @@ class AdminHomeFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun loadBusinessName() {
+        firestore = FirebaseFirestore.getInstance()
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+            userNameTextView.text = "Usuário não autenticado"
+            return
+        }
+
+        firestore.collection("business").document(currentUserUid)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null) {
+                    val business = document.toObject(Business::class.java)
+                    userNameTextView.text = business?.name ?: "Nome não disponível"
+                } else {
+                    userNameTextView.text = "Nome não disponível"
+                }
+            }
+            .addOnFailureListener { e ->
+                userNameTextView.text = "Erro ao carregar o nome"
+                Log.e("AdminHomeFragment", "Erro ao buscar o nome do negócio: ", e)
+            }
     }
 }

@@ -28,6 +28,11 @@
     <string name="my_profile">Meu Perfil</string>
     <string name="services">Serviços</string>
     <string name="ver_mais">Ver mais</string>
+    <string-array name="business_service_types">
+        <item>Cabeleireiro</item>
+        <item>Manicure</item>
+        <item>Outros</item>
+    </string-array>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 

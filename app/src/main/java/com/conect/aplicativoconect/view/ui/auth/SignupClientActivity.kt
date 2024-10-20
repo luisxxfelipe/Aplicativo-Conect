@@ -8,6 +8,7 @@ import android.widget.TextView // Importar TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
+import com.conect.aplicativoconect.view.ui.client.ClientHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -77,7 +78,7 @@ class SignupClientActivity : AppCompatActivity() {
                         db.collection("users").document(it).set(userData)
                             .addOnSuccessListener {
                                 Toast.makeText(this, "Cadastro bem-sucedido!", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this, LoginActivity::class.java))
+                                startActivity(Intent(this, ClientHomeActivity::class.java))
                                 finish()
                             }
                             .addOnFailureListener {

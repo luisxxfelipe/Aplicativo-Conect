@@ -59,6 +59,10 @@
             android:name=".view.ui.admin.AdminHomeActivity"
             android:exported="true" />
 
+        <activity
+            android:name=".view.ui.admin.RegisterBusinessActivity"
+            android:exported="true" />
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

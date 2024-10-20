@@ -84,7 +84,7 @@ class LoginActivity : AppCompatActivity() {
                                 finish()
                             } else {
                                 // Se não encontrar, tenta na coleção de negócios
-                                val businessRef = db.collection("businesses").document(userId)
+                                val businessRef = db.collection("business").document(userId)
                                 businessRef.get().addOnSuccessListener { businessDocument ->
                                     if (businessDocument != null && businessDocument.exists()) {
                                         // Se encontrar, assume que é um negócio

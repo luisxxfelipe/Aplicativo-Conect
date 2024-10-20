@@ -8,6 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
+import com.conect.aplicativoconect.view.ui.admin.RegisterBusinessActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -77,12 +78,16 @@ class SignupBusinessActivity : AppCompatActivity() {
                         db.collection("business").document(it).set(businessData)
                             .addOnSuccessListener {
                                 Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this, LoginActivity::class.java))
+                                // Redirecionar para a tela de cadastro da empresa
+                                startActivity(Intent(this, RegisterBusinessActivity::class.java))
                                 finish()
                             }
                             .addOnFailureListener {
                                 Toast.makeText(this, "Falha ao salvar dados do negócio.", Toast.LENGTH_SHORT).show()
                             }
+                    } ?: run {
+                        // Caso businessId seja nulo
+                        Toast.makeText(this, "Erro: ID de negócio não encontrado.", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     Toast.makeText(baseContext, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
