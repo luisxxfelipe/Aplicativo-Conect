@@ -13,16 +13,16 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:padding">20dp</item>
         <item name="android:maxLength">25</item>
-        <item name="android:layout_marginStart">40dp</item> <!-- Corrigido para layout_marginStart -->
-        <item name="android:layout_marginEnd">40dp</item> <!-- Corrigido para layout_marginEnd -->
+        <item name="android:layout_marginStart">40dp</item>
+        <item name="android:layout_marginEnd">40dp</item>
         <item name="android:layout_marginTop">15dp</item>
     </style>
 
     <style name="title_inicio">
-        <item name="android:layout_width">325dp</item> <!-- Trocado de sp para dp -->
-        <item name="android:layout_height">90dp</item> <!-- Trocado de sp para dp -->
-        <item name="android:layout_marginTop">250dp</item> <!-- Trocado de sp para dp -->
-        <item name="android:layout_marginStart">50dp</item> <!-- Trocado de layout_marginLeft para layout_marginStart -->
+        <item name="android:layout_width">325dp</item>
+        <item name="android:layout_height">90dp</item>
+        <item name="android:layout_marginTop">250dp</item>
+        <item name="android:layout_marginStart">50dp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAlignment">center</item>
         <item name="android:textColor">@color/white</item>
@@ -30,21 +30,21 @@
     </style>
 
     <style name="Text_inicio">
-        <item name="android:layout_width">325dp</item> <!-- Trocado de sp para dp -->
-        <item name="android:layout_height">100dp</item> <!-- Trocado de sp para dp -->
-        <item name="android:layout_marginStart">50dp</item> <!-- Trocado de layout_marginLeft para layout_marginStart -->
+        <item name="android:layout_width">325dp</item>
+        <item name="android:layout_height">100dp</item>
+        <item name="android:layout_marginStart">50dp</item>
         <item name="android:fontFamily">@font/coda</item>
         <item name="android:textAlignment">center</item>
         <item name="android:textColor">@color/white</item>
-        <item name="android:layout_marginTop">25dp</item> <!-- Trocado de sp para dp -->
+        <item name="android:layout_marginTop">25dp</item>
         <item name="android:textSize">20sp</item>
     </style>
 
     <style name="CustomButtonStyle">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginStart">40dp</item> <!-- Corrigido para layout_marginStart -->
-        <item name="android:layout_marginEnd">40dp</item> <!-- Corrigido para layout_marginEnd -->
+        <item name="android:layout_marginStart">40dp</item>
+        <item name="android:layout_marginEnd">40dp</item>
         <item name="android:layout_marginTop">15dp</item>
         <item name="android:padding">20dp</item>
         <item name="android:textColor">@android:color/white</item>

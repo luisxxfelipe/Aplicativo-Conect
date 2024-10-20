@@ -1,0 +1,21 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <!-- Adicione suas variáveis de dados aqui, se necessário -->
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Perfil do Administrador"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <!-- Adicione a lógica para exibir o perfil do administrador -->
+    </LinearLayout>
+</layout>

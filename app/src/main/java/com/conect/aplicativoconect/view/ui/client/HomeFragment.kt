@@ -5,11 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.conect.aplicativoconect.databinding.FragmentHomeBinding
+import com.conect.aplicativoconect.databinding.FragmentHomeClienteBinding // Atualize aqui
 
 class HomeFragment : Fragment() {
 
-    private var _binding: FragmentHomeBinding? = null
+    private var _binding: FragmentHomeClienteBinding? = null // Atualize aqui
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -17,7 +17,7 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         // Infla o layout usando ViewBinding
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        _binding = FragmentHomeClienteBinding.inflate(inflater, container, false) // Atualize aqui
         return binding.root
     }
 

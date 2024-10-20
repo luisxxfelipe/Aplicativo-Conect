@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -30,19 +29,34 @@
             android:name=".view.ui.WelcomeActivity"
             android:exported="true" />
 
+        <!-- Tela de Seleção de Papel -->
+        <activity
+            android:name=".view.ui.auth.RoleSelectionActivity"
+            android:exported="true" />
+
         <!-- Tela de Login -->
         <activity
             android:name=".view.ui.auth.LoginActivity"
             android:exported="true" />
 
-        <!-- Tela de Signup -->
+        <!-- Tela de Signup Cliente -->
         <activity
-            android:name=".view.ui.auth.SignupActivity"
+            android:name=".view.ui.auth.SignupClientActivity"
+            android:exported="true" />
+
+        <!-- Tela de Signup Negócio -->
+        <activity
+            android:name=".view.ui.auth.SignupBusinessActivity"
             android:exported="true" />
 
         <!-- Tela de Home do Cliente -->
         <activity
             android:name=".view.ui.client.ClientHomeActivity"
+            android:exported="true" />
+
+        <!-- Tela de Home do Admin -->
+        <activity
+            android:name=".view.ui.admin.AdminHomeActivity"
             android:exported="true" />
 
         <meta-data

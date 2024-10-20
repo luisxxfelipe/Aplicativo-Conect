@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.ui.auth.LoginActivity
+import com.conect.aplicativoconect.view.ui.auth.RoleSelectionActivity // Certifique-se de importar a nova Activity
 
 class WelcomeActivity : AppCompatActivity() {
     private var currentPage = 0
@@ -26,7 +26,7 @@ class WelcomeActivity : AppCompatActivity() {
             else -> findViewById<Button>(R.id.nextButton3)
         }
 
-        nextButton.text = if (currentPage == layouts.size - 1) "Ir para Login" else "Próximo"
+        nextButton.text = if (currentPage == layouts.size - 1) "Ir para Seleção" else "Próximo"
 
         // Listener do botão
         nextButton.setOnClickListener {
@@ -35,8 +35,8 @@ class WelcomeActivity : AppCompatActivity() {
                 setContentView(layouts[currentPage])
                 updateButton() // Atualiza a referência e o texto do botão
             } else {
-                // Redirecionar para a tela de login
-                val intent = Intent(this, LoginActivity::class.java)
+                // Redirecionar para a tela de seleção de papel
+                val intent = Intent(this, RoleSelectionActivity::class.java) // Altere para RoleSelectionActivity
                 startActivity(intent)
                 finish()
             }
