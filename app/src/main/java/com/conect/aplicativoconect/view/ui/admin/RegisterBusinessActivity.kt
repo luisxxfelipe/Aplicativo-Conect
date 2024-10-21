@@ -1,5 +1,3 @@
-package com.conect.aplicativoconect.view.ui.admin
-
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -19,6 +17,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Business
+import com.conect.aplicativoconect.view.data.model.OperatingHours
+import com.conect.aplicativoconect.view.ui.admin.OperatingHoursDialogFragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
@@ -28,7 +28,6 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
 
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
-
     private lateinit var selectedServiceType: String
     private lateinit var operatingHoursInput: TextInputEditText
     private lateinit var businessImageView: ImageView
@@ -51,7 +50,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         val businessNameInput = findViewById<TextInputEditText>(R.id.businessNameInput)
         val serviceTypeSpinner = findViewById<Spinner>(R.id.serviceTypeSpinner)
         val addressInput = findViewById<TextInputEditText>(R.id.addressInput)
-        operatingHoursInput = findViewById<TextInputEditText>(R.id.operatingHoursInput)
+        operatingHoursInput = findViewById(R.id.operatingHoursInput)
         val phoneInput = findViewById<TextInputEditText>(R.id.phoneInput)
         val registerBusinessButton = findViewById<MaterialButton>(R.id.registerBusinessButton)
 
@@ -112,7 +111,6 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
             openGallery() // Abre a galeria ao clicar no ícone de upload
         }
 
-// Adicionar a lógica para abrir a galeria também no clique do botão de upload
         registerBusinessButton.setOnClickListener {
             val businessName = businessNameInput.text.toString().trim()
             val address = addressInput.text.toString().trim()
@@ -121,7 +119,16 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
             if (validateInputs(businessName, address, phone)) {
                 // Use a imagem padrão se imageUri for nulo
                 val finalImageUri = imageUri ?: Uri.parse("android.resource://${packageName}/drawable/default_img") // Substitua pelo ID da imagem padrão
-                registerBusiness(businessName, selectedServiceType, address, operatingHoursInput.text.toString(), phone, finalImageUri)
+
+                // Criar uma instância de OperatingHours
+                val operatingHours = OperatingHours(
+                    opening = "08:00",  // Horário de abertura padrão, ajuste conforme necessário
+                    closing = "18:00",  // Horário de fechamento padrão, ajuste conforme necessário
+                    days = listOf()      // Aqui você pode passar a lista de dias selecionados
+                )
+
+                // Registrar o negócio
+                registerBusiness(businessName, selectedServiceType, address, operatingHours, phone, finalImageUri)
             }
         }
     }
@@ -144,9 +151,16 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         }
     }
 
-    private fun registerBusiness(businessName: String, serviceType: String, address: String, operatingHours: String, phone: String, imageUri: Uri) {
+    private fun registerBusiness(businessName: String, serviceType: String, address: String, operatingHours: OperatingHours, phone: String, imageUri: Uri) {
         // Adicionar lógica para salvar no Firestore, incluindo a imagem se necessário
-        val business = Business(businessName, serviceType, address, operatingHours, phone, imageUri.toString())
+        val business = Business(
+            name = businessName,
+            serviceType = serviceType,
+            address = address,
+            phone = phone,
+            operatingHours = operatingHours, // Passando a instância de OperatingHours
+            imageUrl = imageUri.toString()
+        )
 
         firestore.collection("business")
             .add(business)
@@ -189,14 +203,16 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == storagePermissionCode) {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                Toast.makeText(this, "Permissão de armazenamento concedida", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permissão concedida", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Permissão de armazenamento negada", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permissão negada", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    override fun onHoursSelected(opening: String, closing: String) {
-        operatingHoursInput.setText("Abertura: $opening, Fechamento: $closing")
+    // Callback para selecionar horários
+    override fun onHoursSelected(openingTime: String, closingTime: String) {
+        val operatingHoursText = "$openingTime - $closingTime"
+        operatingHoursInput.setText(operatingHoursText)
     }
 }

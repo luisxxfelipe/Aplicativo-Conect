@@ -9,12 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 class ClienteProfileFragment : Fragment() {
 
     private lateinit var clientViewModel: ClientViewModel
     private lateinit var userNameTextView: TextView
-    // Adicione mais TextViews conforme necessário para mostrar outros dados do usuário
+    private lateinit var userEmailTextView: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,16 +28,26 @@ class ClienteProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         userNameTextView = view.findViewById(R.id.userName)
+        userEmailTextView = view.findViewById(R.id.userEmail)
 
-        clientViewModel = ViewModelProvider(this).get(ClientViewModel::class.java)
+        clientViewModel = ViewModelProvider(this)[ClientViewModel::class.java]
+
+        // Obtenha o userId do Firebase Authentication
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+
+        userId?.let {
+            // Carregar dados do perfil
+            clientViewModel.loadUserData(it)
+        } ?: run {
+            // Trate o caso quando não há usuário autenticado
+            userNameTextView.text = "Usuário não autenticado"
+            userEmailTextView.text = "Usuário não autenticado"
+        }
 
         // Observe as informações do perfil
         clientViewModel.userData.observe(viewLifecycleOwner) { user ->
-            userNameTextView.text = user.displayName // Ajuste conforme os dados disponíveis
-            // Atualize outros TextViews conforme necessário
+            userNameTextView.text = user?.name ?: "Nome não disponível" // Altere displayName para name
+            userEmailTextView.text = user?.email ?: "Email não disponível"
         }
-
-        // Carregar dados do perfil - Use um ID de usuário apropriado
-        clientViewModel.loadUserData("userId") // Altere "userId" para o ID correto
     }
 }

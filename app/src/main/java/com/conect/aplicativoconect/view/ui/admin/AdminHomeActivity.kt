@@ -1,13 +1,10 @@
 package com.conect.aplicativoconect.view.ui.admin
 
-import AdminProfileFragment
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.ui.WelcomeActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth

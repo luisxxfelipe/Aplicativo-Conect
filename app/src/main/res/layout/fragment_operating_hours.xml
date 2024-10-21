@@ -15,7 +15,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Selecione os horários de funcionamento:"
-            android:textSize="24sp"
+            android:textSize="23sp"
             android:textColor="@color/black"
             android:layout_marginBottom="16dp"/>
 
@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:text="Horário de Abertura:"
             android:textSize="18sp"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="14dp" />
 
         <TimePicker
             android:id="@+id/timePickerOpen"
@@ -122,7 +122,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Salvar Horários"
-            android:textColorHint="@color/white"
+            android:textColor="@color/white"
             android:backgroundTint="@color/roxo"
             android:layout_marginTop="16dp"/>
 
