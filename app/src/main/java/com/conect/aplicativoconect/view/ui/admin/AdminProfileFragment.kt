@@ -3,7 +3,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentAdminProfileBinding
+import com.conect.aplicativoconect.view.ui.admin.OperatingHoursFragment
 
 class AdminProfileFragment : Fragment() {
 
@@ -20,7 +22,19 @@ class AdminProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Aqui você pode adicionar a lógica para exibir o perfil do admin
+
+        // Listener para abrir o fragmento de horários de funcionamento
+        binding.hoursButtonAdmin.setOnClickListener {
+            openOperatingHoursFragment()
+        }
+    }
+
+    private fun openOperatingHoursFragment() {
+        // Troca o fragmento atual pelo OperatingHoursFragment
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, OperatingHoursFragment()) // Certifique-se de que o ID 'fragment_container' exista na activity que carrega os fragmentos
+            .addToBackStack(null)
+            .commit()
     }
 
     override fun onDestroyView() {

@@ -6,7 +6,7 @@
     android:background="@color/white"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="24dp">
 
     <TextView
         android:layout_width="wrap_content"
@@ -17,18 +17,57 @@
         android:textSize="24sp"
         android:textStyle="bold" />
 
+    <FrameLayout
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginBottom="16dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/circle_background" />
+
+        <ImageView
+            android:id="@+id/businessImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToOutline="true"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/uploadIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_upload"
+            android:contentDescription="Upload da imagem" />
+    </FrameLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/uploadButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:text="Fazer Upload"
+        android:backgroundTint="@color/colorPrimary"
+        android:textColor="@android:color/white"
+        app:cornerRadius="8dp" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="12dp"
+        android:hint="Nome da Empresa">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/businessNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:inputType="text"
+            android:minHeight="48dp"
+            android:padding="12dp"
             android:backgroundTint="@android:color/transparent"
-            android:hint="Nome da Empresa"
-            android:padding="10dp"
             android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -46,52 +85,58 @@
         android:id="@+id/serviceTypeSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="12dp"
+        android:background="@android:color/transparent" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="12dp"
+        android:hint="Horário de Funcionamento">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/operatingHoursInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:focusable="false"
+            android:inputType="none"
+            android:minHeight="48dp"
+            android:padding="12dp"
             android:backgroundTint="@android:color/transparent"
-            android:hint="Horário de Funcionamento"
-            android:padding="10dp"
             android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="12dp"
+        android:hint="Telefone">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/phoneInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
-            android:hint="Telefone"
             android:inputType="phone"
-            android:padding="10dp"
+            android:backgroundTint="@android:color/transparent"
+            android:minHeight="48dp"
+            android:padding="12dp"
             android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="12dp"
+        android:hint="Endereço">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/addressInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
-            android:hint="Endereço"
             android:inputType="textPostalAddress"
-            android:padding="10dp"
+            android:backgroundTint="@android:color/transparent"
+            android:minHeight="48dp"
+            android:padding="12dp"
             android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -104,5 +149,4 @@
         android:text="Cadastrar Empresa"
         android:textColor="@android:color/white"
         app:cornerRadius="8dp" />
-
 </LinearLayout>

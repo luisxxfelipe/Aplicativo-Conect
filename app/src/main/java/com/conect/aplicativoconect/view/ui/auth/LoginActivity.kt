@@ -8,7 +8,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.ui.client.ClientHomeActivity
+import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.conect.aplicativoconect.view.ui.admin.AdminHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -76,7 +76,7 @@ class LoginActivity : AppCompatActivity() {
                             if (document != null && document.exists()) {
                                 val retrievedUserType = document.getString("type") // Obtém o tipo do usuário
                                 val intent = if (retrievedUserType == "client") {
-                                    Intent(this, ClientHomeActivity::class.java)
+                                    Intent(this, ClienteHomeActivity::class.java)
                                 } else {
                                     Intent(this, AdminHomeActivity::class.java)
                                 }

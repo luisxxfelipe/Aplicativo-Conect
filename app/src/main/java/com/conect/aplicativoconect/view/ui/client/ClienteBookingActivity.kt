@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.google.android.material.button.MaterialButton
 
-class ClientBookingActivity : AppCompatActivity() {
+class ClienteBookingActivity : AppCompatActivity() {
 
     private lateinit var addBookingButton: MaterialButton
     private lateinit var bookingsRecyclerView: RecyclerView

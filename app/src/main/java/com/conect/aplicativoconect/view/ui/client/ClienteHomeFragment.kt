@@ -8,55 +8,73 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.conect.aplicativoconect.databinding.FragmentHomeClienteBinding
+import com.conect.aplicativoconect.databinding.FragmentClienteHomeBinding
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.ui.BusinessAdapter
-import com.google.android.play.integrity.internal.o
+import com.conect.aplicativoconect.view.ui.admin.BookingAdapter
+import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 
-class HomeFragment : Fragment() {
+class ClienteHomeFragment : Fragment() {
 
-    private var _binding: FragmentHomeClienteBinding? = null
+    private var _binding: FragmentClienteHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var firestore: FirebaseFirestore
     private lateinit var businessAdapter: BusinessAdapter
     private val businessList = mutableListOf<Business>()
 
+    private val clientViewModel: ClientViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentHomeClienteBinding.inflate(inflater, container, false)
+        _binding = FragmentClienteHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicialize o Firestore
         firestore = FirebaseFirestore.getInstance()
 
-        // Recuperar o nome do usuário dos argumentos
-        val userName = arguments?.getString("userName")
-        binding.userName.text = userName ?: "Nome do Usuário"
+        clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
+            binding.userName.text = userName ?: "Nome do Usuário"
+        }
 
-        // Configurar categorias
+        val userName = arguments?.getString("userName")
+        if (userName != null) {
+            clientViewModel.setUserName(userName)
+        }
+
         val categories = listOf("Manicure", "Barbearia", "Cabeleireiro", "Massagista", "Maquiagens")
         val categoriesPagerAdapter = CategoriesPagerAdapter(categories)
-
 
         binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.categoriesRecyclerView.adapter = categoriesPagerAdapter
 
-        // Definir layout manager para o RecyclerView de estabelecimentos
         binding.establishmentsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         businessAdapter = BusinessAdapter(businessList)
         binding.establishmentsRecyclerView.adapter = businessAdapter
 
-        // Buscar empresas
         fetchBusinesses()
+
+        // Observar as mudanças nas reservas de hoje
+        clientViewModel.todayBookings.observe(viewLifecycleOwner) { bookings ->
+            if (bookings.isNullOrEmpty()) {
+                binding.noBookingsMessage.visibility = View.VISIBLE
+                binding.noBookingsImage.visibility = View.VISIBLE
+                binding.todayBookingsRecyclerView.visibility = View.GONE
+            } else {
+                binding.noBookingsMessage.visibility = View.GONE
+                binding.noBookingsImage.visibility = View.GONE
+                // Atualize o RecyclerView com os bookings
+                binding.todayBookingsRecyclerView.adapter = BookingAdapter(bookings) // Crie um Adapter para bookings
+                binding.todayBookingsRecyclerView.visibility = View.VISIBLE
+            }
+        }
     }
 
     private fun fetchBusinesses() {
@@ -94,3 +112,4 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 }
+

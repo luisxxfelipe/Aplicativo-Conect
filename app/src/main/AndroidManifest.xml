@@ -3,6 +3,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
 
     <application
         android:allowBackup="true"
@@ -51,7 +54,7 @@
 
         <!-- Tela de Home do Cliente -->
         <activity
-            android:name=".view.ui.client.ClientHomeActivity"
+            android:name=".view.ui.client.ClienteHomeActivity"
             android:exported="true" />
 
         <!-- Tela de Home do Admin -->

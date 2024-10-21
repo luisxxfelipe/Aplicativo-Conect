@@ -1,0 +1,130 @@
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selecione os horários de funcionamento:"
+            android:textSize="24sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Horário de Abertura:"
+            android:textSize="18sp"
+            android:layout_marginTop="16dp" />
+
+        <TimePicker
+            android:id="@+id/timePickerOpen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:timePickerMode="spinner" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Horário de Fechamento:"
+            android:textSize="18sp"
+            android:layout_marginTop="16dp"/>
+
+        <TimePicker
+            android:id="@+id/timePickerClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:timePickerMode="spinner" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selecione os dias da semana:"
+            android:textSize="18sp"
+            android:layout_marginTop="16dp"/>
+
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:columnCount="4"
+            android:rowCount="2">
+
+            <Button
+                android:id="@+id/buttonMonday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Seg"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/orange"/>
+
+            <Button
+                android:id="@+id/buttonTuesday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ter"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/orange"/>
+
+            <Button
+                android:id="@+id/buttonWednesday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Qua"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/orange"/>
+
+            <Button
+                android:id="@+id/buttonThursday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Qui"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/orange"/>
+
+            <Button
+                android:id="@+id/buttonFriday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sex"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/orange"/>
+
+            <Button
+                android:id="@+id/buttonSaturday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sáb"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/orange"/>
+
+            <Button
+                android:id="@+id/buttonSunday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dom"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/orange"/>
+
+        </GridLayout>
+
+        <Button
+            android:id="@+id/saveHoursButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Salvar Horários"
+            android:textColorHint="@color/white"
+            android:backgroundTint="@color/roxo"
+            android:layout_marginTop="16dp"/>
+
+    </LinearLayout>
+</ScrollView>

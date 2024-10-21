@@ -7,12 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.data.repository.BookingRepository
+import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +33,8 @@ class AdminHomeFragment : Fragment() {
 
     private val bookingRepository = BookingRepository()
     private lateinit var firestore: FirebaseFirestore
+
+    private val adminViewModel: AdminViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,6 +57,27 @@ class AdminHomeFragment : Fragment() {
         setupRecyclerView()
         loadData()
         loadBusinessName()
+
+        // Observa os dados do ViewModel
+        adminViewModel.todayBookingsCount.observe(viewLifecycleOwner) { count ->
+            todayBookingsCountTextView.text = count.toString()
+        }
+
+        adminViewModel.monthBookingsCount.observe(viewLifecycleOwner) { count ->
+            monthBookingsCountTextView.text = count.toString()
+        }
+
+        adminViewModel.todayProfit.observe(viewLifecycleOwner) { profit ->
+            todayProfitTextView.text = String.format("R$ %.2f", profit)
+        }
+
+        adminViewModel.monthProfit.observe(viewLifecycleOwner) { profit ->
+            monthProfitTextView.text = String.format("R$ %.2f", profit)
+        }
+
+        adminViewModel.businessName.observe(viewLifecycleOwner) { name ->
+            userNameTextView.text = name ?: "Nome não disponível"
+        }
     }
 
     private fun setupRecyclerView() {
@@ -70,13 +94,13 @@ class AdminHomeFragment : Fragment() {
                 val monthProfit = bookingRepository.getMonthProfit()
 
                 withContext(Dispatchers.Main) {
-                    // Update UI elements
-                    todayBookingsCountTextView.text = todayBookings.size.toString()
-                    monthBookingsCountTextView.text = monthBookings.size.toString()
-                    todayProfitTextView.text = String.format("R$ %.2f", todayProfit)
-                    monthProfitTextView.text = String.format("R$ %.2f", monthProfit)
+                    // Atualiza dados no ViewModel
+                    adminViewModel.setTodayBookingsCount(todayBookings.size)
+                    adminViewModel.setMonthBookingsCount(monthBookings.size)
+                    adminViewModel.setTodayProfit(todayProfit)
+                    adminViewModel.setMonthProfit(monthProfit)
 
-                    // Show bookings in RecyclerView or a message if no bookings exist
+                    // Mostrar agendamentos no RecyclerView ou mensagem se não houver
                     if (todayBookings.isEmpty()) {
                         noBookingsMessage.visibility = View.VISIBLE
                     } else {
@@ -86,9 +110,10 @@ class AdminHomeFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    // Handle errors
+                    // Tratar erros
                     noBookingsMessage.text = "Erro ao carregar dados."
                     noBookingsMessage.visibility = View.VISIBLE
+                    Log.e("AdminHomeFragment", "Erro ao carregar dados: ", e)
                 }
             }
         }
@@ -106,13 +131,13 @@ class AdminHomeFragment : Fragment() {
             .addOnSuccessListener { document ->
                 if (document != null) {
                     val business = document.toObject(Business::class.java)
-                    userNameTextView.text = business?.name ?: "Nome não disponível"
+                    adminViewModel.setBusinessName(business?.name ?: "Nome não disponível")
                 } else {
-                    userNameTextView.text = "Nome não disponível"
+                    adminViewModel.setBusinessName("Nome não disponível")
                 }
             }
             .addOnFailureListener { e ->
-                userNameTextView.text = "Erro ao carregar o nome"
+                adminViewModel.setBusinessName("Erro ao carregar o nome")
                 Log.e("AdminHomeFragment", "Erro ao buscar o nome do negócio: ", e)
             }
     }

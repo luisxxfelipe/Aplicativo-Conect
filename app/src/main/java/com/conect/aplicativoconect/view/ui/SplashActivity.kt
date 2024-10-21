@@ -6,7 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.ui.client.ClientHomeActivity
+import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.conect.aplicativoconect.view.ui.admin.AdminHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -43,7 +43,7 @@ class SplashActivity : AppCompatActivity() {
                                 .addOnSuccessListener { userDocument ->
                                     if (userDocument.exists()) {
                                         // Usuário é um cliente
-                                        startActivity(Intent(this, ClientHomeActivity::class.java))
+                                        startActivity(Intent(this, ClienteHomeActivity::class.java))
                                     } else {
                                         // Se o documento não existir, redirecionar para a tela de boas-vindas
                                         startActivity(Intent(this, WelcomeActivity::class.java))

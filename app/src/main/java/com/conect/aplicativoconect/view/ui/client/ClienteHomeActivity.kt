@@ -6,19 +6,24 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.ui.WelcomeActivity
+import com.conect.aplicativoconect.view.ui.admin.BookingAdapter
+import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-class ClientHomeActivity : AppCompatActivity() {
+class ClienteHomeActivity : AppCompatActivity() {
 
     private lateinit var firestore: FirebaseFirestore
+    private val clientViewModel: ClientViewModel by viewModels() // Inicializa o ViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +35,7 @@ class ClientHomeActivity : AppCompatActivity() {
         bottomNavigation.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
-                    loadFragment(HomeFragment())
+                    loadFragment(ClienteHomeFragment())
                     true
                 }
                 R.id.navigation_appointments -> {
@@ -38,7 +43,7 @@ class ClientHomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.navigation_profile -> {
-                    loadFragment(ProfileFragment())
+                    loadFragment(ClienteProfileFragment())
                     true
                 }
                 R.id.navigation_logout -> {
@@ -50,12 +55,17 @@ class ClientHomeActivity : AppCompatActivity() {
         }
 
         // Carregue o fragmento inicial
-        loadFragment(HomeFragment())
+        loadFragment(ClienteHomeFragment())
         fetchUserName() // Chama o método para buscar o nome do usuário
+
+        // Observe as mudanças na lista de agendamentos
+        clientViewModel.todayBookings.observe(this) { bookings ->
+            updateBookingsView(bookings)
+        }
     }
 
     private fun loadFragment(fragment: Fragment, userName: String? = null) {
-        if (fragment is HomeFragment) {
+        if (fragment is ClienteHomeFragment) {
             val bundle = Bundle()
             bundle.putString("userName", userName)
             fragment.arguments = bundle
@@ -78,8 +88,9 @@ class ClientHomeActivity : AppCompatActivity() {
                         if (!querySnapshot.isEmpty) {
                             val userDocument = querySnapshot.documents[0]
                             val userName = userDocument.getString("name")
+                            clientViewModel.setUserName(userName ?: "Nome não encontrado") // Atualiza o nome no ViewModel
                             // Carregue o HomeFragment e passe o nome do usuário
-                            loadFragment(HomeFragment(), userName) // Passando o nome do usuário
+                            loadFragment(ClienteHomeFragment(), userName) // Passando o nome do usuário
                             fetchTodayBookings(userEmail) // Chama o método para buscar agendamentos
                         }
                     }
@@ -92,15 +103,15 @@ class ClientHomeActivity : AppCompatActivity() {
 
     private fun fetchTodayBookings(userEmail: String) {
         firestore.collection("bookings")
-            .whereEqualTo("userEmail", userEmail) // Substitua pelo seu campo de email
+            .whereEqualTo("userEmail", userEmail)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 if (querySnapshot.isEmpty) {
                     // Se não houver agendamentos, exiba a mensagem e a imagem
-                    updateBookingsView(emptyList())
+                    clientViewModel.setTodayBookings(emptyList())
                 } else {
                     val bookings = querySnapshot.toObjects(Booking::class.java)
-                    updateBookingsView(bookings)
+                    clientViewModel.setTodayBookings(bookings)
                 }
             }
             .addOnFailureListener { e ->
@@ -121,8 +132,12 @@ class ClientHomeActivity : AppCompatActivity() {
             noBookingsMessage.visibility = View.GONE
             noBookingsImage.visibility = View.GONE
             recyclerView.visibility = View.VISIBLE
-            // Configure seu RecyclerView com os dados
-            // adapter.setData(bookings) // Exemplo de como definir os dados do adapter
+
+            // Aqui você deve configurar seu adapter e definir os dados
+            val adapter = BookingAdapter(bookings) // Supondo que você tenha um BookingAdapter
+            recyclerView.adapter = adapter
+            // Defina um layout manager se necessário
+            recyclerView.layoutManager = LinearLayoutManager(this)
         }
     }
 
