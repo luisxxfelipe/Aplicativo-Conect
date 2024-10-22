@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
     app:cardElevation="4dp">
 
     <LinearLayout
@@ -59,7 +61,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="16dp"
             android:backgroundTint="@color/roxo"
-            android:text="Agendar"
+            android:text="Conhecer"
             android:textColor="@color/white" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

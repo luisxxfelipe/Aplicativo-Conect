@@ -97,6 +97,7 @@ class OperatingHoursFragment : Fragment() {
             "days" to selectedDays.toList() // Adicionando os dias selecionados
         )
 
+        // Aqui usamos o mesmo userId para atualizar o documento correspondente
         firestore.collection("business")
             .document(userId) // Use o ID do usuário como identificador
             .set(mapOf("operatingHours" to hours), SetOptions.merge())
@@ -108,6 +109,7 @@ class OperatingHoursFragment : Fragment() {
                 Toast.makeText(context, "Erro ao salvar horários: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     private fun redirectToHome() {
         val intent = Intent(activity, AdminHomeActivity::class.java)

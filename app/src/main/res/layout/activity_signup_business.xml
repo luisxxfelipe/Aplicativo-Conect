@@ -27,7 +27,7 @@
             android:id="@+id/businessNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nome do Negócio"
+            android:hint="Nome completo"
             android:padding="12dp"
             android:textColor="@color/black"
             android:backgroundTint="@android:color/transparent" />

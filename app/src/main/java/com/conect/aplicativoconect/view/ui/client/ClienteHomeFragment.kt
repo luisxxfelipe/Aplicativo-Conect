@@ -1,6 +1,7 @@
 package com.conect.aplicativoconect.view.ui.client
 
 import CategoriesPagerAdapter
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,8 +13,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.conect.aplicativoconect.databinding.FragmentClienteHomeBinding
 import com.conect.aplicativoconect.view.data.model.Business
-import com.conect.aplicativoconect.view.ui.BusinessAdapter
 import com.conect.aplicativoconect.view.ui.admin.BookingAdapter
+import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -55,8 +56,12 @@ class ClienteHomeFragment : Fragment() {
         binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.categoriesRecyclerView.adapter = categoriesPagerAdapter
 
+        // Passando o contexto ao adaptador
+        businessAdapter = BusinessAdapter(requireContext(), businessList) { selectedBusiness ->
+            fetchBusinessIdAndOpenDetails(selectedBusiness.name)
+        }
+
         binding.establishmentsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        businessAdapter = BusinessAdapter(businessList)
         binding.establishmentsRecyclerView.adapter = businessAdapter
 
         fetchBusinesses()
@@ -70,8 +75,7 @@ class ClienteHomeFragment : Fragment() {
             } else {
                 binding.noBookingsMessage.visibility = View.GONE
                 binding.noBookingsImage.visibility = View.GONE
-                // Atualize o RecyclerView com os bookings
-                binding.todayBookingsRecyclerView.adapter = BookingAdapter(bookings) // Crie um Adapter para bookings
+                binding.todayBookingsRecyclerView.adapter = BookingAdapter(bookings)
                 binding.todayBookingsRecyclerView.visibility = View.VISIBLE
             }
         }
@@ -107,9 +111,34 @@ class ClienteHomeFragment : Fragment() {
             }
     }
 
+    private fun fetchBusinessIdAndOpenDetails(businessName: String) {
+        firestore.collection("business")
+            .whereEqualTo("name", businessName)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    for (document in documents) {
+                        // Aqui você obteve o ID da empresa
+                        val businessId = document.id
+
+                        // Agora inicia a EmpresaDetalhesActivity passando o ID
+                        val intent = Intent(requireContext(), EmpresaDetalhesActivity::class.java).apply {
+                            putExtra("companyId", businessId) // Passa o ID da empresa
+                        }
+                        startActivity(intent)
+                        break // Sai do loop após encontrar o primeiro ID
+                    }
+                } else {
+                    Log.d("ClienteHomeFragment", "Nenhuma empresa correspondente encontrada")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.w("ClienteHomeFragment", "Erro ao buscar documentos: ", e)
+            }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 }
-

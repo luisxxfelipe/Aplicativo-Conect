@@ -3,9 +3,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
     <application
         android:allowBackup="true"
@@ -28,43 +26,31 @@
         </activity>
 
         <!-- Tela de boas-vindas -->
-        <activity
-            android:name=".view.ui.WelcomeActivity"
-            android:exported="true" />
+        <activity android:name=".view.ui.WelcomeActivity" android:exported="true" />
 
         <!-- Tela de Seleção de Papel -->
-        <activity
-            android:name=".view.ui.auth.RoleSelectionActivity"
-            android:exported="true" />
+        <activity android:name=".view.ui.auth.RoleSelectionActivity" android:exported="true" />
 
         <!-- Tela de Login -->
-        <activity
-            android:name=".view.ui.auth.LoginActivity"
-            android:exported="true" />
+        <activity android:name=".view.ui.auth.LoginActivity" android:exported="true" />
 
         <!-- Tela de Signup Cliente -->
-        <activity
-            android:name=".view.ui.auth.SignupClientActivity"
-            android:exported="true" />
+        <activity android:name=".view.ui.auth.SignupClientActivity" android:exported="true" />
 
         <!-- Tela de Signup Negócio -->
-        <activity
-            android:name=".view.ui.auth.SignupBusinessActivity"
-            android:exported="true" />
+        <activity android:name=".view.ui.auth.SignupBusinessActivity" android:exported="true" />
 
         <!-- Tela de Home do Cliente -->
-        <activity
-            android:name=".view.ui.client.ClienteHomeActivity"
-            android:exported="true" />
+        <activity android:name=".view.ui.client.ClienteHomeActivity" android:exported="true" />
 
         <!-- Tela de Home do Admin -->
-        <activity
-            android:name=".view.ui.admin.AdminHomeActivity"
-            android:exported="true" />
+        <activity android:name=".view.ui.admin.AdminHomeActivity" android:exported="true" />
 
-        <activity
-            android:name=".view.ui.admin.RegisterBusinessActivity"
-            android:exported="true" />
+        <!-- Tela de Registro de Negócio -->
+        <activity android:name=".view.ui.admin.RegisterBusinessActivity" android:exported="true" />
+
+        <!-- Tela de Detalhes da Empresa -->
+        <activity android:name=".view.ui.client.EmpresaDetalhesActivity" android:exported="true" />
 
         <meta-data
             android:name="preloaded_fonts"

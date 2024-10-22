@@ -134,7 +134,7 @@ class ClienteHomeActivity : AppCompatActivity() {
             recyclerView.visibility = View.VISIBLE
 
             // Aqui você deve configurar seu adapter e definir os dados
-            val adapter = BookingAdapter(bookings) // Supondo que você tenha um BookingAdapter
+            val adapter = BookingAdapter(bookings)
             recyclerView.adapter = adapter
             // Defina um layout manager se necessário
             recyclerView.layoutManager = LinearLayoutManager(this)

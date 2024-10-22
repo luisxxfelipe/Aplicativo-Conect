@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -29,6 +30,7 @@ class AdminHomeFragment : Fragment() {
     private lateinit var todayProfitTextView: TextView
     private lateinit var monthProfitTextView: TextView
     private lateinit var noBookingsMessage: TextView
+    private lateinit var noBookingsImage: ImageView // Para mostrar a imagem quando não há agendamentos
     private lateinit var userNameTextView: TextView
 
     private val bookingRepository = BookingRepository()
@@ -46,12 +48,14 @@ class AdminHomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Inicializa todos os componentes da View
         todayBookingsRecyclerView = view.findViewById(R.id.todayBookingsRecyclerView)
         todayBookingsCountTextView = view.findViewById(R.id.todayBookingsCount)
         monthBookingsCountTextView = view.findViewById(R.id.monthBookingsCount)
-        todayProfitTextView = view.findViewById(R.id.todayProfit)
-        monthProfitTextView = view.findViewById(R.id.monthProfit)
+        todayProfitTextView = view.findViewById(R.id.todayProfitTextView)
+        monthProfitTextView = view.findViewById(R.id.monthProfitTextView)
         noBookingsMessage = view.findViewById(R.id.noBookingsMessage)
+        noBookingsImage = view.findViewById(R.id.noBookingsImage)
         userNameTextView = view.findViewById(R.id.userName_business)
 
         setupRecyclerView()
@@ -103,8 +107,12 @@ class AdminHomeFragment : Fragment() {
                     // Mostrar agendamentos no RecyclerView ou mensagem se não houver
                     if (todayBookings.isEmpty()) {
                         noBookingsMessage.visibility = View.VISIBLE
+                        noBookingsImage.visibility = View.VISIBLE // Exibe a imagem
+                        todayBookingsRecyclerView.visibility = View.GONE
                     } else {
                         noBookingsMessage.visibility = View.GONE
+                        noBookingsImage.visibility = View.GONE // Esconde a imagem
+                        todayBookingsRecyclerView.visibility = View.VISIBLE
                         todayBookingsRecyclerView.adapter = BookingAdapter(todayBookings)
                     }
                 }
@@ -113,6 +121,8 @@ class AdminHomeFragment : Fragment() {
                     // Tratar erros
                     noBookingsMessage.text = "Erro ao carregar dados."
                     noBookingsMessage.visibility = View.VISIBLE
+                    noBookingsImage.visibility = View.VISIBLE
+                    todayBookingsRecyclerView.visibility = View.GONE
                     Log.e("AdminHomeFragment", "Erro ao carregar dados: ", e)
                 }
             }

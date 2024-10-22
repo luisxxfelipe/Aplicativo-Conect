@@ -18,16 +18,17 @@ data class OperatingHours(
     val days: List<String> = listOf()  // Lista de dias
 )
 
-// Modelo do negócio, agora incluindo o `uid`
 data class Business(
-    val uid: String = "",              // ID único do negócio
-    val name: String = "",             // Nome do negócio
-    val address: String = "",          // Endereço do negócio
-    val phone: String = "",            // Telefone do negócio
-    val operatingHours: OperatingHours = OperatingHours(), // Horário de funcionamento
-    val serviceType: String = "",      // Tipo de serviço oferecido
-    var imageUrl: String? = null
+    val name: String,
+    val description: String,
+    val serviceType: String,
+    val address: String,
+    val phone: String,
+    val operatingHours: OperatingHours,
+    val imageUrl: String,
+    val email: String, // Campo email
+    val isActive: Boolean // Campo isActive
 ) {
     // Construtor padrão necessário para o Firestore
-    constructor() : this("", "", "", "", OperatingHours(), "")
+    constructor() : this("", "", "", "", "", OperatingHours(), "", "", true) // Definindo isActive como true por padrão
 }

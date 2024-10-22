@@ -1,3 +1,5 @@
+package com.conect.aplicativoconect.view.ui.admin
+
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -15,10 +17,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.data.model.OperatingHours
-import com.conect.aplicativoconect.view.ui.admin.OperatingHoursDialogFragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
@@ -31,9 +33,10 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     private lateinit var selectedServiceType: String
     private lateinit var operatingHoursInput: TextInputEditText
     private lateinit var businessImageView: ImageView
-    private lateinit var uploadIcon: ImageView
-    private var imageUri: Uri? = null // Para armazenar a URI da imagem
+    private lateinit var uploadIcon: MaterialButton
+    private var imageUri: Uri? = null
     private val storagePermissionCode = 101
+    private lateinit var email: String
 
     // ActivityResultLauncher para o resultado da galeria
     private lateinit var getContent: ActivityResultLauncher<Intent>
@@ -46,8 +49,12 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
+        // Recuperar o email passado pela SignupBusinessActivity
+        email = intent.getStringExtra("EMAIL_KEY") ?: ""
+
         // Referências aos componentes
         val businessNameInput = findViewById<TextInputEditText>(R.id.businessNameInput)
+        val businessDescriptionInput = findViewById<TextInputEditText>(R.id.businessDescriptionInput)
         val serviceTypeSpinner = findViewById<Spinner>(R.id.serviceTypeSpinner)
         val addressInput = findViewById<TextInputEditText>(R.id.addressInput)
         operatingHoursInput = findViewById(R.id.operatingHoursInput)
@@ -111,32 +118,54 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
             openGallery() // Abre a galeria ao clicar no ícone de upload
         }
 
+
         registerBusinessButton.setOnClickListener {
             val businessName = businessNameInput.text.toString().trim()
+            val businessDescription = businessDescriptionInput.text.toString().trim()
             val address = addressInput.text.toString().trim()
             val phone = phoneInput.text.toString().trim()
 
-            if (validateInputs(businessName, address, phone)) {
+            if (validateInputs(businessName, businessDescription, address, phone, email)) {
                 // Use a imagem padrão se imageUri for nulo
-                val finalImageUri = imageUri ?: Uri.parse("android.resource://${packageName}/drawable/default_img") // Substitua pelo ID da imagem padrão
+                val finalImageUri = imageUri ?: Uri.parse("android.resource://${packageName}/drawable/default_img")
 
                 // Criar uma instância de OperatingHours
                 val operatingHours = OperatingHours(
-                    opening = "08:00",  // Horário de abertura padrão, ajuste conforme necessário
-                    closing = "18:00",  // Horário de fechamento padrão, ajuste conforme necessário
+                    opening = "08:00",  // Horário de abertura padrão
+                    closing = "18:00",  // Horário de fechamento padrão
                     days = listOf()      // Aqui você pode passar a lista de dias selecionados
                 )
 
                 // Registrar o negócio
-                registerBusiness(businessName, selectedServiceType, address, operatingHours, phone, finalImageUri)
+                registerBusiness(
+                    businessName,
+                    businessDescription,
+                    selectedServiceType,
+                    address,
+                    operatingHours,
+                    phone,
+                    finalImageUri,
+                    email // Passando o email aqui
+                )
             }
         }
     }
 
-    private fun validateInputs(businessName: String, address: String, phone: String): Boolean {
+
+    private fun validateInputs(
+        businessName: String,
+        businessDescription: String,
+        address: String,
+        phone: String,
+        email: String
+    ): Boolean {
         return when {
             businessName.isEmpty() -> {
                 Toast.makeText(this, "Por favor, insira o nome da empresa.", Toast.LENGTH_SHORT).show()
+                false
+            }
+            businessDescription.isEmpty() -> {
+                Toast.makeText(this, "Por favor, insira a descrição da empresa.", Toast.LENGTH_SHORT).show()
                 false
             }
             address.isEmpty() -> {
@@ -147,27 +176,48 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
                 Toast.makeText(this, "Por favor, insira o telefone.", Toast.LENGTH_SHORT).show()
                 false
             }
+            email.isEmpty() -> {
+                Toast.makeText(this, "Por favor, insira o email.", Toast.LENGTH_SHORT).show()
+                false
+            }
             else -> true
         }
     }
 
-    private fun registerBusiness(businessName: String, serviceType: String, address: String, operatingHours: OperatingHours, phone: String, imageUri: Uri) {
-        // Adicionar lógica para salvar no Firestore, incluindo a imagem se necessário
+    private fun registerBusiness(
+        businessName: String,
+        businessDescription: String,
+        serviceType: String,
+        address: String,
+        operatingHours: OperatingHours,
+        phone: String,
+        imageUri: Uri,
+        email: String
+    ) {
+        val userId = auth.currentUser?.uid ?: return // Certifique-se de que o usuário esteja autenticado
+
+        // Crie a instância de Business com os novos campos
         val business = Business(
             name = businessName,
+            description = businessDescription,
             serviceType = serviceType,
             address = address,
             phone = phone,
-            operatingHours = operatingHours, // Passando a instância de OperatingHours
-            imageUrl = imageUri.toString()
+            operatingHours = operatingHours,
+            imageUrl = imageUri.toString(),
+            email = email,
+            isActive = true // Defina isActive como true (ou como você desejar)
         )
 
+        // Use o método set() com o userId como identificador do documento
         firestore.collection("business")
-            .add(business)
+            .document(userId) // Usando o UID como o identificador do documento
+            .set(business) // Substituindo o documento existente ou criando um novo
             .addOnSuccessListener {
                 Toast.makeText(this, "Empresa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
-                // Redirecionar ou limpar campos após cadastro
-                clearFields()
+                val intent = Intent(this, AdminHomeActivity::class.java)
+                startActivity(intent)
+                finish()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Erro ao cadastrar: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -176,6 +226,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
 
     private fun clearFields() {
         findViewById<TextInputEditText>(R.id.businessNameInput).text?.clear()
+        findViewById<TextInputEditText>(R.id.businessDescriptionInput).text?.clear()
         findViewById<TextInputEditText>(R.id.addressInput).text?.clear()
         findViewById<TextInputEditText>(R.id.phoneInput).text?.clear()
         operatingHoursInput.text?.clear()
@@ -202,7 +253,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == storagePermissionCode) {
-            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Permissão concedida", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "Permissão negada", Toast.LENGTH_SHORT).show()
