@@ -47,6 +47,10 @@ class AdminHomeActivity : AppCompatActivity() {
                     loadFragment(AdminProfileFragment())
                     true
                 }
+                R.id.navigation_add_service -> {
+                    showAddServiceDialog() // Chama o método para mostrar o popup
+                    true
+                }
                 R.id.navigation_logout -> {
                     logout()
                     true
@@ -68,5 +72,10 @@ class AdminHomeActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+
+    private fun showAddServiceDialog() {
+        val dialog = AddServiceDialogFragment()
+        dialog.show(supportFragmentManager, "AddServiceDialog")
     }
 }

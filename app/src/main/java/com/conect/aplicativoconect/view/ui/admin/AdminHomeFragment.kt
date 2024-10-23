@@ -11,16 +11,19 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.data.repository.BookingRepository
 import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 class AdminHomeFragment : Fragment() {
 
@@ -30,8 +33,9 @@ class AdminHomeFragment : Fragment() {
     private lateinit var todayProfitTextView: TextView
     private lateinit var monthProfitTextView: TextView
     private lateinit var noBookingsMessage: TextView
-    private lateinit var noBookingsImage: ImageView // Para mostrar a imagem quando não há agendamentos
+    private lateinit var noBookingsImage: ImageView
     private lateinit var userNameTextView: TextView
+    private lateinit var greetingTextView: TextView
 
     private val bookingRepository = BookingRepository()
     private lateinit var firestore: FirebaseFirestore
@@ -57,6 +61,7 @@ class AdminHomeFragment : Fragment() {
         noBookingsMessage = view.findViewById(R.id.noBookingsMessage)
         noBookingsImage = view.findViewById(R.id.noBookingsImage)
         userNameTextView = view.findViewById(R.id.userName_business)
+        greetingTextView = view.findViewById(R.id.greetingTextView)
 
         setupRecyclerView()
         loadData()
@@ -81,7 +86,22 @@ class AdminHomeFragment : Fragment() {
 
         adminViewModel.businessName.observe(viewLifecycleOwner) { name ->
             userNameTextView.text = name ?: "Nome não disponível"
+            setGreeting(name ?: "Usuário")
         }
+    }
+
+    private fun setGreeting(name: String) {
+        val calendar = Calendar.getInstance()
+        val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
+
+        val greeting = when {
+            hourOfDay < 6 -> "Boa madrugada!"
+            hourOfDay < 12 -> "Bom dia!"
+            hourOfDay < 18 -> "Boa tarde!"
+            else -> "Boa noite!"
+        }
+
+        greetingTextView.text = greeting // Atualiza o TextView de saudação
     }
 
     private fun setupRecyclerView() {
@@ -129,6 +149,22 @@ class AdminHomeFragment : Fragment() {
         }
     }
 
+    private fun loadProfileImage(imageUrl: String?) {
+        val userImageView = view?.findViewById<CircleImageView>(R.id.userImage)
+        imageUrl?.let {
+            if (userImageView != null) {
+                Glide.with(this)
+                    .load(it) // URL da imagem no Firebase Storage
+                    .placeholder(R.drawable.foto_perfil_generica) // Imagem de carregamento
+                    .error(R.drawable.foto_perfil_generica) // Imagem em caso de erro
+                    .into(userImageView)
+            }
+        } ?: run {
+            userImageView?.setImageResource(R.drawable.foto_perfil_generica) // Ou uma imagem padrão se a URL for nula
+        }
+    }
+
+
     private fun loadBusinessName() {
         firestore = FirebaseFirestore.getInstance()
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: run {
@@ -142,6 +178,7 @@ class AdminHomeFragment : Fragment() {
                 if (document != null) {
                     val business = document.toObject(Business::class.java)
                     adminViewModel.setBusinessName(business?.name ?: "Nome não disponível")
+                    loadProfileImage(business?.imageUrl) // Carregar a imagem de perfil
                 } else {
                     adminViewModel.setBusinessName("Nome não disponível")
                 }
@@ -151,4 +188,5 @@ class AdminHomeFragment : Fragment() {
                 Log.e("AdminHomeFragment", "Erro ao buscar o nome do negócio: ", e)
             }
     }
+
 }

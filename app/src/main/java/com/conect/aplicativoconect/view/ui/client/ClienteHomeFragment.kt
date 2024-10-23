@@ -16,7 +16,11 @@ import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.ui.admin.BookingAdapter
 import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.bumptech.glide.Glide
+import com.conect.aplicativoconect.R
+import java.util.*
 
 class ClienteHomeFragment : Fragment() {
 
@@ -41,13 +45,24 @@ class ClienteHomeFragment : Fragment() {
 
         firestore = FirebaseFirestore.getInstance()
 
-        clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
-            binding.userName.text = userName ?: "Nome do Usuário"
+        // Obtenha o ID do usuário autenticado
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        userId?.let {
+            clientViewModel.loadUserData(it) // Carregue os dados do usuário
         }
 
-        val userName = arguments?.getString("userName")
-        if (userName != null) {
-            clientViewModel.setUserName(userName)
+        clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
+            binding.userName.text = userName ?: "Nome do Usuário"
+            updateGreeting()
+        }
+
+        clientViewModel.userImage.observe(viewLifecycleOwner) { imageUrl ->
+            Log.d("ClienteHomeFragment", "Loading image from URL: $imageUrl")
+            Glide.with(this)
+                .load(imageUrl)
+                .placeholder(R.drawable.foto_perfil_generica) // Imagem padrão enquanto carrega
+                .error(R.drawable.foto_perfil_generica) // Imagem de erro, se houver falha no carregamento
+                .into(binding.userImage)
         }
 
         val categories = listOf("Manicure", "Barbearia", "Cabeleireiro", "Massagista", "Maquiagens")
@@ -56,7 +71,6 @@ class ClienteHomeFragment : Fragment() {
         binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.categoriesRecyclerView.adapter = categoriesPagerAdapter
 
-        // Passando o contexto ao adaptador
         businessAdapter = BusinessAdapter(requireContext(), businessList) { selectedBusiness ->
             fetchBusinessIdAndOpenDetails(selectedBusiness.name)
         }
@@ -79,6 +93,17 @@ class ClienteHomeFragment : Fragment() {
                 binding.todayBookingsRecyclerView.visibility = View.VISIBLE
             }
         }
+    }
+
+    private fun updateGreeting() {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val greeting = when {
+            hour < 6 -> "Boa madrugada!"
+            hour < 12 -> "Bom dia!"
+            hour < 18 -> "Boa tarde!"
+            else -> "Boa noite!"
+        }
+        binding.greetingTextView.text = greeting
     }
 
     private fun fetchBusinesses() {
@@ -118,15 +143,12 @@ class ClienteHomeFragment : Fragment() {
             .addOnSuccessListener { documents ->
                 if (!documents.isEmpty) {
                     for (document in documents) {
-                        // Aqui você obteve o ID da empresa
                         val businessId = document.id
-
-                        // Agora inicia a EmpresaDetalhesActivity passando o ID
                         val intent = Intent(requireContext(), EmpresaDetalhesActivity::class.java).apply {
                             putExtra("companyId", businessId) // Passa o ID da empresa
                         }
                         startActivity(intent)
-                        break // Sai do loop após encontrar o primeiro ID
+                        break
                     }
                 } else {
                     Log.d("ClienteHomeFragment", "Nenhuma empresa correspondente encontrada")

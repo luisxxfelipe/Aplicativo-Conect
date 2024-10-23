@@ -1,0 +1,54 @@
+package com.conect.aplicativoconect.view.ui.admin
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.CheckBox
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.conect.aplicativoconect.R
+import com.conect.aplicativoconect.view.data.model.ServiceType
+
+class ServiceTypeAdapter(
+    private val serviceTypes: List<ServiceType>,
+    private val onServiceSelected: (ServiceType) -> Unit // Lambda para tratar a seleção
+) : RecyclerView.Adapter<ServiceTypeAdapter.ServiceTypeViewHolder>() {
+
+    private val selectedServices = mutableSetOf<ServiceType>() // Para armazenar os serviços selecionados
+
+    inner class ServiceTypeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val serviceNameTextView: TextView = itemView.findViewById(R.id.textViewServiceName)
+        private val serviceCheckBox: CheckBox = itemView.findViewById(R.id.checkBoxService)
+
+        fun bind(serviceType: ServiceType) {
+            serviceNameTextView.text = serviceType.name
+            serviceCheckBox.isChecked = selectedServices.contains(serviceType)
+
+            serviceCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    selectedServices.add(serviceType)
+                    onServiceSelected(serviceType) // Notifica a seleção
+                } else {
+                    selectedServices.remove(serviceType)
+                }
+            }
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ServiceTypeViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_service_type, parent, false)
+        return ServiceTypeViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ServiceTypeViewHolder, position: Int) {
+        holder.bind(serviceTypes[position])
+    }
+
+    override fun getItemCount(): Int = serviceTypes.size
+
+    // Método para obter o serviço selecionado
+    fun getSelectedService(): ServiceType? {
+        return selectedServices.firstOrNull() // Retorna o primeiro serviço selecionado
+    }
+}

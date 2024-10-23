@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/textViewSelectService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selecione um Serviço"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewServiceTypes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:nestedScrollingEnabled="false" />
+
+        <TextView
+            android:id="@+id/textViewPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Preço"
+            android:layout_marginTop="16dp" />
+
+        <EditText
+            android:id="@+id/editTextPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:hint="Digite o preço do serviço" />
+
+        <Button
+            android:id="@+id/buttonAddService"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Adicionar Serviço"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/roxo"
+        android:textColor="@android:color/white"/>
+
+        <TextView
+            android:id="@+id/textViewAddedServices"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Serviços Adicionados"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewAddedServices"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false" />
+
+        <Button
+            android:id="@+id/buttonSaveServices"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Salvar Serviços"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/roxo"
+        android:textColor="@android:color/white"/>
+
+    </LinearLayout>
+</ScrollView>

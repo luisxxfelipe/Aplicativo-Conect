@@ -17,7 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.data.model.OperatingHours
@@ -25,6 +24,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 
 class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragment.OnHoursSelectedListener {
 
@@ -37,6 +37,8 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     private var imageUri: Uri? = null
     private val storagePermissionCode = 101
     private lateinit var email: String
+    private lateinit var storage: FirebaseStorage
+
 
     // ActivityResultLauncher para o resultado da galeria
     private lateinit var getContent: ActivityResultLauncher<Intent>
@@ -48,6 +50,8 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         // Inicializar Firebase Auth e Firestore
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
+        storage = FirebaseStorage.getInstance()
+
 
         // Recuperar o email passado pela SignupBusinessActivity
         email = intent.getStringExtra("EMAIL_KEY") ?: ""
@@ -66,7 +70,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         uploadIcon = findViewById(R.id.uploadButton)
 
         // Configurar o Spinner com opções de serviços
-        val serviceTypes = listOf("Cabeleireiro", "Manicure", "Barbeiro", "Estética", "Massagem")
+        val serviceTypes = listOf("Cabeleireiro", "Manicure", "Barbeiro", "Estética", "Cabeleireiro", "Penteado", "Depilação", "Maquiagem", "Limpeza de Pele", "Design de Sobrancelhas", "Tratamento Capilar", "Alongamento de Cílios", "Massagem")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, serviceTypes)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         serviceTypeSpinner.adapter = adapter
@@ -118,7 +122,6 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
             openGallery() // Abre a galeria ao clicar no ícone de upload
         }
 
-
         registerBusinessButton.setOnClickListener {
             val businessName = businessNameInput.text.toString().trim()
             val businessDescription = businessDescriptionInput.text.toString().trim()
@@ -150,7 +153,6 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
             }
         }
     }
-
 
     private fun validateInputs(
         businessName: String,
@@ -196,33 +198,53 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     ) {
         val userId = auth.currentUser?.uid ?: return // Certifique-se de que o usuário esteja autenticado
 
-        // Crie a instância de Business com os novos campos
-        val business = Business(
-            name = businessName,
-            description = businessDescription,
-            serviceType = serviceType,
-            address = address,
-            phone = phone,
-            operatingHours = operatingHours,
-            imageUrl = imageUri.toString(),
-            email = email,
-            isActive = true // Defina isActive como true (ou como você desejar)
-        )
+        // Definir o caminho onde a imagem será salva no Firebase Storage
+        val storageRef = storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
 
-        // Use o método set() com o userId como identificador do documento
-        firestore.collection("business")
-            .document(userId) // Usando o UID como o identificador do documento
-            .set(business) // Substituindo o documento existente ou criando um novo
-            .addOnSuccessListener {
-                Toast.makeText(this, "Empresa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, AdminHomeActivity::class.java)
-                startActivity(intent)
-                finish()
+        // Fazer o upload da imagem para o Firebase Storage
+        val uploadTask = storageRef.putFile(imageUri)
+        uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let { throw it }
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao cadastrar: ${e.message}", Toast.LENGTH_SHORT).show()
+            // Após o upload, obter a URL de download
+            storageRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result
+
+                // Agora crie a instância de Business com a URL da imagem
+                val business = Business(
+                    name = businessName,
+                    description = businessDescription,
+                    serviceType = serviceType,
+                    address = address,
+                    phone = phone,
+                    operatingHours = operatingHours,
+                    imageUrl = downloadUri.toString(), // Usando a URL da imagem
+                    email = email,
+                    isActive = true
+                )
+
+                // Salvar a empresa no Firestore
+                firestore.collection("business")
+                    .document(userId)
+                    .set(business)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Empresa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this, AdminHomeActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Erro ao cadastrar: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            } else {
+                Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT).show()
             }
+        }
     }
+
 
     private fun clearFields() {
         findViewById<TextInputEditText>(R.id.businessNameInput).text?.clear()

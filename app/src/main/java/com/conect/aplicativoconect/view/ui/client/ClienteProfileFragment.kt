@@ -1,53 +1,64 @@
 package com.conect.aplicativoconect.view.ui.client
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
+import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
+import com.conect.aplicativoconect.databinding.FragmentClienteProfileBinding
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 class ClienteProfileFragment : Fragment() {
 
-    private lateinit var clientViewModel: ClientViewModel
-    private lateinit var userNameTextView: TextView
-    private lateinit var userEmailTextView: TextView
+    private var _binding: FragmentClienteProfileBinding? = null
+    private val binding get() = _binding!!
+    private val clientViewModel: ClientViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_cliente_profile, container, false)
+    ): View {
+        _binding = FragmentClienteProfileBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        userNameTextView = view.findViewById(R.id.userName)
-        userEmailTextView = view.findViewById(R.id.userEmail)
-
-        clientViewModel = ViewModelProvider(this)[ClientViewModel::class.java]
-
-        // Obtenha o userId do Firebase Authentication
+        // Obtenha o ID do usuário autenticado
         val userId = FirebaseAuth.getInstance().currentUser?.uid
-
         userId?.let {
-            // Carregar dados do perfil
-            clientViewModel.loadUserData(it)
-        } ?: run {
-            // Trate o caso quando não há usuário autenticado
-            userNameTextView.text = "Usuário não autenticado"
-            userEmailTextView.text = "Usuário não autenticado"
+            clientViewModel.loadUserData(it) // Carregue os dados do usuário
         }
 
-        // Observe as informações do perfil
-        clientViewModel.userData.observe(viewLifecycleOwner) { user ->
-            userNameTextView.text = user?.name ?: "Nome não disponível" // Altere displayName para name
-            userEmailTextView.text = user?.email ?: "Email não disponível"
+        // Observe a URL da imagem de perfil
+        clientViewModel.userImage.observe(viewLifecycleOwner) { imageUrl ->
+            Log.d("ClienteProfileFragment", "Loading image from URL: $imageUrl")
+            Glide.with(this)
+                .load(imageUrl)
+                .placeholder(R.drawable.foto_perfil_generica) // Imagem padrão enquanto carrega
+                .error(R.drawable.foto_perfil_generica) // Imagem de erro, se houver falha no carregamento
+                .into(binding.profileImageClient) // binding.userImage é o seu ImageView
         }
+
+        // Observe o nome do usuário
+        clientViewModel.userName.observe(viewLifecycleOwner) { name ->
+            binding.userName.text = name // Atualiza o TextView com o nome
+        }
+
+        // Observe o email do usuário
+        clientViewModel.userEmail.observe(viewLifecycleOwner) { email ->
+            binding.userEmail.text = email // Atualiza o TextView com o email
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
