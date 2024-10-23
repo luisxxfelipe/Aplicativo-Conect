@@ -52,6 +52,9 @@
         <!-- Tela de Detalhes da Empresa -->
         <activity android:name=".view.ui.client.EmpresaDetalhesActivity" android:exported="true" />
 
+        <activity android:name=".view.ui.client.SelecionarHorarioActivity" />
+
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

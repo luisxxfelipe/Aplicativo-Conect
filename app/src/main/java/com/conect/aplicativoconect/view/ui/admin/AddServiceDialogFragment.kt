@@ -34,7 +34,7 @@ class AddServiceDialogFragment : DialogFragment() {
             // Navegar para a tela de adicionar serviços
             val fragment = AddServiceFragment()
             val transaction = requireActivity().supportFragmentManager.beginTransaction()
-            transaction.replace(R.id.fragment_container, fragment) // Substitua R.id.fragment_container pela ID do seu contêiner de fragmentos
+            transaction.replace(R.id.fragment_container, fragment)
             transaction.addToBackStack(null)
             transaction.commit()
             dismiss() // Fechar o popup
@@ -44,7 +44,7 @@ class AddServiceDialogFragment : DialogFragment() {
             // Navegar para a tela de ajustar horário de funcionamento
             val fragment = OperatingHoursFragment() // Substitua pelo nome correto da sua classe
             val transaction = requireActivity().supportFragmentManager.beginTransaction()
-            transaction.replace(R.id.fragment_container, fragment) // Substitua R.id.fragment_container pela ID do seu contêiner de fragmentos
+            transaction.replace(R.id.fragment_container, fragment)
             transaction.addToBackStack(null)
             transaction.commit()
             dismiss() // Fechar o popup

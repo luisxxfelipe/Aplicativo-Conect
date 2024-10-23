@@ -3,45 +3,53 @@ package com.conect.aplicativoconect.view.ui.admin
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.ServiceType
 
 class AddedServicesAdapter(
-    private val services: MutableList<Pair<ServiceType, Double>>, // Tornado mutável para permitir edição
-    private val onPriceChange: (ServiceType, Double) -> Unit
-) : RecyclerView.Adapter<AddedServicesAdapter.ServiceViewHolder>() {
+    private val addedServices: MutableList<Pair<ServiceType, Double>>,
+    private val onRemoveService: (Int) -> Unit // Lambda para remover serviço
+) : RecyclerView.Adapter<AddedServicesAdapter.AddedServiceViewHolder>() {
 
-    inner class ServiceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class AddedServiceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val serviceNameTextView: TextView = itemView.findViewById(R.id.textViewServiceName)
-        private val priceEditText: EditText = itemView.findViewById(R.id.editTextServicePrice)
+        private val servicePriceEditText: EditText = itemView.findViewById(R.id.editTextServicePrice)
+        private val removeServiceButton: ImageButton = itemView.findViewById(R.id.buttonRemoveService)
 
-        fun bind(service: Pair<ServiceType, Double>) {
+        fun bind(service: Pair<ServiceType, Double>, position: Int) {
             serviceNameTextView.text = service.first.name
-            priceEditText.setText(service.second.toString())
+            servicePriceEditText.setText(service.second.toString())
 
-            priceEditText.setOnFocusChangeListener { _, hasFocus ->
+            removeServiceButton.setOnClickListener {
+                onRemoveService(position) // Notifica a remoção
+            }
+
+            // Atualizar o preço ao sair do campo de texto
+            servicePriceEditText.setOnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
-                    val newPrice = priceEditText.text.toString().toDoubleOrNull()
+                    val newPrice = servicePriceEditText.text.toString().toDoubleOrNull()
                     if (newPrice != null) {
-                        onPriceChange(service.first, newPrice)
+                        addedServices[position] = Pair(service.first, newPrice) // Atualiza o preço
                     }
                 }
             }
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ServiceViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AddedServiceViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_added_service, parent, false)
-        return ServiceViewHolder(view)
+        return AddedServiceViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ServiceViewHolder, position: Int) {
-        holder.bind(services[position])
+    override fun onBindViewHolder(holder: AddedServiceViewHolder, position: Int) {
+        holder.bind(addedServices[position], position)
     }
 
-    override fun getItemCount(): Int = services.size
+    override fun getItemCount(): Int = addedServices.size
 }

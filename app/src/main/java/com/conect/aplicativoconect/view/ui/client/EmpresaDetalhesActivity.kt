@@ -2,13 +2,19 @@ package com.conect.aplicativoconect.view.ui.client
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Service
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import java.io.Serializable
 
 class EmpresaDetalhesActivity : AppCompatActivity() {
 
@@ -35,13 +41,18 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                 if (document.exists()) {
                     val companyName = document.getString("name") ?: ""
                     val companyDescription = document.getString("description") ?: ""
-
-                    // Pega os serviços como uma lista de Map (ou objetos) em vez de Strings
-                    val services = document.get("services") as? List<Map<String, Any>> ?: emptyList()
+                    val companyImageUrl = document.getString("imageUrl") // URL da imagem salva no Firestore
 
                     // Preenche os detalhes da empresa
                     findViewById<TextView>(R.id.companyName).text = companyName
                     findViewById<TextView>(R.id.companyDescription).text = companyDescription
+
+                    // Carregar a imagem usando Glide
+                    val companyImageView = findViewById<ImageView>(R.id.companyImage)
+                    loadCompanyImage(companyImageUrl, companyImageView)
+
+                    // Pega os serviços como uma lista de Map (ou objetos)
+                    val services = document.get("services") as? List<Map<String, Any>> ?: emptyList()
 
                     // Converte os serviços para uma lista de objetos Service
                     val serviceList = services.map { serviceMap ->
@@ -51,18 +62,18 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                         )
                     }
 
-                    // Configura o RecyclerView com os serviços da empresa
                     val servicesRecyclerView = findViewById<RecyclerView>(R.id.servicesRecyclerView)
-                    servicesRecyclerView.layoutManager = LinearLayoutManager(this)
+                    val gridLayoutManager = GridLayoutManager(this, 2) // 2 colunas
+                    servicesRecyclerView.layoutManager = gridLayoutManager
                     servicesRecyclerView.adapter = ServicesAdapter(serviceList, { selectedService ->
-                        this.selectedService = selectedService // Armazena o serviço selecionado
+                        this.selectedService = selectedService
                     }, { serviceToBook ->
-                        // Redireciona para SelecionarHorarioActivity ao clicar no botão "Agendar"
                         val intent: Intent = Intent(this, SelecionarHorarioActivity::class.java)
-                        intent.putExtra("selectedService", serviceToBook)
-                        intent.putExtra("companyId", companyId) // Passa o ID da empresa para o agendamento
+                        intent.putExtra("selectedService", serviceToBook as Serializable)
+                        intent.putExtra("companyId", companyId)
                         startActivity(intent)
                     })
+
                 } else {
                     finish()
                 }
@@ -71,5 +82,20 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                 e.printStackTrace()
                 finish()
             }
+    }
+
+    private fun loadCompanyImage(imageUrl: String?, imageView: ImageView) {
+        if (!imageUrl.isNullOrEmpty()) {
+            Log.d("EmpresaDetalhesActivity", "Loading image from URL: $imageUrl")
+            Glide.with(this)
+                .load(imageUrl)
+                .placeholder(R.drawable.about_business) // Placeholder enquanto carrega
+                .error(R.drawable.about_business) // Imagem de erro, se houver falha no carregamento
+                .diskCacheStrategy(DiskCacheStrategy.ALL) // Cache da imagem
+                .into(imageView)
+        } else {
+            Log.e("EmpresaDetalhesActivity", "Image URL is null or empty")
+            imageView.setImageResource(R.drawable.about_business) // Imagem padrão caso não haja URL
+        }
     }
 }

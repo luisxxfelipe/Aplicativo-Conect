@@ -3,7 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="12dp"
+    android:layout_margin="8dp"
+    android:background="@drawable/service_item_background">
 
     <TextView
         android:id="@+id/serviceTextView"
@@ -11,7 +13,9 @@
         android:layout_height="wrap_content"
         android:text="Nome do Serviço"
         android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="4dp" />
 
     <TextView
         android:id="@+id/servicePriceTextView"
@@ -19,12 +23,15 @@
         android:layout_height="wrap_content"
         android:text="R$ 0.00"
         android:textSize="14sp"
-        android:layout_marginTop="4dp" />
+        android:textColor="@android:color/holo_green_dark"
+        android:layout_marginBottom="8dp" />
 
     <Button
         android:id="@+id/bookButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Agendar"
-        android:layout_marginTop="8dp" />
+        android:backgroundTint="@android:color/holo_blue_light"
+        android:textColor="@android:color/white"
+        android:layout_gravity="end" />
 </LinearLayout>

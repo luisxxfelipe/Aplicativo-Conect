@@ -2,63 +2,93 @@ package com.conect.aplicativoconect.view.ui.client
 
 import android.os.Bundle
 import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
-import com.google.firebase.auth.FirebaseAuth
+import com.conect.aplicativoconect.view.data.model.Service
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 
 class SelecionarHorarioActivity : AppCompatActivity() {
 
+    private lateinit var horariosRecyclerView: RecyclerView
+    private lateinit var horariosAdapter: HorariosAdapter
+    private lateinit var firestore: FirebaseFirestore
+    private lateinit var companyId: String
+    private lateinit var selectedService: Service
+    private var selectedHour: Int? = null // Variável para armazenar o horário selecionado
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.fragment_select_time) // Certifique-se de usar o layout correto
+        setContentView(R.layout.activity_selecionar_horario)
 
-        val selectedService = intent.getStringExtra("selectedService") ?: ""
+        companyId = intent.getStringExtra("companyId") ?: ""
+        selectedService = intent.getSerializableExtra("selectedService") as Service
 
-        findViewById<TextView>(R.id.selectedService).text = selectedService
+        horariosRecyclerView = findViewById(R.id.horariosRecyclerView)
+        horariosRecyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Buscar horários disponíveis para o serviço selecionado
-        fetchAvailableTimes(selectedService)
-    }
+        firestore = FirebaseFirestore.getInstance()
 
-    private fun fetchAvailableTimes(service: String) {
-        // Exemplo de horários disponíveis
-        val availableTimes = listOf("10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM")
+        fetchExistingBookings()
 
-        val scheduleRecyclerView = findViewById<RecyclerView>(R.id.scheduleRecyclerView)
-        scheduleRecyclerView.layoutManager = LinearLayoutManager(this)
-        scheduleRecyclerView.adapter = TimesAdapter(availableTimes) { selectedTime ->
-            // Habilitar o botão "Agendar Agora" quando um horário for selecionado
-            findViewById<Button>(R.id.bookNowButton).isEnabled = true
-
-            findViewById<Button>(R.id.bookNowButton).setOnClickListener {
-                // Realizar o agendamento
-                bookAppointment(service, selectedTime)
+        val buttonAgendar = findViewById<Button>(R.id.buttonAgendar)
+        buttonAgendar.setOnClickListener {
+            selectedHour?.let { hour ->
+                // Aqui você pode processar o agendamento
+                val bookingData = mapOf(
+                    "companyId" to companyId,
+                    "serviceName" to selectedService.name,
+                    "hour" to hour
+                )
+                firestore.collection("bookings").add(bookingData)
+                    .addOnSuccessListener {
+                        // Agendamento realizado com sucesso
+                        Toast.makeText(this, "Agendamento realizado com sucesso!", Toast.LENGTH_SHORT).show()
+                        finish() // Voltar para a tela anterior
+                    }
+                    .addOnFailureListener { e ->
+                        // Lidar com falha no agendamento
+                        Toast.makeText(this, "Erro ao agendar: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            } ?: run {
+                // Mensagem de erro se nenhum horário foi selecionado
+                Toast.makeText(this, "Por favor, selecione um horário.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun bookAppointment(service: String, time: String) {
-        // Lógica para gravar o agendamento no Firestore
-        val firestore = FirebaseFirestore.getInstance()
-        val booking = hashMapOf(
-            "service" to service,
-            "time" to time,
-            "userEmail" to FirebaseAuth.getInstance().currentUser?.email
-        )
+    private fun fetchExistingBookings() {
+        firestore.collection("bookings")
+            .whereEqualTo("companyId", companyId)
+            .whereEqualTo("serviceName", selectedService.name)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val horariosOcupados = getBookedHours(querySnapshot)
+                val horariosDisponiveis = generateAvailableHours(horariosOcupados)
+                horariosAdapter = HorariosAdapter(horariosDisponiveis) { selectedHour ->
+                    // Atualiza o horário selecionado
+                    this.selectedHour = selectedHour
+                }
+                horariosRecyclerView.adapter = horariosAdapter
+            }
+    }
 
-        firestore.collection("bookings").add(booking)
-            .addOnSuccessListener {
-                // Notificar o sucesso do agendamento
-                Toast.makeText(this, "Agendamento realizado com sucesso!", Toast.LENGTH_LONG).show()
-                finish()
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Erro ao realizar o agendamento.", Toast.LENGTH_LONG).show()
-            }
+    private fun getBookedHours(querySnapshot: QuerySnapshot): List<Int> {
+        val bookedHours = mutableListOf<Int>()
+        for (document in querySnapshot) {
+            val bookedHour = document.getLong("hour")?.toInt() ?: continue
+            bookedHours.add(bookedHour)
+        }
+        return bookedHours
+    }
+
+    private fun generateAvailableHours(bookedHours: List<Int>): List<Int> {
+        val allHours = (9..17).toList() // Horários de 9h a 17h
+        return allHours.filter { hour ->
+            bookedHours.none { bookedHour -> Math.abs(hour - bookedHour) < 1 } // Exclui horários com menos de 1h de diferença
+        }
     }
 }

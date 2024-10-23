@@ -3,46 +3,67 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="0dp"> <!-- Sem padding no layout principal -->
 
     <!-- Seção com a imagem e detalhes da empresa -->
-    <ImageView
-        android:id="@+id/companyImage"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_barbearia" />
+        android:layout_height="200dp">
 
-    <TextView
-        android:id="@+id/companyName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Nome da Empresa"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:layout_marginTop="16dp" />
+        <ImageView
+            android:id="@+id/companyImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop" />
 
-    <TextView
-        android:id="@+id/companyDescription"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Descrição do trabalho da empresa"
-        android:textSize="16sp"
-        android:layout_marginTop="8dp" />
+        <!-- Degradê escurecendo a imagem -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/gradient_overlay" />
 
-    <!-- Seção de lista de serviços -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Serviços"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginTop="24dp" />
+    </FrameLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/servicesRecyclerView"
+    <!-- Adicionando padding apenas na parte que contém os textos e a lista -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        android:orientation="vertical"
+        android:padding="16dp"> <!-- Padding adicionado aqui -->
 
+        <TextView
+            android:id="@+id/companyName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nome da Empresa"
+            android:paddingTop="5dp"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/companyDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Descrição do trabalho da empresa"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Seção de lista de serviços -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Serviços"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/servicesRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
 </LinearLayout>

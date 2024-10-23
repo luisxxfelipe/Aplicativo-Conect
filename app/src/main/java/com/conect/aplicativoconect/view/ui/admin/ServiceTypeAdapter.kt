@@ -14,7 +14,7 @@ class ServiceTypeAdapter(
     private val onServiceSelected: (ServiceType) -> Unit // Lambda para tratar a seleção
 ) : RecyclerView.Adapter<ServiceTypeAdapter.ServiceTypeViewHolder>() {
 
-    private val selectedServices = mutableSetOf<ServiceType>() // Para armazenar os serviços selecionados
+    private var selectedService: ServiceType? = null // Para armazenar o serviço selecionado
 
     inner class ServiceTypeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val serviceNameTextView: TextView = itemView.findViewById(R.id.textViewServiceName)
@@ -22,14 +22,20 @@ class ServiceTypeAdapter(
 
         fun bind(serviceType: ServiceType) {
             serviceNameTextView.text = serviceType.name
-            serviceCheckBox.isChecked = selectedServices.contains(serviceType)
+            serviceCheckBox.isChecked = selectedService == serviceType
 
+            // Define a lógica para o CheckBox
             serviceCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
-                    selectedServices.add(serviceType)
+                    if (selectedService != null) {
+                        // Desmarcar o serviço anteriormente selecionado
+                        notifyItemChanged(serviceTypes.indexOf(selectedService))
+                    }
+                    selectedService = serviceType // Atualiza o serviço selecionado
                     onServiceSelected(serviceType) // Notifica a seleção
-                } else {
-                    selectedServices.remove(serviceType)
+                } else if (selectedService == serviceType) {
+                    // Se o serviço selecionado for desmarcado
+                    selectedService = null // Reseta o serviço selecionado
                 }
             }
         }
@@ -49,6 +55,6 @@ class ServiceTypeAdapter(
 
     // Método para obter o serviço selecionado
     fun getSelectedService(): ServiceType? {
-        return selectedServices.firstOrNull() // Retorna o primeiro serviço selecionado
+        return selectedService // Retorna o serviço selecionado
     }
 }
