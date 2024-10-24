@@ -72,8 +72,6 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
-
-        <!-- Cartão de agendamentos de hoje -->
         <androidx.cardview.widget.CardView
             android:id="@+id/todayAgendaCardView"
             android:layout_width="match_parent"
@@ -95,7 +93,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:textColor="@color/black"
-                    android:text="Agendamentos de Hoje"
+                    android:text="Agendamentos da semana"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"

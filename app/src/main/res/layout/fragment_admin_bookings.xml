@@ -1,15 +1,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:gravity="center"
+        android:text="Meus agendamentos"
+        android:textColor="@color/cinza"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/emptyBookingsMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="Ainda não há agendamentos."
         android:textColor="@color/cinza"
@@ -19,9 +27,15 @@
         android:id="@+id/emptyBookingsImage"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        android:layout_marginTop="16dp"
+        android:layout_gravity="center"
         android:scaleType="centerInside"
         android:src="@drawable/sem_agendamentos"
         android:visibility="gone" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/bookingsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="16dp"
+        android:visibility="gone" />
 </LinearLayout>

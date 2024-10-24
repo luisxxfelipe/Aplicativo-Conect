@@ -9,8 +9,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.widget.ImageView
 import android.widget.TextView
+import android.util.Log
+import android.widget.Toast
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class BookingFragment : Fragment() {
 
@@ -18,7 +22,8 @@ class BookingFragment : Fragment() {
     private lateinit var bookingAdapter: ClientBookingAdapter
     private lateinit var emptyBookingsMessage: TextView
     private lateinit var emptyBookingsImage: ImageView
-    private var bookings: List<Booking> = listOf() // Carregar agendamentos do banco de dados
+    private var bookings: List<Booking> = listOf()
+    private lateinit var firestore: FirebaseFirestore
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -30,8 +35,10 @@ class BookingFragment : Fragment() {
         emptyBookingsMessage = view.findViewById(R.id.emptyBookingsMessage)
         emptyBookingsImage = view.findViewById(R.id.emptyBookingsImage)
 
+        firestore = FirebaseFirestore.getInstance()
+
         setupRecyclerView()
-        loadBookings() // Método para carregar os agendamentos do banco de dados
+        loadBookings() // Carregar agendamentos do banco de dados
 
         return view
     }
@@ -39,31 +46,43 @@ class BookingFragment : Fragment() {
     private fun setupRecyclerView() {
         bookingRecyclerView.layoutManager = LinearLayoutManager(context)
         bookingAdapter = ClientBookingAdapter(bookings) { booking ->
-            // Lógica de cancelamento do agendamento
+            // Implementar lógica para cancelar agendamento
             cancelBooking(booking)
         }
         bookingRecyclerView.adapter = bookingAdapter
     }
 
     private fun loadBookings() {
-        // Aqui você deve buscar os agendamentos do banco de dados e atualizar a lista
-        // Exemplo: bookings = obterAgendamentosDoBancoDeDados()
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
 
-        if (bookings.isEmpty()) {
-            // Se não houver agendamentos, mostre a mensagem e a imagem
-            emptyBookingsMessage.visibility = View.VISIBLE
-            emptyBookingsImage.visibility = View.VISIBLE
-            bookingRecyclerView.visibility = View.GONE // Oculta o RecyclerView
-        } else {
-            // Se houver agendamentos, atualize a lista
-            emptyBookingsMessage.visibility = View.GONE
-            emptyBookingsImage.visibility = View.GONE
-            bookingRecyclerView.visibility = View.VISIBLE // Exibe o RecyclerView
-            bookingAdapter.notifyDataSetChanged() // Notificar o adapter que os dados mudaram
+        userId?.let { id ->
+            firestore.collection("bookings")
+                .whereEqualTo("userId", id) // Busca os agendamentos pelo ID do usuário
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    bookings = querySnapshot.documents.mapNotNull {
+                        it.toObject(Booking::class.java)
+                    }
+
+                    if (bookings.isEmpty()) {
+                        emptyBookingsMessage.visibility = View.VISIBLE
+                        emptyBookingsImage.visibility = View.VISIBLE
+                        bookingRecyclerView.visibility = View.GONE // Oculta o RecyclerView
+                    } else {
+                        emptyBookingsMessage.visibility = View.GONE
+                        emptyBookingsImage.visibility = View.GONE
+                        bookingRecyclerView.visibility = View.VISIBLE
+                        bookingAdapter.updateBookings(bookings) // Atualiza a lista no adapter
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("BookingFragment", "Erro ao buscar agendamentos: ${e.message}")
+                    Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+                }
         }
     }
 
     private fun cancelBooking(booking: Booking) {
-        // Implementar a lógica de cancelamento aqui
+        // Implementar a lógica de cancelamento de agendamento
     }
 }

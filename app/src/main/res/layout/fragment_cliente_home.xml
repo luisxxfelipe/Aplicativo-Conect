@@ -84,7 +84,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/headerCardView" />
 
-        <!-- Today's Agenda -->
         <androidx.cardview.widget.CardView
             android:id="@+id/todayAgendaCardView"
             android:layout_width="match_parent"
@@ -104,7 +103,7 @@
                     android:id="@+id/todayAgendaTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Agenda de hoje"
+                    android:text="Seus Agendamentos"
                     android:textColor="@color/black"
                     android:textSize="20sp"
                     android:textStyle="bold"

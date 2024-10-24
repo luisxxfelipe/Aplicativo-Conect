@@ -20,6 +20,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
+import com.conect.aplicativoconect.view.data.model.Booking
 import java.util.*
 
 class ClienteHomeFragment : Fragment() {
@@ -29,7 +30,6 @@ class ClienteHomeFragment : Fragment() {
     private lateinit var firestore: FirebaseFirestore
     private lateinit var businessAdapter: BusinessAdapter
     private val businessList = mutableListOf<Business>()
-
     private val clientViewModel: ClientViewModel by activityViewModels()
 
     override fun onCreateView(
@@ -48,7 +48,7 @@ class ClienteHomeFragment : Fragment() {
         // Obtenha o ID do usuário autenticado
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         userId?.let {
-            clientViewModel.loadUserData(it) // Carregue os dados do usuário
+            clientViewModel.loadUserData(it) // Carrega os dados do usuário
         }
 
         clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
@@ -60,8 +60,8 @@ class ClienteHomeFragment : Fragment() {
             Log.d("ClienteHomeFragment", "Loading image from URL: $imageUrl")
             Glide.with(this)
                 .load(imageUrl)
-                .placeholder(R.drawable.foto_perfil_generica) // Imagem padrão enquanto carrega
-                .error(R.drawable.foto_perfil_generica) // Imagem de erro, se houver falha no carregamento
+                .placeholder(R.drawable.foto_perfil_generica)
+                .error(R.drawable.foto_perfil_generica)
                 .into(binding.userImage)
         }
 
@@ -80,20 +80,61 @@ class ClienteHomeFragment : Fragment() {
 
         fetchBusinesses()
 
-        // Observar as mudanças nas reservas de hoje
-        clientViewModel.todayBookings.observe(viewLifecycleOwner) { bookings ->
-            if (bookings.isNullOrEmpty()) {
-                binding.noBookingsMessage.visibility = View.VISIBLE
-                binding.noBookingsImage.visibility = View.VISIBLE
-                binding.todayBookingsRecyclerView.visibility = View.GONE
-            } else {
-                binding.noBookingsMessage.visibility = View.GONE
-                binding.noBookingsImage.visibility = View.GONE
-                binding.todayBookingsRecyclerView.adapter = BookingAdapter(bookings)
-                binding.todayBookingsRecyclerView.visibility = View.VISIBLE
-            }
-        }
+        // Busca os agendamentos usando o índice "User_agendamentos"
+        userId?.let { fetchUserBookings(it) }
     }
+
+    private fun fetchUserBookings(userId: String) {
+        Log.d("ClienteHomeFragment", "Buscando agendamentos para o usuário com ID: $userId")
+
+        firestore.collection("bookings")
+            .whereEqualTo("userId", userId) // Busca os agendamentos pelo ID do usuário
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                // Verifique se o fragmento ainda está ativo antes de acessar o binding
+                if (_binding == null || !isAdded) {
+                    return@addOnSuccessListener
+                }
+
+                // Log para verificar o número de agendamentos retornados
+                Log.d("ClienteHomeFragment", "Número de agendamentos encontrados: ${querySnapshot.size()}")
+
+                val bookings = querySnapshot.documents.mapNotNull {
+                    Log.d("ClienteHomeFragment", "Agendamento encontrado: ${it.data}")
+                    it.toObject(Booking::class.java)
+                }
+
+                if (bookings.isNullOrEmpty()) {
+                    Log.d("ClienteHomeFragment", "Nenhum agendamento encontrado para o usuário.")
+                    binding.noBookingsMessage.visibility = View.VISIBLE
+                    binding.noBookingsImage.visibility = View.VISIBLE
+                    binding.todayBookingsRecyclerView.visibility = View.GONE
+                } else {
+                    Log.d("ClienteHomeFragment", "Exibindo ${bookings.size} agendamentos.")
+                    binding.noBookingsMessage.visibility = View.GONE
+                    binding.noBookingsImage.visibility = View.GONE
+                    binding.todayBookingsRecyclerView.visibility = View.VISIBLE
+
+                    // Configurando o LayoutManager para o RecyclerView
+                    binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
+
+                    // Configurando o adapter e passando os agendamentos
+                    val adapter = BookingAdapter(bookings)
+                    binding.todayBookingsRecyclerView.adapter = adapter
+
+                    // Notificando o adapter sobre mudanças nos dados
+                    adapter.notifyDataSetChanged()
+                }
+            }
+            .addOnFailureListener { e ->
+                if (_binding == null || !isAdded) {
+                    return@addOnFailureListener
+                }
+                Log.e("ClienteHomeFragment", "Erro ao buscar agendamentos: ${e.message}")
+                Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
     private fun updateGreeting() {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -145,7 +186,7 @@ class ClienteHomeFragment : Fragment() {
                     for (document in documents) {
                         val businessId = document.id
                         val intent = Intent(requireContext(), EmpresaDetalhesActivity::class.java).apply {
-                            putExtra("companyId", businessId) // Passa o ID da empresa
+                            putExtra("companyId", businessId)
                         }
                         startActivity(intent)
                         break

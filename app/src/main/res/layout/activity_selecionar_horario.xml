@@ -13,6 +13,25 @@
         android:textSize="18sp"
         android:layout_gravity="center_horizontal" />
 
+    <!-- Adicionando os componentes necessários -->
+    <TextView
+        android:id="@+id/textViewSelectedDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Data não selecionada"
+        android:textSize="16sp"
+        android:layout_marginTop="16dp"
+        android:layout_gravity="center_horizontal" />
+
+    <Button
+        android:id="@+id/buttonPickDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:text="Escolher Data"
+        android:layout_marginTop="8dp"
+        android:layout_gravity="center_horizontal" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/horariosRecyclerView"
         android:layout_width="match_parent"

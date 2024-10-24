@@ -111,34 +111,31 @@ class AdminHomeFragment : Fragment() {
     private fun loadData() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Fetch data from the repository
-                val todayBookings = bookingRepository.getTodayBookings()
+                val weeklyBookings = bookingRepository.getWeeklyBookings()
+                Log.d("AdminHomeFragment", "Agendamentos da semana carregados: ${weeklyBookings.size}") // Log para verificar quantos agendamentos foram carregados
                 val monthBookings = bookingRepository.getMonthBookings()
                 val todayProfit = bookingRepository.getTodayProfit()
                 val monthProfit = bookingRepository.getMonthProfit()
 
                 withContext(Dispatchers.Main) {
-                    // Atualiza dados no ViewModel
-                    adminViewModel.setTodayBookingsCount(todayBookings.size)
+                    adminViewModel.setTodayBookingsCount(weeklyBookings.size)
                     adminViewModel.setMonthBookingsCount(monthBookings.size)
                     adminViewModel.setTodayProfit(todayProfit)
                     adminViewModel.setMonthProfit(monthProfit)
 
-                    // Mostrar agendamentos no RecyclerView ou mensagem se não houver
-                    if (todayBookings.isEmpty()) {
+                    if (weeklyBookings.isEmpty()) {
                         noBookingsMessage.visibility = View.VISIBLE
-                        noBookingsImage.visibility = View.VISIBLE // Exibe a imagem
+                        noBookingsImage.visibility = View.VISIBLE
                         todayBookingsRecyclerView.visibility = View.GONE
                     } else {
                         noBookingsMessage.visibility = View.GONE
-                        noBookingsImage.visibility = View.GONE // Esconde a imagem
+                        noBookingsImage.visibility = View.GONE
                         todayBookingsRecyclerView.visibility = View.VISIBLE
-                        todayBookingsRecyclerView.adapter = BookingAdapter(todayBookings)
+                        todayBookingsRecyclerView.adapter = BookingAdapter(weeklyBookings)
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    // Tratar erros
                     noBookingsMessage.text = "Erro ao carregar dados."
                     noBookingsMessage.visibility = View.VISIBLE
                     noBookingsImage.visibility = View.VISIBLE
@@ -148,6 +145,8 @@ class AdminHomeFragment : Fragment() {
             }
         }
     }
+
+
 
     private fun loadProfileImage(imageUrl: String?) {
         val userImageView = view?.findViewById<CircleImageView>(R.id.userImage)

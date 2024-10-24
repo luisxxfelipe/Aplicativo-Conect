@@ -9,28 +9,30 @@ import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 
-class ClientBookingAdapter(private val bookings: List<Booking>, private val onCancelClick: (Booking) -> Unit) : RecyclerView.Adapter<ClientBookingAdapter.ClientBookingViewHolder>() {
+class ClientBookingAdapter(private var bookings: List<Booking>, private val onCancelClick: (Booking) -> Unit) : RecyclerView.Adapter<ClientBookingAdapter.ClientBookingViewHolder>() {
 
     class ClientBookingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val bookingService: TextView = itemView.findViewById(R.id.bookingService)
         val bookingDateTime: TextView = itemView.findViewById(R.id.bookingDateTime)
-        val cancelButton: Button = itemView.findViewById(R.id.cancelButton)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClientBookingViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_admin_booking, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_cliente_booking, parent, false)
         return ClientBookingViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ClientBookingViewHolder, position: Int) {
         val booking = bookings[position]
-        holder.bookingService.text = booking.service
-        holder.bookingDateTime.text = "${booking.date} ${booking.time}"
+        holder.bookingService.text = booking.serviceName
+        holder.bookingDateTime.text = "${booking.date} ${booking.hour}"
 
-        holder.cancelButton.setOnClickListener {
-            onCancelClick(booking) // Chama a função de cancelamento passando o agendamento
-        }
+
     }
 
     override fun getItemCount(): Int = bookings.size
+
+    fun updateBookings(newBookings: List<Booking>) {
+        this.bookings = newBookings
+        notifyDataSetChanged() // Notifica que a lista mudou
+    }
 }
