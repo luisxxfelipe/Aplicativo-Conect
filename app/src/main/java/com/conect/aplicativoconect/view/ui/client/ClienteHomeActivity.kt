@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.view.ui.client
 
+import BookingAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -14,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.ui.WelcomeActivity
-import com.conect.aplicativoconect.view.ui.admin.BookingAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
@@ -133,10 +133,7 @@ class ClienteHomeActivity : AppCompatActivity() {
             noBookingsImage.visibility = View.GONE
             recyclerView.visibility = View.VISIBLE
 
-            // Aqui você deve configurar seu adapter e definir os dados
-            val adapter = BookingAdapter(bookings)
-            recyclerView.adapter = adapter
-            // Defina um layout manager se necessário
+
             recyclerView.layoutManager = LinearLayoutManager(this)
         }
     }

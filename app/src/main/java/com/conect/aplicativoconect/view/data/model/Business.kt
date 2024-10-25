@@ -1,16 +1,5 @@
 package com.conect.aplicativoconect.view.data.model
 
-// Enum para representar os dias da semana
-enum class DayOfWeek(val displayName: String) {
-    MONDAY("Segunda-feira"),
-    TUESDAY("Terça-feira"),
-    WEDNESDAY("Quarta-feira"),
-    THURSDAY("Quinta-feira"),
-    FRIDAY("Sexta-feira"),
-    SATURDAY("Sábado"),
-    SUNDAY("Domingo")
-}
-
 // Classe para representar os horários de funcionamento
 data class OperatingHours(
     val opening: String = "",  // Horário de abertura

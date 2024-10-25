@@ -9,11 +9,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 
-class ClientBookingAdapter(private var bookings: List<Booking>, private val onCancelClick: (Booking) -> Unit) : RecyclerView.Adapter<ClientBookingAdapter.ClientBookingViewHolder>() {
+class ClientBookingAdapter(
+    private var bookings: List<Booking>,
+    private val onCancelClick: (Booking) -> Unit // Renomeado corretamente
+) : RecyclerView.Adapter<ClientBookingAdapter.ClientBookingViewHolder>() {
 
     class ClientBookingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val bookingService: TextView = itemView.findViewById(R.id.bookingService)
         val bookingDateTime: TextView = itemView.findViewById(R.id.bookingDateTime)
+        val cancelButton: Button = itemView.findViewById(R.id.cancelButton)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClientBookingViewHolder {
@@ -24,9 +28,11 @@ class ClientBookingAdapter(private var bookings: List<Booking>, private val onCa
     override fun onBindViewHolder(holder: ClientBookingViewHolder, position: Int) {
         val booking = bookings[position]
         holder.bookingService.text = booking.serviceName
-        holder.bookingDateTime.text = "${booking.date} ${booking.hour}"
+        holder.bookingDateTime.text = "${booking.date} ${booking.hour}:00h"
 
-
+        holder.cancelButton.setOnClickListener {
+            onCancelClick(booking) // Chama a ação de cancelamento corretamente
+        }
     }
 
     override fun getItemCount(): Int = bookings.size

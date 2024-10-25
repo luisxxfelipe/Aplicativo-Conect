@@ -1,6 +1,3 @@
-package com.conect.aplicativoconect.view.ui.admin
-
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +7,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 
-class BookingAdapter(private val bookings: List<Booking>) : RecyclerView.Adapter<BookingAdapter.BookingViewHolder>() {
+class BookingAdapter(
+    private val bookings: List<Booking>,
+    private val onConfirmBooking: (String) -> Unit, // Callback para confirmar
+    private val onCancelBooking: (String) -> Unit // Callback para cancelar
+) : RecyclerView.Adapter<BookingAdapter.BookingViewHolder>() {
 
     class BookingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val userName: TextView = view.findViewById(R.id.bookingUserName)
@@ -18,6 +19,7 @@ class BookingAdapter(private val bookings: List<Booking>) : RecyclerView.Adapter
         val serviceType: TextView = view.findViewById(R.id.bookingServiceType)
         val bookingTime: TextView = view.findViewById(R.id.bookingTime)
         val confirmButton: Button = view.findViewById(R.id.confirmButton)
+        val cancelButton: Button = view.findViewById(R.id.cancelButton) // Adiciona o cancelButton
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookingViewHolder {
@@ -34,6 +36,12 @@ class BookingAdapter(private val bookings: List<Booking>) : RecyclerView.Adapter
 
         // Configurar o botão de confirmação
         holder.confirmButton.setOnClickListener {
+            onConfirmBooking(booking.id ?: "") // Chama a função de callback com o ID do agendamento
+        }
+
+        // Configurar o botão de cancelamento
+        holder.cancelButton.setOnClickListener {
+            onCancelBooking(booking.id ?: "") // Chama a função de callback com o ID do agendamento
         }
     }
 

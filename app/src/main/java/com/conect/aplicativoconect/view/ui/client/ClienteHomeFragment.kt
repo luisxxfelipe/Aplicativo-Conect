@@ -1,6 +1,7 @@
 package com.conect.aplicativoconect.view.ui.client
 
 import CategoriesPagerAdapter
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -11,17 +12,16 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentClienteHomeBinding
+import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.data.model.Business
-import com.conect.aplicativoconect.view.ui.admin.BookingAdapter
 import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.bumptech.glide.Glide
-import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.data.model.Booking
-import java.util.*
+import java.util.Calendar
 
 class ClienteHomeFragment : Fragment() {
 
@@ -45,10 +45,9 @@ class ClienteHomeFragment : Fragment() {
 
         firestore = FirebaseFirestore.getInstance()
 
-        // Obtenha o ID do usuário autenticado
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         userId?.let {
-            clientViewModel.loadUserData(it) // Carrega os dados do usuário
+            clientViewModel.loadUserData(it)
         }
 
         clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
@@ -71,8 +70,9 @@ class ClienteHomeFragment : Fragment() {
         binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.categoriesRecyclerView.adapter = categoriesPagerAdapter
 
-        businessAdapter = BusinessAdapter(requireContext(), businessList) { selectedBusiness ->
-            fetchBusinessIdAndOpenDetails(selectedBusiness.name)
+        // Inicializando o adapter do business
+        businessAdapter = BusinessAdapter(requireContext(), businessList) { business ->
+            fetchBusinessIdAndOpenDetails(business.name) // Passa o nome da empresa
         }
 
         binding.establishmentsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -88,53 +88,113 @@ class ClienteHomeFragment : Fragment() {
         Log.d("ClienteHomeFragment", "Buscando agendamentos para o usuário com ID: $userId")
 
         firestore.collection("bookings")
-            .whereEqualTo("userId", userId) // Busca os agendamentos pelo ID do usuário
+            .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                // Verifique se o fragmento ainda está ativo antes de acessar o binding
-                if (_binding == null || !isAdded) {
-                    return@addOnSuccessListener
-                }
+                if (_binding == null || !isAdded) return@addOnSuccessListener
 
-                // Log para verificar o número de agendamentos retornados
                 Log.d("ClienteHomeFragment", "Número de agendamentos encontrados: ${querySnapshot.size()}")
 
-                val bookings = querySnapshot.documents.mapNotNull {
-                    Log.d("ClienteHomeFragment", "Agendamento encontrado: ${it.data}")
-                    it.toObject(Booking::class.java)
+                val bookings = querySnapshot.documents.mapNotNull { document ->
+                    val booking = document.toObject(Booking::class.java)
+                    booking?.id = document.id // Atribui o ID do documento ao objeto Booking
+                    booking
+                }.filter { booking ->
+                    isFutureBooking(booking) // Filtra agendamentos futuros
                 }
 
-                if (bookings.isNullOrEmpty()) {
-                    Log.d("ClienteHomeFragment", "Nenhum agendamento encontrado para o usuário.")
+                if (bookings.isEmpty()) {
                     binding.noBookingsMessage.visibility = View.VISIBLE
                     binding.noBookingsImage.visibility = View.VISIBLE
                     binding.todayBookingsRecyclerView.visibility = View.GONE
                 } else {
-                    Log.d("ClienteHomeFragment", "Exibindo ${bookings.size} agendamentos.")
                     binding.noBookingsMessage.visibility = View.GONE
                     binding.noBookingsImage.visibility = View.GONE
                     binding.todayBookingsRecyclerView.visibility = View.VISIBLE
 
-                    // Configurando o LayoutManager para o RecyclerView
-                    binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
+                    val sortedBookings = bookings.sortedBy { it.hour }
+                    val displayedBookings = sortedBookings.take(2)
 
-                    // Configurando o adapter e passando os agendamentos
-                    val adapter = BookingAdapter(bookings)
+                    binding.todayBookingsRecyclerView.layoutManager =
+                        LinearLayoutManager(requireContext())
+                    val adapter = ClientBookingAdapter(displayedBookings) { booking ->
+                        cancelBooking(booking)
+                    }
                     binding.todayBookingsRecyclerView.adapter = adapter
-
-                    // Notificando o adapter sobre mudanças nos dados
-                    adapter.notifyDataSetChanged()
                 }
             }
             .addOnFailureListener { e ->
-                if (_binding == null || !isAdded) {
-                    return@addOnFailureListener
-                }
+                if (_binding == null || !isAdded) return@addOnFailureListener
                 Log.e("ClienteHomeFragment", "Erro ao buscar agendamentos: ${e.message}")
                 Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
             }
     }
 
+
+    private fun cancelBooking(booking: Booking) {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Cancelar Agendamento")
+        builder.setMessage("Você tem certeza que deseja cancelar este agendamento?")
+
+        builder.setPositiveButton("Sim") { dialog, _ ->
+            val bookingId = booking.id
+            Log.d(
+                "ClienteHomeFragment",
+                "Tentando apagar agendamento com ID: $bookingId"
+            ) // Verifique o ID
+
+            bookingId?.let {
+                firestore.collection("bookings").document(it)
+                    .delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            requireContext(),
+                            "Agendamento cancelado com sucesso.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        // Atualizar a lista de agendamentos após o cancelamento
+                        fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("ClienteHomeFragment", "Erro ao cancelar agendamento: ${e.message}")
+                        Toast.makeText(
+                            requireContext(),
+                            "Erro ao cancelar agendamento.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+            } ?: run {
+                Log.e("ClienteHomeFragment", "ID do agendamento é nulo. Não foi possível cancelar.")
+                Toast.makeText(
+                    requireContext(),
+                    "Erro: ID do agendamento inválido.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            dialog.dismiss()
+        }
+
+        builder.setNegativeButton("Não") { dialog, _ -> dialog.dismiss() }
+
+        builder.show()
+    }
+
+
+    private fun isFutureBooking(booking: Booking): Boolean {
+        val currentDateTime = Calendar.getInstance()
+        val bookingDateParts = booking.date?.split("/")?.map { it.toInt() }
+        if (bookingDateParts != null && bookingDateParts.size == 3) {
+            val bookingCalendar = Calendar.getInstance().apply {
+                set(Calendar.YEAR, bookingDateParts[2]) // YYYY
+                set(Calendar.MONTH, bookingDateParts[1] - 1) // MM (0-11)
+                set(Calendar.DAY_OF_MONTH, bookingDateParts[0]) // DD
+                set(Calendar.HOUR_OF_DAY, booking.hour ?: 0) // HORA
+                set(Calendar.MINUTE, 0) // MINUTO
+            }
+            return bookingCalendar.after(currentDateTime)
+        }
+        return false
+    }
 
     private fun updateGreeting() {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -160,7 +220,7 @@ class ClienteHomeFragment : Fragment() {
                         val business = document.toObject(Business::class.java)
                         business?.let { businessList.add(it) }
                     }
-                    businessAdapter.notifyDataSetChanged()
+                    businessAdapter.notifyDataSetChanged() // Notifica o adapter sobre as mudanças
                     binding.noEstablishmentsMessage.visibility = View.GONE
                     binding.establishmentsRecyclerView.visibility = View.VISIBLE
                 } else {

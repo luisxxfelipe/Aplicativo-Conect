@@ -174,7 +174,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Hoje"
+                        android:text="Semana"
                         android:textColor="@android:color/black"
                         android:textSize="18sp"
                         app:layout_constraintStart_toStartOf="parent"
@@ -271,7 +271,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Hoje"
+                        android:text="Semana"
                         android:textColor="@android:color/black"
                         android:textSize="18sp"
                         app:layout_constraintStart_toStartOf="parent"

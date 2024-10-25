@@ -1,20 +1,21 @@
 package com.conect.aplicativoconect.view.ui.client
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.widget.ImageView
 import android.widget.TextView
-import android.util.Log
 import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Calendar
 
 class BookingFragment : Fragment() {
 
@@ -55,24 +56,25 @@ class BookingFragment : Fragment() {
     private fun loadBookings() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
 
-        userId?.let { id ->
+        if (userId != null) {
             firestore.collection("bookings")
-                .whereEqualTo("userId", id) // Busca os agendamentos pelo ID do usuário
+                .whereEqualTo("userId", userId)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
-                    bookings = querySnapshot.documents.mapNotNull {
-                        it.toObject(Booking::class.java)
-                    }
+                    bookings =
+                        querySnapshot.documents.mapNotNull { it.toObject(Booking::class.java) }
+                    bookings =
+                        bookings.filter { isFutureBooking(it) } // Filtrar agendamentos futuros
 
                     if (bookings.isEmpty()) {
                         emptyBookingsMessage.visibility = View.VISIBLE
                         emptyBookingsImage.visibility = View.VISIBLE
-                        bookingRecyclerView.visibility = View.GONE // Oculta o RecyclerView
+                        bookingRecyclerView.visibility = View.GONE
                     } else {
                         emptyBookingsMessage.visibility = View.GONE
                         emptyBookingsImage.visibility = View.GONE
                         bookingRecyclerView.visibility = View.VISIBLE
-                        bookingAdapter.updateBookings(bookings) // Atualiza a lista no adapter
+                        bookingAdapter.updateBookings(bookings)
                     }
                 }
                 .addOnFailureListener { e ->
@@ -82,7 +84,26 @@ class BookingFragment : Fragment() {
         }
     }
 
+    private fun isFutureBooking(booking: Booking): Boolean {
+        val currentDate = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val bookingDateParts = booking.date?.split("/")?.map { it.toInt() }
+        if (bookingDateParts != null && bookingDateParts.size == 3) {
+            val bookingCalendar = Calendar.getInstance().apply {
+                set(Calendar.YEAR, bookingDateParts[2]) // YYYY
+                set(Calendar.MONTH, bookingDateParts[1] - 1) // MM (0-11)
+                set(Calendar.DAY_OF_MONTH, bookingDateParts[0]) // DD
+            }
+            return bookingCalendar.after(currentDate)
+        }
+        return false
+    }
+
     private fun cancelBooking(booking: Booking) {
-        // Implementar a lógica de cancelamento de agendamento
+        // Implementar lógica para cancelar agendamento
     }
 }

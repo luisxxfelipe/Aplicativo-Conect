@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.view.ui.admin
 
+import BookingAdapter
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -23,7 +24,7 @@ class AdminBookingsFragment : Fragment() {
     private lateinit var emptyBookingsMessage: TextView
     private lateinit var emptyBookingsImage: ImageView
     private lateinit var bookingsRecyclerView: RecyclerView
-    private val bookingRepository = BookingRepository() // Instancia do repositório de agendamentos
+    private val bookingRepository = BookingRepository()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,28 +36,26 @@ class AdminBookingsFragment : Fragment() {
         emptyBookingsImage = view.findViewById(R.id.emptyBookingsImage)
         bookingsRecyclerView = view.findViewById(R.id.bookingsRecyclerView)
 
-        loadBookings() // Método para carregar os agendamentos do banco de dados
+        loadBookings()
         return view
     }
 
     private fun loadBookings() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val bookings = bookingRepository.getMonthBookings() // Altere para o método de busca adequado
+                val bookings = bookingRepository.getMonthBookings()
 
                 withContext(Dispatchers.Main) {
                     if (bookings.isEmpty()) {
-                        // Se não houver agendamentos, mostre a mensagem e a imagem
                         emptyBookingsMessage.visibility = View.VISIBLE
                         emptyBookingsImage.visibility = View.VISIBLE
                         bookingsRecyclerView.visibility = View.GONE
                     } else {
-                        // Se houver agendamentos
                         emptyBookingsMessage.visibility = View.GONE
                         emptyBookingsImage.visibility = View.GONE
                         bookingsRecyclerView.visibility = View.VISIBLE
 
-                        setupRecyclerView(bookings) // Configura o RecyclerView
+                        setupRecyclerView(bookings)
                     }
                 }
             } catch (e: Exception) {
@@ -73,7 +72,6 @@ class AdminBookingsFragment : Fragment() {
 
     private fun setupRecyclerView(bookings: List<Booking>) {
         bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        val adapter = BookingAdapter(bookings)
-        bookingsRecyclerView.adapter = adapter
+
     }
 }
