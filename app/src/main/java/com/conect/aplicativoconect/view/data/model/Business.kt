@@ -15,9 +15,10 @@ data class Business(
     val phone: String,
     val operatingHours: OperatingHours,
     val imageUrl: String,
-    val email: String, // Campo email
-    val isActive: Boolean // Campo isActive
+    val ownerId: String,
+    val email: String,
+    val isActive: Boolean
 ) {
     // Construtor padrão necessário para o Firestore
-    constructor() : this("", "", "", "", "", OperatingHours(), "", "", true) // Definindo isActive como true por padrão
+    constructor() : this("", "", "",  "", "", OperatingHours(), "", "", "", true) // Definindo isActive como true por padrão
 }

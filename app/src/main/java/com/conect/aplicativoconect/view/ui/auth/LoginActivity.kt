@@ -20,26 +20,19 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var passwordEditText: EditText
     private lateinit var loginButton: Button
     private lateinit var signUpButton: Button
-
-    private var userType: String? = null // Variável para armazenar o tipo de usuário
+    private val db = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        // Inicializar Firebase Auth
         auth = FirebaseAuth.getInstance()
 
-        // Referências aos componentes do layout
         emailEditText = findViewById(R.id.emailInput)
         passwordEditText = findViewById(R.id.passwordInput)
         loginButton = findViewById(R.id.loginButton)
         signUpButton = findViewById(R.id.signupButton)
 
-        // Obter o tipo de usuário do Intent
-        userType = intent.getStringExtra("USER_TYPE")
-
-        // Lógica de login
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
@@ -51,13 +44,8 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // Botão de cadastro
         signUpButton.setOnClickListener {
-            val intent = if (userType == "client") {
-                Intent(this, SignupClientActivity::class.java)
-            } else {
-                Intent(this, SignupBusinessActivity::class.java)
-            }
+            val intent = Intent(this, SignupClientActivity::class.java)
             startActivity(intent)
         }
     }
@@ -66,16 +54,31 @@ class LoginActivity : AppCompatActivity() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    val userId = auth.currentUser?.uid
-                    if (userId != null) {
-                        val db = FirebaseFirestore.getInstance()
+                    val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+                    verifyUserType(userId)
+                } else {
+                    Log.w("LoginActivity", "signInWithEmail:failure", task.exception)
+                    Toast.makeText(this, "Falha na autenticação. Verifique suas credenciais.", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
 
-                        // Verifique primeiro na coleção de usuários
-                        val userRef = db.collection("users").document(userId)
-                        userRef.get().addOnSuccessListener { document ->
-                            if (document != null && document.exists()) {
-                                val retrievedUserType = document.getString("type") // Obtém o tipo do usuário
-                                val intent = if (retrievedUserType == "client") {
+    private fun verifyUserType(userId: String) {
+        // Verificar primeiro se é um negócio
+        db.collection("business").document(userId).get()
+            .addOnSuccessListener { businessDocument ->
+                if (businessDocument != null && businessDocument.exists()) {
+                    // Se encontrar, redireciona para a tela de administração
+                    val intent = Intent(this, AdminHomeActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    // Caso não seja um negócio, verifica se é um cliente
+                    db.collection("users").document(userId).get()
+                        .addOnSuccessListener { userDocument ->
+                            if (userDocument != null && userDocument.exists()) {
+                                val userType = userDocument.getString("type")
+                                val intent = if (userType == "client") {
                                     Intent(this, ClienteHomeActivity::class.java)
                                 } else {
                                     Intent(this, AdminHomeActivity::class.java)
@@ -83,30 +86,18 @@ class LoginActivity : AppCompatActivity() {
                                 startActivity(intent)
                                 finish()
                             } else {
-                                // Se não encontrar, tenta na coleção de negócios
-                                val businessRef = db.collection("business").document(userId)
-                                businessRef.get().addOnSuccessListener { businessDocument ->
-                                    if (businessDocument != null && businessDocument.exists()) {
-                                        // Se encontrar, assume que é um negócio
-                                        val intent = Intent(this, AdminHomeActivity::class.java)
-                                        startActivity(intent)
-                                        finish()
-                                    } else {
-                                        Toast.makeText(this, "Usuário não encontrado", Toast.LENGTH_SHORT).show()
-                                    }
-                                }.addOnFailureListener {
-                                    Toast.makeText(this, "Erro ao recuperar dados do negócio", Toast.LENGTH_SHORT).show()
-                                }
+                                Toast.makeText(this, "Usuário não encontrado.", Toast.LENGTH_SHORT).show()
                             }
-                        }.addOnFailureListener {
-                            Toast.makeText(this, "Erro ao recuperar dados do usuário", Toast.LENGTH_SHORT).show()
                         }
-                    }
-                } else {
-                    Log.w("LoginActivity", "signInWithEmail:failure", task.exception)
-                    Toast.makeText(baseContext, "Falha na autenticação.", Toast.LENGTH_SHORT).show()
+                        .addOnFailureListener { e ->
+                            Log.e("LoginActivity", "Erro ao buscar usuário: ", e)
+                            Toast.makeText(this, "Erro ao recuperar dados do usuário.", Toast.LENGTH_SHORT).show()
+                        }
                 }
             }
+            .addOnFailureListener { e ->
+                Log.e("LoginActivity", "Erro ao buscar negócio: ", e)
+                Toast.makeText(this, "Erro ao recuperar dados do negócio.", Toast.LENGTH_SHORT).show()
+            }
     }
-
 }

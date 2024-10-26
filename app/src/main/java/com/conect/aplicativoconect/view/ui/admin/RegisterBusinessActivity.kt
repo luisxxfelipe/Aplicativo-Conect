@@ -215,9 +215,9 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         imageUri: Uri,
         email: String
     ) {
-        val userId = auth.currentUser?.uid ?: return // Certifique-se de que o usuário esteja autenticado
+        val userId = auth.currentUser?.uid ?: return // UID do usuário autenticado
 
-        // Definir o caminho onde a imagem será salva no Firebase Storage
+        // Definir o caminho para salvar a imagem no Firebase Storage
         val storageRef = storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
 
         // Fazer o upload da imagem para o Firebase Storage
@@ -226,14 +226,13 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
             if (!task.isSuccessful) {
                 task.exception?.let { throw it }
             }
-            // Após o upload, obter a URL de download
             storageRef.downloadUrl
         }.addOnCompleteListener { task ->
             progressDialog.dismiss()
             if (task.isSuccessful) {
                 val downloadUri = task.result
 
-                // Agora crie a instância de Business com a URL da imagem
+                // Criar instância de Business com o ownerId
                 val business = Business(
                     name = businessName,
                     description = businessDescription,
@@ -241,15 +240,15 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
                     address = address,
                     phone = phone,
                     operatingHours = operatingHours,
-                    imageUrl = downloadUri.toString(), // Usando a URL da imagem
+                    imageUrl = downloadUri.toString(),
                     email = email,
-                    isActive = true
+                    isActive = true,
+                    ownerId = userId // Armazena o dono da empresa (UID do usuário autenticado)
                 )
 
                 // Salvar a empresa no Firestore
                 firestore.collection("business")
-                    .document(userId)
-                    .set(business)
+                    .add(business) // Salva a empresa com um ID gerado automaticamente
                     .addOnSuccessListener {
                         Toast.makeText(this, "Empresa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
                         val intent = Intent(this, AdminHomeActivity::class.java)
@@ -264,6 +263,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
             }
         }
     }
+
 
 
     private fun clearFields() {

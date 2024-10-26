@@ -13,50 +13,57 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Business
+import com.conect.aplicativoconect.view.data.model.OperatingHours
 import com.conect.aplicativoconect.view.ui.client.EmpresaDetalhesActivity
 import com.google.firebase.firestore.FirebaseFirestore
 
 class BusinessAdapter(
     private val context: Context,
     private val businessList: List<Business>,
-    private val onBusinessClick: (Business) -> Unit // Adicionado
+    private val onBusinessClick: (Business) -> Unit
 ) : RecyclerView.Adapter<BusinessAdapter.BusinessViewHolder>() {
 
-    class BusinessViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class BusinessViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val businessName: TextView = itemView.findViewById(R.id.businessName)
-        val businessAddress: TextView = itemView.findViewById(R.id.businessAddress)
-        val businessPhone: TextView = itemView.findViewById(R.id.businessPhone)
-        val businessImage: ImageView = itemView.findViewById(R.id.businessImage) // Adicionado
-        val bookButton: Button = itemView.findViewById(R.id.bookButton) // Referência ao botão
+        val businessCategory: TextView = itemView.findViewById(R.id.businessAddress) // Reaproveitando o campo
+        val operatingHours: TextView = itemView.findViewById(R.id.businessOperatingHours)
+        val businessImage: ImageView = itemView.findViewById(R.id.businessImage)
+        val bookButton: Button = itemView.findViewById(R.id.bookButton)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BusinessViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_business, parent, false)
+            .inflate(R.layout.item_card_booking_admin, parent, false) // Use o layout correto aqui
         return BusinessViewHolder(view)
     }
 
+
+
     override fun onBindViewHolder(holder: BusinessViewHolder, position: Int) {
         val business = businessList[position]
-        holder.businessName.text = business.name
-        holder.businessAddress.text = business.address
-        holder.businessPhone.text = business.phone
 
-        // Carregando a imagem da empresa usando Glide
+        holder.businessName.text = business.name
+        holder.businessCategory.text = business.serviceType
+        holder.operatingHours.text = formatOperatingHours(business.operatingHours)
+
         Glide.with(context)
-            .load(business.imageUrl) // A URL da imagem
-            .placeholder(R.drawable.imagem_negocios) // Placeholder enquanto carrega
-            .error(R.drawable.imagem_negocios) // Imagem de erro
+            .load(business.imageUrl)
+            .placeholder(R.drawable.foto_perfil_generica)
             .into(holder.businessImage)
 
-        // Definindo a ação de clique no botão
         holder.bookButton.setOnClickListener {
-            onBusinessClick(business) // Chama a função de callback
+            onBusinessClick(business)
         }
 
+
     }
 
-    override fun getItemCount(): Int {
-        return businessList.size
+    // Função ajustada para trabalhar com a data class OperatingHours
+    private fun formatOperatingHours(operatingHours: OperatingHours?): String {
+        val opening = operatingHours?.opening ?: "N/A"
+        val closing = operatingHours?.closing ?: "N/A"
+        return "$opening - $closing"
     }
+
+    override fun getItemCount(): Int = businessList.size
 }

@@ -14,10 +14,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.data.repository.BookingRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 class AdminBookingsFragment : Fragment() {
@@ -45,19 +47,32 @@ class AdminBookingsFragment : Fragment() {
     }
 
     private fun loadBookings() {
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Busca apenas agendamentos que não estão cancelados
-                val bookings = bookingRepository.getAllBookings().filter { it.status_adm != "canceled" }
+                // Busca a empresa associada ao usuário logado
+                val businessSnapshot = firestore.collection("business")
+                    .whereEqualTo("ownerId", currentUserUid)
+                    .get()
+                    .await()
+
+                val businessId = businessSnapshot.documents.firstOrNull()?.id ?: return@launch
+
+                // Busca os agendamentos para a empresa
+                val bookingsSnapshot = firestore.collection("bookings")
+                    .whereEqualTo("companyId", businessId)
+                    .get()
+                    .await()
+
+                val bookings = bookingsSnapshot.toObjects(Booking::class.java)
 
                 withContext(Dispatchers.Main) {
                     if (bookings.isEmpty()) {
-                        // Exibe mensagem de vazio
                         emptyBookingsMessage.visibility = View.VISIBLE
                         emptyBookingsImage.visibility = View.VISIBLE
                         bookingsRecyclerView.visibility = View.GONE
                     } else {
-                        // Esconde a mensagem de vazio e configura o RecyclerView
                         emptyBookingsMessage.visibility = View.GONE
                         emptyBookingsImage.visibility = View.GONE
                         bookingsRecyclerView.visibility = View.VISIBLE
@@ -66,7 +81,6 @@ class AdminBookingsFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    // Exibe mensagem de erro
                     emptyBookingsMessage.text = "Erro ao carregar agendamentos."
                     emptyBookingsMessage.visibility = View.VISIBLE
                     emptyBookingsImage.visibility = View.VISIBLE
@@ -76,6 +90,8 @@ class AdminBookingsFragment : Fragment() {
             }
         }
     }
+
+
 
     private fun setupRecyclerView(bookings: List<Booking>) {
         bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())

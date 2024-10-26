@@ -128,29 +128,31 @@ class SignupClientActivity : AppCompatActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Cadastro bem-sucedido, salve os dados do usuário no Firestore
-                    val userId = auth.currentUser?.uid
-                    // Certifique-se de que os valores são do tipo Any
-                    val userData = hashMapOf<String, Any>(
-                        "email" to email,
-                        "name" to name,
-                        "isActive" to true,
-                        "type" to "client"
+                    val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+
+                    // Criação do HashMap com tipos explicitamente definidos como Any
+                    val userData: HashMap<String, Any> = hashMapOf(
+                        "userId" to userId as Any,
+                        "email" to email as Any,
+                        "name" to name as Any,
+                        "isActive" to true as Any,
+                        "type" to "client" as Any
                     )
 
-                    // Fazer o upload da imagem de perfil, se houver
+                    // Fazer upload da imagem de perfil se houver
                     imageUri?.let {
                         uploadProfileImage(it, userId, userData)
                     } ?: run {
-                        // Se não houver imagem, apenas salvar os dados do usuário
+                        // Se não houver imagem, salva diretamente no Firestore
                         saveUserToFirestore(userId, userData)
                     }
                 } else {
-                    progressDialog.dismiss() // Esconder progresso em caso de erro
-                    Toast.makeText(baseContext, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
                 }
             }
     }
+
 
 
     private fun uploadProfileImage(imageUri: Uri, userId: String?, userData: HashMap<String, Any>) {

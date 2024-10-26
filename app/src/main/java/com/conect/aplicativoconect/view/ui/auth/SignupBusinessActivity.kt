@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -65,31 +66,41 @@ class SignupBusinessActivity : AppCompatActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    val businessId = auth.currentUser?.uid
-                    val businessData = hashMapOf(
-                        "email" to email,
-                        "name" to businessName,
-                        "isActive" to true,
-                        "type" to "business"
-                    )
+                    // Recupera o UID do usuário autenticado
+                    val user = auth.currentUser
+                    val userId = user?.uid
 
-                    businessId?.let {
-                        db.collection("business").document(it).set(businessData)
+                    if (userId != null) {
+                        // Cria o objeto com os dados do negócio
+                        val businessData = hashMapOf(
+                            "email" to email,
+                            "name" to businessName,
+                            "isActive" to true,
+                            "type" to "business",
+                            "ownerId" to userId // UID do proprietário do negócio
+                        )
+
+                        // Salva o negócio no Firestore
+                        db.collection("business").document(userId)
+                            .set(businessData)
                             .addOnSuccessListener {
                                 Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT).show()
-                                // Passar o email para a próxima Activity
+                                // Redireciona para a tela de registro de mais dados
                                 val intent = Intent(this, RegisterBusinessActivity::class.java)
-                                intent.putExtra("EMAIL_KEY", email) // Enviando o email
+                                intent.putExtra("EMAIL_KEY", email)
                                 startActivity(intent)
                                 finish()
                             }
-                            .addOnFailureListener {
+                            .addOnFailureListener { e ->
+                                Log.e("CreateBusiness", "Erro ao salvar dados do negócio: ${e.message}")
                                 Toast.makeText(this, "Falha ao salvar dados do negócio.", Toast.LENGTH_SHORT).show()
                             }
-                    } ?: run {
-                        Toast.makeText(this, "Erro: ID de negócio não encontrado.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Erro: UID do usuário não encontrado.", Toast.LENGTH_SHORT).show()
                     }
                 } else {
+                    // Exibe mensagem de erro se falhar ao criar a conta
+                    Log.e("CreateBusiness", "Erro ao criar usuário: ${task.exception?.message}")
                     Toast.makeText(baseContext, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
                 }
             }

@@ -10,8 +10,8 @@ import java.util.*
 class BookingRepository {
     private val firestore = FirebaseFirestore.getInstance()
 
-    // Obtém agendamentos confirmados da semana
-    suspend fun getWeeklyBookings(): List<Booking> {
+    // Obtém agendamentos da semana para uma empresa específica
+    suspend fun getWeeklyBookingsByCompany(businessId: String): List<Booking> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
         val startOfWeek = calendar.time
@@ -21,16 +21,13 @@ class BookingRepository {
 
         val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-        Log.d("BookingRepository", "Início da semana: ${formatter.format(startOfWeek)}")
-        Log.d("BookingRepository", "Fim da semana: ${formatter.format(endOfWeek)}")
-
         val snapshot = firestore.collection("bookings")
+            .whereEqualTo("companyId", businessId)
             .whereGreaterThanOrEqualTo("date", formatter.format(startOfWeek))
             .whereLessThanOrEqualTo("date", formatter.format(endOfWeek))
             .get()
             .await()
 
-        // Filtra os agendamentos que não têm status "canceled"
         return snapshot.documents.mapNotNull { document ->
             document.toObject(Booking::class.java)?.apply {
                 id = document.id
@@ -40,31 +37,17 @@ class BookingRepository {
         }
     }
 
-    // Método público para obter todos os bookings
-    suspend fun getAllBookings(): List<Booking> {
-        val snapshot = firestore.collection("bookings").get().await()
-
-        // Filtra os agendamentos que não estão cancelados por nenhuma das partes
-        return snapshot.documents.mapNotNull { document ->
-            document.toObject(Booking::class.java)
-        }.filter { booking ->
-            booking.status_adm != "canceled" && booking.status_cliente != "canceled"
-        }
-    }
-
-    // Obtém agendamentos confirmados do mês
-    suspend fun getMonthBookings(): List<Booking> {
+    // Obtém agendamentos do mês para uma empresa específica
+    suspend fun getMonthBookingsByCompany(businessId: String): List<Booking> {
         val startOfMonth = getFirstDateOfMonth()
         val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-        Log.d("BookingRepository", "Início do mês: ${formatter.format(startOfMonth)}")
-
         val snapshot = firestore.collection("bookings")
+            .whereEqualTo("companyId", businessId)
             .whereGreaterThanOrEqualTo("date", formatter.format(startOfMonth))
             .get()
             .await()
 
-        // Filtra os agendamentos não cancelados
         return snapshot.documents.mapNotNull { document ->
             document.toObject(Booking::class.java)?.apply {
                 id = document.id
@@ -74,7 +57,33 @@ class BookingRepository {
         }
     }
 
-    // Obtém o preço de um serviço específico
+    // Calcula o lucro semanal para uma empresa específica
+    suspend fun getWeeklyProfitByCompany(businessId: String): Double {
+        val bookings = getWeeklyBookingsByCompany(businessId)
+        return calculateTotalProfit(businessId, bookings)
+    }
+
+    // Calcula o lucro mensal para uma empresa específica
+    suspend fun getMonthProfitByCompany(businessId: String): Double {
+        val bookings = getMonthBookingsByCompany(businessId)
+        return calculateTotalProfit(businessId, bookings)
+    }
+
+    // Calcula o lucro total baseado nos agendamentos e preços dos serviços
+    private suspend fun calculateTotalProfit(businessId: String, bookings: List<Booking>): Double {
+        var totalProfit = 0.0
+
+        for (booking in bookings) {
+            val serviceName = booking.serviceName ?: continue
+            val servicePrice = getServicePrice(businessId, serviceName)
+            totalProfit += servicePrice
+        }
+
+        Log.d("BookingRepository", "Lucro total: $totalProfit")
+        return totalProfit
+    }
+
+    // Obtém o preço de um serviço específico de uma empresa
     suspend fun getServicePrice(businessId: String, serviceName: String): Double {
         return try {
             val businessSnapshot = firestore.collection("business")
@@ -92,44 +101,6 @@ class BookingRepository {
             Log.e("BookingRepository", "Erro ao buscar preço do serviço: ", e)
             0.0
         }
-    }
-
-    // Calcula o lucro semanal
-    suspend fun getWeeklyProfit(): Double {
-        val bookings = getWeeklyBookings()
-        var totalProfit = 0.0
-
-        for (booking in bookings) {
-            val businessId = booking.companyId ?: continue
-            val serviceName = booking.serviceName ?: continue
-
-            val servicePrice = getServicePrice(businessId, serviceName)
-            totalProfit += servicePrice
-
-            Log.d("BookingRepository", "Lucro acumulado da semana: $totalProfit")
-        }
-
-        Log.d("BookingRepository", "Lucro total da semana: $totalProfit")
-        return totalProfit
-    }
-
-    // Calcula o lucro mensal
-    suspend fun getMonthProfit(): Double {
-        val bookings = getMonthBookings()
-        var totalProfit = 0.0
-
-        for (booking in bookings) {
-            val businessId = booking.companyId ?: continue
-            val serviceName = booking.serviceName ?: continue
-
-            val servicePrice = getServicePrice(businessId, serviceName)
-            totalProfit += servicePrice
-
-            Log.d("BookingRepository", "Lucro acumulado do mês: $totalProfit")
-        }
-
-        Log.d("BookingRepository", "Lucro total do mês: $totalProfit")
-        return totalProfit
     }
 
     private fun getFirstDateOfMonth(): Date {

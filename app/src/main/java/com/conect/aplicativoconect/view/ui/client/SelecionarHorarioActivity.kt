@@ -62,8 +62,8 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 selectedDate?.let { date ->
                     val userId = auth.currentUser?.uid // Pega o UID do usuário autenticado
                     if (userId != null) {
-                        // Buscar o nome do usuário no Firestore
-                        fetchUserName(userId) { userName ->
+                        // Buscar o nome e a imagem do usuário no Firestore
+                        fetchUserDetails(userId) { userName, userImageUrl ->
                             val bookingData = mapOf(
                                 "userId" to userId,
                                 "companyId" to companyId,
@@ -71,6 +71,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                                 "hour" to hour,
                                 "date" to date,
                                 "name" to userName,
+                                "userImageUrl" to userImageUrl, // Salvar a URL da imagem de perfil
                                 "status_cliente" to "pending",
                                 "status_adm" to "pending"
                             )
@@ -94,6 +95,20 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun fetchUserDetails(userId: String, callback: (String, String?) -> Unit) {
+        firestore.collection("users").document(userId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                val userName = documentSnapshot.getString("name") ?: "Nome não encontrado"
+                val userImageUrl = documentSnapshot.getString("imageUrl") // Busca a URL da imagem
+                callback(userName, userImageUrl)
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Erro ao buscar detalhes do usuário: ${e.message}", Toast.LENGTH_SHORT).show()
+                callback("Nome não encontrado", null)
+            }
+    }
+
 
     // Abre um DatePicker para o usuário selecionar a data
     private fun openDatePicker() {

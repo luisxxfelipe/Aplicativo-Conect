@@ -9,6 +9,7 @@ data class Booking(
     val userId: String? = null,
     val companyId: String? = null,
     val price: Double = 0.0,
-    val status_cliente: String? = null,
+    val userImageUrl: String? = null,
+    var status_cliente: String? = null,
     val status_adm: String? = null
 )

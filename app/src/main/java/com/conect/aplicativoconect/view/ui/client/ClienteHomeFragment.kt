@@ -295,13 +295,15 @@ class ClienteHomeFragment : Fragment() {
                     it.toObject(Business::class.java)
                 }
                 filteredBusinessList.clear()
-                filteredBusinessList.addAll(businessList) // Copia todas as empresas para a lista filtrada
+                filteredBusinessList.addAll(businessList)
                 businessAdapter.notifyDataSetChanged()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(requireContext(), "Erro ao buscar empresas.", Toast.LENGTH_SHORT).show()
             }
     }
+
+
 
 
     private fun fetchBusinessIdAndOpenDetails(businessName: String) {

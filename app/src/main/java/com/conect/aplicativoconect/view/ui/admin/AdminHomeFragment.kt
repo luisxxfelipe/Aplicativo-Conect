@@ -23,6 +23,7 @@ import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -55,6 +56,10 @@ class AdminHomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Inicialize o Firestore
+        firestore = FirebaseFirestore.getInstance()
+
+        // Configuração dos elementos da interface
         todayBookingsRecyclerView = view.findViewById(R.id.todayBookingsRecyclerView)
         todayBookingsCountTextView = view.findViewById(R.id.weekBookingsCount)
         monthBookingsCountTextView = view.findViewById(R.id.monthBookingsCount)
@@ -69,6 +74,7 @@ class AdminHomeFragment : Fragment() {
         loadData()
         loadBusinessName()
 
+        // Observa mudanças nos ViewModels
         adminViewModel.todayBookingsCount.observe(viewLifecycleOwner) { count ->
             todayBookingsCountTextView.text = count.toString()
         }
@@ -110,18 +116,28 @@ class AdminHomeFragment : Fragment() {
     }
 
     private fun loadData() {
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val weeklyBookings = bookingRepository.getWeeklyBookings()
-                val monthBookings = bookingRepository.getMonthBookings()
-                val weeklyProfit = bookingRepository.getWeeklyProfit()
-                val monthlyProfit = bookingRepository.getMonthProfit()
+                val businessSnapshot = firestore.collection("business")
+                    .whereEqualTo("ownerId", currentUserUid)
+                    .get()
+                    .await()
+
+                val businessId = businessSnapshot.documents.firstOrNull()?.id ?: return@launch
+
+                val weeklyBookings = bookingRepository.getWeeklyBookingsByCompany(businessId)
+                val monthBookings = bookingRepository.getMonthBookingsByCompany(businessId)
+
+                val weeklyProfit = bookingRepository.getWeeklyProfitByCompany(businessId)
+                val monthlyProfit = bookingRepository.getMonthProfitByCompany(businessId)
 
                 withContext(Dispatchers.Main) {
                     adminViewModel.setTodayBookingsCount(weeklyBookings.size)
                     adminViewModel.setMonthBookingsCount(monthBookings.size)
-                    adminViewModel.setTodayProfit(weeklyProfit) // Exibe lucro semanal
-                    adminViewModel.setMonthProfit(monthlyProfit) // Exibe lucro mensal
+                    adminViewModel.setTodayProfit(weeklyProfit)
+                    adminViewModel.setMonthProfit(monthlyProfit)
 
                     if (weeklyBookings.isEmpty()) {
                         noBookingsMessage.visibility = View.VISIBLE
@@ -132,17 +148,12 @@ class AdminHomeFragment : Fragment() {
                         noBookingsImage.visibility = View.GONE
                         todayBookingsRecyclerView.visibility = View.VISIBLE
 
-                        todayBookingsRecyclerView.adapter =
-                            BookingAdapter(
-                                weeklyBookings,
-                                requireContext(),
-                                { bookingId ->
-                                    confirmBooking(bookingId)
-                                },
-                                { bookingId ->
-                                    cancelBooking(bookingId)
-                                }
-                            )
+                        todayBookingsRecyclerView.adapter = BookingAdapter(
+                            weeklyBookings,
+                            requireContext(),
+                            { bookingId -> confirmBooking(bookingId) },
+                            { bookingId -> cancelBooking(bookingId) }
+                        )
                     }
                 }
             } catch (e: Exception) {
@@ -157,9 +168,7 @@ class AdminHomeFragment : Fragment() {
         }
     }
 
-
     private fun confirmBooking(bookingId: String) {
-        firestore = FirebaseFirestore.getInstance()
         firestore.collection("bookings").document(bookingId)
             .update("status", "confirmed")
             .addOnSuccessListener {
@@ -171,21 +180,36 @@ class AdminHomeFragment : Fragment() {
             }
     }
 
-    // Método para cancelar um agendamento
     private fun cancelBooking(bookingId: String) {
-        val firestore = FirebaseFirestore.getInstance()
-        val bookingRef = firestore.collection("bookings").document(bookingId)
-
-        bookingRef.delete()
+        firestore.collection("bookings").document(bookingId).delete()
             .addOnSuccessListener {
                 Log.d("CancelBooking", "Agendamento cancelado com sucesso!")
-                loadData() // Atualiza a interface após a exclusão
+                loadData()
             }
             .addOnFailureListener { e ->
                 Log.w("CancelBooking", "Erro ao cancelar agendamento", e)
             }
     }
 
+    private fun loadBusinessName() {
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+            userNameTextView.text = "Usuário não autenticado"
+            return
+        }
+
+        firestore.collection("business")
+            .whereEqualTo("ownerId", currentUserUid)
+            .get()
+            .addOnSuccessListener { documents ->
+                val business = documents.firstOrNull()?.toObject(Business::class.java)
+                adminViewModel.setBusinessName(business?.name ?: "Nome não disponível")
+                loadProfileImage(business?.imageUrl)
+            }
+            .addOnFailureListener { e ->
+                adminViewModel.setBusinessName("Erro ao carregar nome")
+                Log.e("AdminHomeFragment", "Erro ao buscar nome do negócio: ", e)
+            }
+    }
 
     private fun loadProfileImage(imageUrl: String?) {
         val userImageView = view?.findViewById<CircleImageView>(R.id.userImage)
@@ -200,29 +224,5 @@ class AdminHomeFragment : Fragment() {
         } ?: run {
             userImageView?.setImageResource(R.drawable.foto_perfil_generica)
         }
-    }
-
-    private fun loadBusinessName() {
-        firestore = FirebaseFirestore.getInstance()
-        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: run {
-            userNameTextView.text = "Usuário não autenticado"
-            return
-        }
-
-        firestore.collection("business").document(currentUserUid)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document != null) {
-                    val business = document.toObject(Business::class.java)
-                    adminViewModel.setBusinessName(business?.name ?: "Nome não disponível")
-                    loadProfileImage(business?.imageUrl)
-                } else {
-                    adminViewModel.setBusinessName("Nome não disponível")
-                }
-            }
-            .addOnFailureListener { e ->
-                adminViewModel.setBusinessName("Erro ao carregar o nome")
-                Log.e("AdminHomeFragment", "Erro ao buscar o nome do negócio: ", e)
-            }
     }
 }
