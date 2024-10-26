@@ -6,7 +6,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
-import java.util.Random // Importação correta para Random
+import java.util.Random
 
 class CategoriesPagerAdapter(
     private val serviceList: List<String>,
@@ -20,7 +20,8 @@ class CategoriesPagerAdapter(
     )
 
     private var selectedPosition: Int = RecyclerView.NO_POSITION // Nenhuma posição selecionada inicialmente
-    private var lastColor: Int? = null // Armazena a última cor usada
+    private val itemColors = mutableMapOf<Int, Int>() // Mapa para armazenar cores por item
+    private var lastUsedColor: Int? = null // Última cor usada para garantir que não repita
 
     class CategoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val serviceTextView: TextView = itemView.findViewById(R.id.serviceTextView)
@@ -32,39 +33,34 @@ class CategoriesPagerAdapter(
     }
 
     override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {
-        // Define o texto da categoria
         holder.serviceTextView.text = serviceList[position]
 
-        // Escolhe uma cor aleatória para o item
-        var randomColorResId: Int
-        do {
-            randomColorResId = categoryColors[Random().nextInt(categoryColors.size)] // Usando Random da Java Util
-        } while (randomColorResId == lastColor) // Evita repetir a última cor
+        // Gera uma cor que não seja igual à última usada
+        val colorResId = itemColors.getOrPut(position) {
+            getNextColor()
+        }
+        val color = ContextCompat.getColor(holder.itemView.context, colorResId)
 
-        lastColor = randomColorResId // Atualiza a última cor utilizada
-        val randomColor = ContextCompat.getColor(holder.itemView.context, randomColorResId)
-
-        // Cria um GradientDrawable com a cor escolhida
+        // Cria o GradientDrawable para manter a cor original do item
         val backgroundDrawable = GradientDrawable().apply {
-            setColor(randomColor)
-            cornerRadius = 16f // Raio dos cantos
+            setColor(color)
+            cornerRadius = 16f // Ajuste do raio
         }
 
-        // Verifica se o item é o selecionado e ajusta a aparência
+        // Adiciona borda se o item estiver selecionado
         if (position == selectedPosition) {
-            backgroundDrawable.setStroke(6, ContextCompat.getColor(holder.itemView.context, R.color.colorAccent)) // Borda de destaque
+            backgroundDrawable.setStroke(6, ContextCompat.getColor(holder.itemView.context, R.color.colorAccent))
         } else {
-            backgroundDrawable.setStroke(0, randomColor) // Sem borda
+            backgroundDrawable.setStroke(0, color) // Sem borda
         }
 
         holder.itemView.background = backgroundDrawable
 
-        // Define o clique no item
         holder.itemView.setOnClickListener {
             val previousPosition = selectedPosition
             selectedPosition = holder.adapterPosition
 
-            // Atualiza a aparência do item anterior e do atual
+            // Atualiza o item anterior e o atual
             if (previousPosition != RecyclerView.NO_POSITION) {
                 notifyItemChanged(previousPosition)
             }
@@ -76,4 +72,12 @@ class CategoriesPagerAdapter(
     }
 
     override fun getItemCount(): Int = serviceList.size
+
+    // Método para obter a próxima cor que não repita a anterior
+    private fun getNextColor(): Int {
+        val availableColors = categoryColors.filter { it != lastUsedColor }
+        val randomColor = availableColors[Random().nextInt(availableColors.size)]
+        lastUsedColor = randomColor // Atualiza a última cor usada
+        return randomColor
+    }
 }
