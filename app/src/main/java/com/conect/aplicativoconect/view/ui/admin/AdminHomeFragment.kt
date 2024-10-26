@@ -1,7 +1,6 @@
 package com.conect.aplicativoconect.view.ui.admin
 
 import BookingAdapter
-import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -56,9 +55,8 @@ class AdminHomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicializa todos os componentes da View
         todayBookingsRecyclerView = view.findViewById(R.id.todayBookingsRecyclerView)
-        todayBookingsCountTextView = view.findViewById(R.id.todayBookingsCount)
+        todayBookingsCountTextView = view.findViewById(R.id.weekBookingsCount)
         monthBookingsCountTextView = view.findViewById(R.id.monthBookingsCount)
         todayProfitTextView = view.findViewById(R.id.todayProfitTextView)
         monthProfitTextView = view.findViewById(R.id.monthProfitTextView)
@@ -71,7 +69,6 @@ class AdminHomeFragment : Fragment() {
         loadData()
         loadBusinessName()
 
-        // Observa os dados do ViewModel
         adminViewModel.todayBookingsCount.observe(viewLifecycleOwner) { count ->
             todayBookingsCountTextView.text = count.toString()
         }
@@ -105,7 +102,7 @@ class AdminHomeFragment : Fragment() {
             else -> "Boa noite!"
         }
 
-        greetingTextView.text = greeting // Atualiza o TextView de saudação
+        greetingTextView.text = greeting
     }
 
     private fun setupRecyclerView() {
@@ -116,41 +113,17 @@ class AdminHomeFragment : Fragment() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val weeklyBookings = bookingRepository.getWeeklyBookings()
-                Log.d(
-                    "AdminHomeFragment",
-                    "Agendamentos da semana carregados: ${weeklyBookings.size}"
-                )
                 val monthBookings = bookingRepository.getMonthBookings()
-                val todayProfit = bookingRepository.getTodayProfit()
-                val monthProfit = bookingRepository.getMonthProfit()
-
-                // Obter a data e hora atuais para filtrar os agendamentos passados
-                val currentCalendar = Calendar.getInstance()
-                val currentDate = currentCalendar.time
-                val currentHour = currentCalendar.get(Calendar.HOUR_OF_DAY)
-
-                // Filtrar agendamentos que ainda não passaram da data e horário
-                val futureBookings = weeklyBookings.filter { booking ->
-                    val bookingDate =
-                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(booking.date)
-                    if (bookingDate != null) {
-                        // Comparar data e hora do agendamento com a data e hora atuais
-                        bookingDate.after(currentDate) ||
-                                (bookingDate == currentDate && booking.hour != null && booking.hour >= currentHour)
-                    } else {
-                        false
-                    }
-                }
-                    .sortedWith(compareBy({ it.date }, { it.hour })) // Ordenar por data e hora
-                    .take(2) // Pegar os 2 primeiros agendamentos futuros
+                val weeklyProfit = bookingRepository.getWeeklyProfit()
+                val monthlyProfit = bookingRepository.getMonthProfit()
 
                 withContext(Dispatchers.Main) {
-                    adminViewModel.setTodayBookingsCount(futureBookings.size)
+                    adminViewModel.setTodayBookingsCount(weeklyBookings.size)
                     adminViewModel.setMonthBookingsCount(monthBookings.size)
-                    adminViewModel.setTodayProfit(todayProfit)
-                    adminViewModel.setMonthProfit(monthProfit)
+                    adminViewModel.setTodayProfit(weeklyProfit) // Exibe lucro semanal
+                    adminViewModel.setMonthProfit(monthlyProfit) // Exibe lucro mensal
 
-                    if (futureBookings.isEmpty()) {
+                    if (weeklyBookings.isEmpty()) {
                         noBookingsMessage.visibility = View.VISIBLE
                         noBookingsImage.visibility = View.VISIBLE
                         todayBookingsRecyclerView.visibility = View.GONE
@@ -158,12 +131,18 @@ class AdminHomeFragment : Fragment() {
                         noBookingsMessage.visibility = View.GONE
                         noBookingsImage.visibility = View.GONE
                         todayBookingsRecyclerView.visibility = View.VISIBLE
+
                         todayBookingsRecyclerView.adapter =
-                            BookingAdapter(futureBookings, { bookingId ->
-                                showConfirmationDialog(bookingId) // Diálogo para confirmar
-                            }, { bookingId ->
-                                showCancelConfirmationDialog(bookingId) // Diálogo para cancelar
-                            })
+                            BookingAdapter(
+                                weeklyBookings,
+                                requireContext(),
+                                { bookingId ->
+                                    confirmBooking(bookingId)
+                                },
+                                { bookingId ->
+                                    cancelBooking(bookingId)
+                                }
+                            )
                     }
                 }
             } catch (e: Exception) {
@@ -178,77 +157,50 @@ class AdminHomeFragment : Fragment() {
         }
     }
 
-    private fun showConfirmationDialog(bookingId: String) {
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Confirmar Agendamento")
-            .setMessage("Você tem certeza que deseja confirmar este agendamento?")
-            .setPositiveButton("Sim") { _, _ ->
-                confirmBooking(bookingId) // Chama o método de confirmação
-            }
-            .setNegativeButton("Não", null)
-            .create()
-
-        dialog.show()
-    }
-
 
     private fun confirmBooking(bookingId: String) {
-        val firestore = FirebaseFirestore.getInstance()
+        firestore = FirebaseFirestore.getInstance()
         firestore.collection("bookings").document(bookingId)
             .update("status", "confirmed")
             .addOnSuccessListener {
                 Log.d("AdminHomeFragment", "Agendamento confirmado com sucesso!")
-                loadData() // Atualiza os dados
-                // Aqui você pode adicionar lógica para ocultar o botão ou agendamento
+                loadData()
             }
             .addOnFailureListener { e ->
                 Log.w("AdminHomeFragment", "Erro ao confirmar o agendamento: ", e)
             }
     }
 
-
-    private fun showCancelConfirmationDialog(bookingId: String) {
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Confirmar Cancelamento")
-            .setMessage("Você tem certeza que deseja cancelar este agendamento?")
-            .setPositiveButton("Sim") { _, _ ->
-                cancelBooking(bookingId) // Chama o método de cancelamento
-            }
-            .setNegativeButton("Não", null)
-            .create()
-
-        dialog.show()
-    }
-
-    // Método para cancelar o agendamento
+    // Método para cancelar um agendamento
     private fun cancelBooking(bookingId: String) {
         val firestore = FirebaseFirestore.getInstance()
-        firestore.collection("bookings").document(bookingId)
-            .delete()
+        val bookingRef = firestore.collection("bookings").document(bookingId)
+
+        bookingRef.delete()
             .addOnSuccessListener {
-                Log.d("AdminHomeFragment", "Agendamento cancelado com sucesso!")
-                loadData() // Atualiza os dados
+                Log.d("CancelBooking", "Agendamento cancelado com sucesso!")
+                loadData() // Atualiza a interface após a exclusão
             }
             .addOnFailureListener { e ->
-                Log.w("AdminHomeFragment", "Erro ao cancelar o agendamento: ", e)
+                Log.w("CancelBooking", "Erro ao cancelar agendamento", e)
             }
     }
+
 
     private fun loadProfileImage(imageUrl: String?) {
         val userImageView = view?.findViewById<CircleImageView>(R.id.userImage)
         imageUrl?.let {
             if (userImageView != null) {
                 Glide.with(this)
-                    .load(it) // URL da imagem no Firebase Storage
-                    .placeholder(R.drawable.foto_perfil_generica) // Imagem de carregamento
-                    .error(R.drawable.foto_perfil_generica) // Imagem em caso de erro
+                    .load(it)
+                    .placeholder(R.drawable.foto_perfil_generica)
+                    .error(R.drawable.foto_perfil_generica)
                     .into(userImageView)
             }
         } ?: run {
-            userImageView?.setImageResource(R.drawable.foto_perfil_generica) // Ou uma imagem padrão se a URL for nula
+            userImageView?.setImageResource(R.drawable.foto_perfil_generica)
         }
     }
-
 
     private fun loadBusinessName() {
         firestore = FirebaseFirestore.getInstance()
@@ -263,7 +215,7 @@ class AdminHomeFragment : Fragment() {
                 if (document != null) {
                     val business = document.toObject(Business::class.java)
                     adminViewModel.setBusinessName(business?.name ?: "Nome não disponível")
-                    loadProfileImage(business?.imageUrl) // Carregar a imagem de perfil
+                    loadProfileImage(business?.imageUrl)
                 } else {
                     adminViewModel.setBusinessName("Nome não disponível")
                 }
@@ -273,5 +225,4 @@ class AdminHomeFragment : Fragment() {
                 Log.e("AdminHomeFragment", "Erro ao buscar o nome do negócio: ", e)
             }
     }
-
 }

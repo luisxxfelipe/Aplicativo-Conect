@@ -70,7 +70,9 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                                 "serviceName" to selectedService.name,
                                 "hour" to hour,
                                 "date" to date,
-                                "name" to userName
+                                "name" to userName,
+                                "status_cliente" to "pending",
+                                "status_adm" to "pending"
                             )
                             firestore.collection("bookings").add(bookingData)
                                 .addOnSuccessListener {

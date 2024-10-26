@@ -15,5 +15,8 @@
     <color name="colorCategory2">#332A9CFF</color>
     <color name="colorCategory3">#33EE8265</color>
     <color name="colorCategory4">#335063F0</color>
+    <color name="colorCategorySelected">#FFCDD2</color>
+    <color name="colorCategoryUnselected">#FFFFFF</color>
+    <color name="colorAccent">#03A9F4</color>
 
 </resources>

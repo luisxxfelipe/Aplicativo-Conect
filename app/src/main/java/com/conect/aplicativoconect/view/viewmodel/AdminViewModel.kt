@@ -30,6 +30,9 @@ class AdminViewModel : ViewModel() {
     private val _adminEmail = MutableLiveData<String>() // E-mail do administrador
     val adminEmail: LiveData<String> get() = _adminEmail
 
+    private val _companyId = MutableLiveData<String>() // Adicionando o companyId
+    val companyId: LiveData<String> get() = _companyId
+
     private val firestore: FirebaseFirestore = Firebase.firestore
 
     // Métodos para atualizar dados
@@ -61,6 +64,10 @@ class AdminViewModel : ViewModel() {
         _adminEmail.value = email
     }
 
+    fun setCompanyId(id: String) {
+        _companyId.value = id
+    }
+
     // Método para carregar dados do administrador
     fun loadAdminData() {
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -71,17 +78,23 @@ class AdminViewModel : ViewModel() {
                 if (document != null) {
                     val name = document.getString("name") // Campo 'name' no Firestore
                     val email = document.getString("email") // Campo 'email' no Firestore
+                    val companyId = document.getString("companyId") // Campo 'companyId' no Firestore
+
+                    setBusinessName(name ?: "Nome não disponível")
                     setAdminName(name ?: "Nome não disponível")
                     setAdminEmail(email ?: "Email não disponível")
+                    setCompanyId(companyId ?: "ID da empresa não disponível") // Armazena o companyId
                 } else {
                     setAdminName("Nome não disponível")
                     setAdminEmail("Email não disponível")
+                    setCompanyId("ID da empresa não disponível")
                 }
             }
             .addOnFailureListener { exception ->
                 // Tratar erro
                 setAdminName("Erro ao carregar nome")
                 setAdminEmail("Erro ao carregar email")
+                setCompanyId("Erro ao carregar ID da empresa")
             }
     }
 }

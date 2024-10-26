@@ -17,74 +17,87 @@
         android:textColor="@color/black"
         android:layout_marginBottom="24dp" />
 
-    <!-- Campo de entrada de nome do negócio -->
+    <!-- Nome do Negócio -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="16dp"
+        android:hint="Nome completo"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeColor="@color/colorPrimary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/businessNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nome completo"
             android:padding="12dp"
             android:textColor="@color/black"
+            android:inputType="text"
             android:backgroundTint="@android:color/transparent" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Campo de entrada de email -->
+    <!-- Email -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="16dp"
+        android:hint="Email"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeColor="@color/colorPrimary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/emailInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
             android:padding="12dp"
             android:textColor="@color/black"
+            android:inputType="textEmailAddress"
             android:backgroundTint="@android:color/transparent" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- Senha -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="16dp"
+        android:hint="Senha"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeColor="@color/colorPrimary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/passwordInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Senha"
             android:padding="12dp"
             android:textColor="@color/black"
-            android:backgroundTint="@android:color/transparent"
-            android:inputType="textPassword" />
-
+            android:inputType="textPassword"
+            android:backgroundTint="@android:color/transparent" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Campo de entrada de confirmação de senha -->
+    <!-- Confirmar Senha -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="16dp"
+        android:hint="Confirmar Senha"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeColor="@color/colorPrimary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/confirmPasswordInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Confirmar Senha"
             android:padding="12dp"
             android:textColor="@color/black"
-            android:backgroundTint="@android:color/transparent"
-            android:inputType="textPassword" />
-
+            android:inputType="textPassword"
+            android:backgroundTint="@android:color/transparent" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Botão de cadastro -->
+    <!-- Botão de Cadastro -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/signupButton"
         android:layout_width="match_parent"
@@ -95,7 +108,7 @@
         android:layout_marginTop="24dp"
         app:cornerRadius="8dp" />
 
-    <!-- Link para login -->
+    <!-- Link para Login -->
     <TextView
         android:id="@+id/loginTextView"
         android:layout_width="wrap_content"
@@ -105,5 +118,4 @@
         android:layout_marginTop="16dp"
         android:clickable="true"
         android:focusable="true" />
-
 </LinearLayout>

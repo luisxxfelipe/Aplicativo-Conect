@@ -78,7 +78,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:iconifiedByDefault="false"
+            android:iconifiedByDefault="true"
             android:queryHint="Buscar serviços"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -119,7 +119,8 @@
                     android:paddingBottom="8dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/todayAgendaTitle" />
+                    app:layout_constraintTop_toBottomOf="@id/todayAgendaTitle"
+                    android:nestedScrollingEnabled="false" />
 
                 <TextView
                     android:id="@+id/noBookingsMessage"

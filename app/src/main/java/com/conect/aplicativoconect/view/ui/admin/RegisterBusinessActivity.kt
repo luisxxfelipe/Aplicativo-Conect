@@ -2,10 +2,13 @@ package com.conect.aplicativoconect.view.ui.admin
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
+import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -38,7 +41,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     private val storagePermissionCode = 101
     private lateinit var email: String
     private lateinit var storage: FirebaseStorage
-
+    private lateinit var progressDialog: AlertDialog
 
     // ActivityResultLauncher para o resultado da galeria
     private lateinit var getContent: ActivityResultLauncher<Intent>
@@ -51,6 +54,9 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
         storage = FirebaseStorage.getInstance()
+
+        // Inicializar o AlertDialog personalizado
+        setupProgressDialog()
 
 
         // Recuperar o email passado pela SignupBusinessActivity
@@ -70,7 +76,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         uploadIcon = findViewById(R.id.uploadButton)
 
         // Configurar o Spinner com opções de serviços
-        val serviceTypes = listOf("Cabeleireiro", "Manicure", "Barbeiro", "Estética", "Cabeleireiro", "Penteado", "Depilação", "Maquiagem", "Limpeza de Pele", "Design de Sobrancelhas", "Tratamento Capilar", "Alongamento de Cílios", "Massagem")
+        val serviceTypes = listOf("Cabeleireiro", "Manicure", "Barbeiro", "Estética", "Cabeleireiro", "Massagem")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, serviceTypes)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         serviceTypeSpinner.adapter = adapter
@@ -139,6 +145,8 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
                     days = listOf()      // Aqui você pode passar a lista de dias selecionados
                 )
 
+                progressDialog.show() // Mostrar o diálogo de progresso
+
                 // Registrar o negócio
                 registerBusiness(
                     businessName,
@@ -152,6 +160,17 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
                 )
             }
         }
+    }
+
+    private fun setupProgressDialog() {
+        val builder = AlertDialog.Builder(this)
+        val inflater = LayoutInflater.from(this)
+        val view = inflater.inflate(R.layout.dialog_progress, null) // Layout personalizado do diálogo
+
+        builder.setView(view)
+        builder.setCancelable(false) // Impede que o usuário feche o diálogo
+
+        progressDialog = builder.create()
     }
 
     private fun validateInputs(
@@ -210,6 +229,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
             // Após o upload, obter a URL de download
             storageRef.downloadUrl
         }.addOnCompleteListener { task ->
+            progressDialog.dismiss()
             if (task.isSuccessful) {
                 val downloadUri = task.result
 

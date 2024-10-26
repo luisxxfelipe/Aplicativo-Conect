@@ -2,10 +2,12 @@ package com.conect.aplicativoconect.view.ui.auth
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -36,8 +38,8 @@ class SignupClientActivity : AppCompatActivity() {
     private lateinit var loginTextView: TextView
     private lateinit var profileImageView: ImageView
     private lateinit var uploadProfileButton: Button
+    private lateinit var progressDialog: AlertDialog
     private var imageUri: Uri? = null
-    private val storagePermissionCode = 101
     private lateinit var getContent: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +49,8 @@ class SignupClientActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
         storage = FirebaseStorage.getInstance()
+
+        setupProgressDialog() // Inicializa o progresso
 
         emailEditText = findViewById(R.id.emailInput)
         passwordEditText = findViewById(R.id.passwordInput)
@@ -88,6 +92,7 @@ class SignupClientActivity : AppCompatActivity() {
 
             if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty()) {
                 if (password == confirmPassword) {
+                    progressDialog.show() // Mostrar progresso
                     createUser(email, password, name)
                 } else {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
@@ -102,6 +107,15 @@ class SignupClientActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
+    }
+
+    private fun setupProgressDialog() {
+        val builder = AlertDialog.Builder(this)
+        val inflater = LayoutInflater.from(this)
+        val view = inflater.inflate(R.layout.dialog_progress_cliente, null)
+        builder.setView(view)
+        builder.setCancelable(false)
+        progressDialog = builder.create()
     }
 
     private fun openGallery() {
@@ -132,6 +146,7 @@ class SignupClientActivity : AppCompatActivity() {
                         saveUserToFirestore(userId, userData)
                     }
                 } else {
+                    progressDialog.dismiss() // Esconder progresso em caso de erro
                     Toast.makeText(baseContext, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -167,6 +182,7 @@ class SignupClientActivity : AppCompatActivity() {
                     finish()
                 }
                 .addOnFailureListener {
+                    progressDialog.dismiss() // Esconder progresso em caso de erro
                     Toast.makeText(this, "Falha ao salvar dados do usuário.", Toast.LENGTH_SHORT).show()
                 }
         }
