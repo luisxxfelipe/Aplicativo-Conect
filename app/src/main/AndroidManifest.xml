@@ -1,7 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissões Necessárias -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
@@ -15,6 +19,29 @@
         android:theme="@style/Theme.AplicativoConect"
         tools:targetApi="31">
 
+        <!-- Serviço para receber mensagens do Firebase -->
+        <service
+            android:name=".view.ui.MyFirebaseMessagingService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Serviço para tratar notificações após reinicialização do dispositivo -->
+        <receiver
+            android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
+            android:exported="true"
+            android:permission="android.permission.WAKE_LOCK"
+            tools:replace="android:permission">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+                <category android:name="com.conect.aplicativoconect" />
+            </intent-filter>
+        </receiver>
+
+
         <!-- Tela de Splash -->
         <activity
             android:name=".view.ui.SplashActivity"
@@ -25,35 +52,17 @@
             </intent-filter>
         </activity>
 
-        <!-- Tela de boas-vindas -->
+        <!-- Demais Atividades -->
         <activity android:name=".view.ui.WelcomeActivity" android:exported="true" />
-
-        <!-- Tela de Seleção de Papel -->
         <activity android:name=".view.ui.auth.RoleSelectionActivity" android:exported="true" />
-
-        <!-- Tela de Login -->
         <activity android:name=".view.ui.auth.LoginActivity" android:exported="true" />
-
-        <!-- Tela de Signup Cliente -->
         <activity android:name=".view.ui.auth.SignupClientActivity" android:exported="true" />
-
-        <!-- Tela de Signup Negócio -->
         <activity android:name=".view.ui.auth.SignupBusinessActivity" android:exported="true" />
-
-        <!-- Tela de Home do Cliente -->
         <activity android:name=".view.ui.client.ClienteHomeActivity" android:exported="true" />
-
-        <!-- Tela de Home do Admin -->
         <activity android:name=".view.ui.admin.AdminHomeActivity" android:exported="true" />
-
-        <!-- Tela de Registro de Negócio -->
         <activity android:name=".view.ui.admin.RegisterBusinessActivity" android:exported="true" />
-
-        <!-- Tela de Detalhes da Empresa -->
         <activity android:name=".view.ui.client.EmpresaDetalhesActivity" android:exported="true" />
-
-        <activity android:name=".view.ui.client.SelecionarHorarioActivity" />
-
+        <activity android:name=".view.ui.client.SelecionarHorarioActivity" android:exported="true" />
 
         <meta-data
             android:name="preloaded_fonts"

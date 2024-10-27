@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -23,6 +24,7 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 
 class SignupClientActivity : AppCompatActivity() {
@@ -130,21 +132,23 @@ class SignupClientActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-                    // Criação do HashMap com tipos explicitamente definidos como Any
+                    // Criação do HashMap com dados do usuário
                     val userData: HashMap<String, Any> = hashMapOf(
-                        "userId" to userId as Any,
-                        "email" to email as Any,
-                        "name" to name as Any,
-                        "isActive" to true as Any,
-                        "type" to "client" as Any
+                        "userId" to userId,
+                        "email" to email,
+                        "name" to name,
+                        "isActive" to true,
+                        "type" to "client"
                     )
 
                     // Fazer upload da imagem de perfil se houver
                     imageUri?.let {
                         uploadProfileImage(it, userId, userData)
                     } ?: run {
-                        // Se não houver imagem, salva diretamente no Firestore
-                        saveUserToFirestore(userId, userData)
+                        // Salva o usuário diretamente no Firestore e, após, o token
+                        saveUserToFirestore(userId, userData) {
+                            saveFCMToken(userId) // Salva o token após salvar o usuário
+                        }
                     }
                 } else {
                     progressDialog.dismiss()
@@ -153,40 +157,90 @@ class SignupClientActivity : AppCompatActivity() {
             }
     }
 
+    // Função para obter e salvar o token FCM
+    private fun saveFCMToken(userId: String) {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+
+                // Tenta buscar o documento do usuário
+                db.collection("users").document(userId).get()
+                    .addOnSuccessListener { document ->
+                        if (document.exists()) {
+                            // Se o documento existir, apenas atualiza o token
+                            db.collection("users").document(userId)
+                                .update("fcmToken", token)
+                                .addOnSuccessListener {
+                                    Log.d("FCM", "Token atualizado com sucesso para $userId.")
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("FCM", "Erro ao atualizar token: ${e.message}")
+                                }
+                        } else {
+                            // Se o documento não existir, cria um novo com o token
+                            val userData = hashMapOf("fcmToken" to token)
+                            db.collection("users").document(userId)
+                                .set(userData)
+                                .addOnSuccessListener {
+                                    Log.d("FCM", "Token criado com sucesso para $userId.")
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("FCM", "Erro ao criar token: ${e.message}")
+                                }
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("FCM", "Erro ao buscar documento: ${e.message}")
+                    }
+            } else {
+                Log.e("FCM", "Erro ao obter token", task.exception)
+            }
+        }
+    }
 
 
     private fun uploadProfileImage(imageUri: Uri, userId: String?, userData: HashMap<String, Any>) {
         val storageRef = storage.reference.child("profile_images/$userId/${imageUri.lastPathSegment}")
         val uploadTask = storageRef.putFile(imageUri)
+
         uploadTask.continueWithTask { task ->
             if (!task.isSuccessful) {
                 task.exception?.let { throw it }
             }
-            // Após o upload, obter a URL de download
             storageRef.downloadUrl
         }.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val downloadUri = task.result
                 userData["imageUrl"] = downloadUri.toString() // Adiciona a URL da imagem aos dados do usuário
-                saveUserToFirestore(userId, userData)
+
+                // Passando o callback corretamente
+                saveUserToFirestore(userId, userData) {
+                    saveFCMToken(userId!!) // Após salvar o usuário, salva o token FCM
+                }
             } else {
                 Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun saveUserToFirestore(userId: String?, userData: HashMap<String, Any>) {
+    private fun saveUserToFirestore(
+        userId: String?,
+        userData: HashMap<String, Any>,
+        onSuccess: () -> Unit
+    ) {
         userId?.let {
             db.collection("users").document(it).set(userData)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Cadastro bem-sucedido!", Toast.LENGTH_SHORT).show()
+                    onSuccess() // Chama o callback após o sucesso
                     startActivity(Intent(this, ClienteHomeActivity::class.java))
                     finish()
                 }
                 .addOnFailureListener {
-                    progressDialog.dismiss() // Esconder progresso em caso de erro
+                    progressDialog.dismiss()
                     Toast.makeText(this, "Falha ao salvar dados do usuário.", Toast.LENGTH_SHORT).show()
                 }
         }
     }
+
 }

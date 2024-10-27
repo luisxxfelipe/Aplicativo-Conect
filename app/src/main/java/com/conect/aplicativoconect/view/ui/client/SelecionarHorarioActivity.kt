@@ -119,11 +119,14 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 val selectedCalendar = Calendar.getInstance()
                 selectedCalendar.set(year, month, dayOfMonth)
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                selectedDate = dateFormat.format(selectedCalendar.time)
-                textViewSelectedDate.text = selectedDate
+                val formattedDate = dateFormat.format(selectedCalendar.time)
 
-                // Após selecionar a data, buscar os agendamentos existentes e horários disponíveis
-                fetchExistingBookings(selectedDate)
+                // Atualiza o TextView e a variável de data selecionada
+                selectedDate = formattedDate
+                textViewSelectedDate.text = formattedDate
+
+                // Usa uma cópia segura da data para evitar o problema de smart cast
+                fetchExistingBookings(formattedDate)
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -131,6 +134,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         )
         datePickerDialog.show()
     }
+
 
     // Busca os horários de funcionamento da empresa no Firestore
     private fun fetchOperatingHours() {
@@ -147,15 +151,17 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             }
     }
 
-    private fun fetchExistingBookings(date: String?) {
-        if (date == null) return
+    private fun fetchExistingBookings(date: String) {
         firestore.collection("bookings")
             .whereEqualTo("companyId", companyId)
             .whereEqualTo("date", date) // Busca os agendamentos para a data específica
             .get()
             .addOnSuccessListener { querySnapshot ->
                 val horariosOcupados = getBookedHours(querySnapshot)
+
+                // Gerar horários disponíveis excluindo os já ocupados
                 val horariosDisponiveis = generateAvailableHours(horariosOcupados)
+
                 horariosAdapter = HorariosAdapter(horariosDisponiveis) { selectedHour ->
                     this.selectedHour = selectedHour
                 }
@@ -167,12 +173,9 @@ class SelecionarHorarioActivity : AppCompatActivity() {
     }
 
     private fun getBookedHours(querySnapshot: QuerySnapshot): List<Int> {
-        val bookedHours = mutableListOf<Int>()
-        for (document in querySnapshot) {
-            val bookedHour = document.getLong("hour")?.toInt() ?: continue
-            bookedHours.add(bookedHour)
+        return querySnapshot.documents.mapNotNull { document ->
+            document.getLong("hour")?.toInt() // Extrai a hora reservada
         }
-        return bookedHours
     }
 
     private fun generateAvailableHours(bookedHours: List<Int>): List<Int> {

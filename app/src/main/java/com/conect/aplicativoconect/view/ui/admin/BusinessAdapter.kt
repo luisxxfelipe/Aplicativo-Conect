@@ -1,8 +1,6 @@
 package com.conect.aplicativoconect.view.ui.admin
 
 import android.content.Context
-import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,8 +12,6 @@ import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.data.model.OperatingHours
-import com.conect.aplicativoconect.view.ui.client.EmpresaDetalhesActivity
-import com.google.firebase.firestore.FirebaseFirestore
 
 class BusinessAdapter(
     private val context: Context,
@@ -33,7 +29,7 @@ class BusinessAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BusinessViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_card_booking_admin, parent, false) // Use o layout correto aqui
+            .inflate(R.layout.item_business, parent, false) // Use o layout correto aqui
         return BusinessViewHolder(view)
     }
 

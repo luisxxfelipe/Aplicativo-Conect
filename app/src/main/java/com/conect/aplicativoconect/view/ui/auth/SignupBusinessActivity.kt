@@ -12,6 +12,7 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.ui.admin.RegisterBusinessActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 
 class SignupBusinessActivity : AppCompatActivity() {
 
@@ -62,6 +63,25 @@ class SignupBusinessActivity : AppCompatActivity() {
         }
     }
 
+    // Função para obter e salvar o token FCM
+    private fun saveFCMToken(userId: String, collection: String) {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                db.collection(collection).document(userId)
+                    .update("fcmToken", token)
+                    .addOnSuccessListener {
+                        Log.d("FCM", "Token salvo com sucesso para $userId.")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("FCM", "Erro ao salvar token: ${e.message}")
+                    }
+            } else {
+                Log.e("FCM", "Erro ao obter token", task.exception)
+            }
+        }
+    }
+
     private fun createBusiness(email: String, password: String, businessName: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
@@ -79,6 +99,8 @@ class SignupBusinessActivity : AppCompatActivity() {
                             "type" to "business",
                             "ownerId" to userId // UID do proprietário do negócio
                         )
+
+                        saveFCMToken(userId, "business") // Salva o token para empresa
 
                         // Salva o negócio no Firestore
                         db.collection("business").document(userId)

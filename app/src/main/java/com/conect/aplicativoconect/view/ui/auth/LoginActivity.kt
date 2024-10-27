@@ -12,6 +12,7 @@ import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.conect.aplicativoconect.view.ui.admin.AdminHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 
 class LoginActivity : AppCompatActivity() {
 
@@ -45,9 +46,16 @@ class LoginActivity : AppCompatActivity() {
         }
 
         signUpButton.setOnClickListener {
-            val intent = Intent(this, SignupClientActivity::class.java)
+            val userType = intent.getStringExtra("USER_TYPE") ?: "client" // Padrão para cliente
+
+            val intent = if (userType == "client") {
+                Intent(this, SignupClientActivity::class.java) // Cadastro de cliente
+            } else {
+                Intent(this, SignupBusinessActivity::class.java) // Cadastro de empresa
+            }
             startActivity(intent)
         }
+
     }
 
     private fun loginUser(email: String, password: String) {
@@ -64,20 +72,20 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun verifyUserType(userId: String) {
-        // Verificar primeiro se é um negócio
         db.collection("business").document(userId).get()
             .addOnSuccessListener { businessDocument ->
-                if (businessDocument != null && businessDocument.exists()) {
-                    // Se encontrar, redireciona para a tela de administração
-                    val intent = Intent(this, AdminHomeActivity::class.java)
-                    startActivity(intent)
+                if (businessDocument.exists()) {
+                    // Empresa encontrada
+                    saveFCMToken(userId, "business") // Salva o token para empresa
+                    startActivity(Intent(this, AdminHomeActivity::class.java))
                     finish()
                 } else {
-                    // Caso não seja um negócio, verifica se é um cliente
                     db.collection("users").document(userId).get()
                         .addOnSuccessListener { userDocument ->
-                            if (userDocument != null && userDocument.exists()) {
+                            if (userDocument.exists()) {
                                 val userType = userDocument.getString("type")
+                                saveFCMToken(userId, "users") // Salva o token para cliente
+
                                 val intent = if (userType == "client") {
                                     Intent(this, ClienteHomeActivity::class.java)
                                 } else {
@@ -96,8 +104,28 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("LoginActivity", "Erro ao buscar negócio: ", e)
+                Log.e("LoginActivity", "Erro ao buscar empresa: ", e)
                 Toast.makeText(this, "Erro ao recuperar dados do negócio.", Toast.LENGTH_SHORT).show()
             }
     }
+
+    // Função para obter e salvar o token FCM
+    private fun saveFCMToken(userId: String, collection: String) {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                db.collection(collection).document(userId)
+                    .update("fcmToken", token)
+                    .addOnSuccessListener {
+                        Log.d("FCM", "Token salvo com sucesso para $userId.")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("FCM", "Erro ao salvar token: ${e.message}")
+                    }
+            } else {
+                Log.e("FCM", "Erro ao obter token", task.exception)
+            }
+        }
+    }
+
 }

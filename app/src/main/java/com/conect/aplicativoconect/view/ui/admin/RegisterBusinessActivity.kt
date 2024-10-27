@@ -27,6 +27,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 
 class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragment.OnHoursSelectedListener {
@@ -76,7 +77,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         uploadIcon = findViewById(R.id.uploadButton)
 
         // Configurar o Spinner com opções de serviços
-        val serviceTypes = listOf("Cabeleireiro", "Manicure", "Barbeiro", "Estética", "Cabeleireiro", "Massagem")
+        val serviceTypes = listOf("Cabeleireiro", "Manicure", "Estética", "Cabeleireiro", "Massagem")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, serviceTypes)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         serviceTypeSpinner.adapter = adapter
@@ -217,65 +218,61 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     ) {
         val userId = auth.currentUser?.uid ?: return // UID do usuário autenticado
 
-        // Definir o caminho para salvar a imagem no Firebase Storage
-        val storageRef = storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
-
-        // Fazer o upload da imagem para o Firebase Storage
-        val uploadTask = storageRef.putFile(imageUri)
-        uploadTask.continueWithTask { task ->
-            if (!task.isSuccessful) {
-                task.exception?.let { throw it }
-            }
-            storageRef.downloadUrl
-        }.addOnCompleteListener { task ->
-            progressDialog.dismiss()
+        // Obter o token FCM
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                val downloadUri = task.result
+                val fcmToken = task.result
 
-                // Criar instância de Business com o ownerId
-                val business = Business(
-                    name = businessName,
-                    description = businessDescription,
-                    serviceType = serviceType,
-                    address = address,
-                    phone = phone,
-                    operatingHours = operatingHours,
-                    imageUrl = downloadUri.toString(),
-                    email = email,
-                    isActive = true,
-                    ownerId = userId // Armazena o dono da empresa (UID do usuário autenticado)
-                )
+                // Definir o caminho para salvar a imagem no Firebase Storage
+                val storageRef = storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
 
-                // Salvar a empresa no Firestore
-                firestore.collection("business")
-                    .add(business) // Salva a empresa com um ID gerado automaticamente
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Empresa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this, AdminHomeActivity::class.java)
-                        startActivity(intent)
-                        finish()
+                // Fazer o upload da imagem para o Firebase Storage
+                val uploadTask = storageRef.putFile(imageUri)
+                uploadTask.continueWithTask { uploadTask ->
+                    if (!uploadTask.isSuccessful) {
+                        uploadTask.exception?.let { throw it }
                     }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(this, "Erro ao cadastrar: ${e.message}", Toast.LENGTH_SHORT).show()
+                    storageRef.downloadUrl
+                }.addOnCompleteListener { uploadTask ->
+                    progressDialog.dismiss()
+                    if (uploadTask.isSuccessful) {
+                        val downloadUri = uploadTask.result
+
+                        // Cria ou atualiza o documento da empresa com o token FCM
+                        val business = mapOf(
+                            "name" to businessName,
+                            "description" to businessDescription,
+                            "serviceType" to serviceType,
+                            "address" to address,
+                            "phone" to phone,
+                            "operatingHours" to operatingHours,
+                            "imageUrl" to downloadUri.toString(),
+                            "email" to email,
+                            "isActive" to true,
+                            "ownerId" to userId, // UID do usuário autenticado
+                            "fcmToken" to fcmToken // Token FCM do proprietário
+                        )
+
+                        // Usa `set` para garantir que o documento seja atualizado ou criado
+                        firestore.collection("business").document(userId)
+                            .set(business)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Empresa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
+                                val intent = Intent(this, AdminHomeActivity::class.java)
+                                startActivity(intent)
+                                finish()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Erro ao cadastrar: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    } else {
+                        Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT).show()
                     }
+                }
             } else {
-                Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Erro ao obter token FCM.", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-
-
-    private fun clearFields() {
-        findViewById<TextInputEditText>(R.id.businessNameInput).text?.clear()
-        findViewById<TextInputEditText>(R.id.businessDescriptionInput).text?.clear()
-        findViewById<TextInputEditText>(R.id.addressInput).text?.clear()
-        findViewById<TextInputEditText>(R.id.phoneInput).text?.clear()
-        operatingHoursInput.text?.clear()
-        imageUri = null
-        businessImageView.setImageResource(R.drawable.default_img) // Substitua por um recurso padrão
-        businessImageView.visibility = View.GONE
-        uploadIcon.visibility = View.VISIBLE
     }
 
     private fun openGallery() {

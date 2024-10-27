@@ -47,7 +47,9 @@ class BookingFragment : Fragment() {
     private fun setupRecyclerView() {
         bookingRecyclerView.layoutManager = LinearLayoutManager(context)
 
+        // Passando o contexto para o adapter
         bookingAdapter = ClientBookingAdapter(
+            requireContext(), // Aqui usamos o contexto da Activity ou Fragment
             bookings,
             onConfirmClick = { booking -> confirmBooking(booking) },
             onCancelClick = { booking -> cancelBooking(booking) }
@@ -55,6 +57,7 @@ class BookingFragment : Fragment() {
 
         bookingRecyclerView.adapter = bookingAdapter
     }
+
 
     private fun loadBookings() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
@@ -64,14 +67,17 @@ class BookingFragment : Fragment() {
                 .whereEqualTo("userId", userId)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
-                    bookings = querySnapshot.documents.mapNotNull { it.toObject(Booking::class.java) }
-                        .filter { isFutureBooking(it) } // Filtrar agendamentos futuros
+                    bookings = querySnapshot.documents.mapNotNull { document ->
+                        val booking = document.toObject(Booking::class.java)
+                        booking?.id = document.id // Atribui o ID do documento ao objeto Booking
+                        booking
+                    }.filter { isFutureBooking(it) } // Filtrar agendamentos futuros
 
                     if (bookings.isEmpty()) {
                         showEmptyBookingsMessage(true)
                     } else {
                         showEmptyBookingsMessage(false)
-                        bookingAdapter.updateBookings(bookings) // Chamada correta
+                        bookingAdapter.updateBookings(bookings)
                     }
                 }
                 .addOnFailureListener { e ->
@@ -80,6 +86,7 @@ class BookingFragment : Fragment() {
                 }
         }
     }
+
 
     private fun showEmptyBookingsMessage(show: Boolean) {
         if (show) {
@@ -133,13 +140,29 @@ class BookingFragment : Fragment() {
             firestore.collection("bookings").document(bookingId)
                 .update("status_cliente", "canceled")
                 .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Agendamento cancelado.", Toast.LENGTH_SHORT).show()
-                    loadBookings()
+                    // Exclui o agendamento após marcar como cancelado
+                    deleteBooking(bookingId)
                 }
                 .addOnFailureListener { e ->
                     Log.e("BookingFragment", "Erro ao cancelar agendamento: ${e.message}")
                     Toast.makeText(requireContext(), "Erro ao cancelar agendamento.", Toast.LENGTH_SHORT).show()
                 }
         }
+    }
+
+
+    // Função para excluir o agendamento do Firestore
+    private fun deleteBooking(bookingId: String) {
+        firestore.collection("bookings").document(bookingId)
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Agendamento excluído.", Toast.LENGTH_SHORT).show()
+                loadBookings() // Recarrega os agendamentos após a exclusão
+            }
+            .addOnFailureListener { e ->
+                Log.e("BookingFragment", "Erro ao excluir agendamento: ${e.message}")
+                Toast.makeText(requireContext(), "Erro ao excluir agendamento.", Toast.LENGTH_SHORT)
+                    .show()
+            }
     }
 }

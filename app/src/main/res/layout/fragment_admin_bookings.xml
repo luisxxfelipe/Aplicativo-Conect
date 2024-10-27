@@ -5,16 +5,6 @@
     android:padding="16dp">
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:gravity="center"
-        android:text="Meus agendamentos"
-        android:textColor="@color/cinza"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <TextView
         android:id="@+id/emptyBookingsMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

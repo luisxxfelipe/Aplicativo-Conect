@@ -23,17 +23,17 @@ class RoleSelectionActivity : AppCompatActivity() {
         // Definindo o listener para o botão do cliente
         clientButton.setOnClickListener {
             val intent = Intent(this, LoginActivity::class.java).apply {
-                putExtra("USER_TYPE", "client") // Adiciona um extra para indicar que é um cliente
+                putExtra("USER_TYPE", "client") // Adiciona um extra indicando que é cliente
             }
             startActivity(intent)
         }
 
-        // Definindo o listener para o botão do negócio
         businessButton.setOnClickListener {
             val intent = Intent(this, LoginActivity::class.java).apply {
-                putExtra("USER_TYPE", "business") // Adiciona um extra para indicar que é uma empresa
+                putExtra("USER_TYPE", "business") // Adiciona um extra indicando que é empresa
             }
             startActivity(intent)
         }
+
     }
 }
