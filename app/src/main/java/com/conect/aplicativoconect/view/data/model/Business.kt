@@ -8,16 +8,17 @@ data class OperatingHours(
 )
 
 data class Business(
-    val name: String,
-    val description: String,
-    val serviceType: String,
-    val address: String,
-    val phone: String,
-    val operatingHours: OperatingHours,
-    val imageUrl: String,
-    val ownerId: String,
-    val email: String,
-    val isActive: Boolean
+    val name: String = "",
+    val description: String = "",
+    val serviceType: String = "",
+    val address: String = "",
+    val phone: String = "",
+    val operatingHours: OperatingHours = OperatingHours(),
+    val imageUrl: String = "",
+    val ownerId: String = "",
+    val email: String = "",
+    val isActive: Boolean = true,
+    val services: List<Service> = listOf()
 ) {
     // Construtor padrão necessário para o Firestore
     constructor() : this("", "", "",  "", "", OperatingHours(), "", "", "", true) // Definindo isActive como true por padrão

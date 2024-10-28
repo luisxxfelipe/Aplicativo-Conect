@@ -54,4 +54,12 @@
         <item name="android:background">@drawable/button</item>
     </style>
 
+    <style name="CustomSearchView" parent="Widget.AppCompat.SearchView">
+        <item name="queryHint">Pesquise um estabelecimento</item>
+        <item name="android:textColorHint">#615E5E</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+
 </resources>

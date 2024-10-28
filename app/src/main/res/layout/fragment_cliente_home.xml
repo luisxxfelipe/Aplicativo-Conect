@@ -91,8 +91,10 @@
             android:id="@+id/searchView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:queryHint="Buscar serviços"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/search_view_background"
+            android:iconifiedByDefault="false"
+            android:queryHint="Pesquise um estabelecimento"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/headerCardView" />
@@ -102,6 +104,7 @@
             android:id="@+id/todayAgendaCardView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:background="@android:color/transparent"
             app:cardCornerRadius="0dp"
             app:cardElevation="0dp"
@@ -118,6 +121,7 @@
                     android:id="@+id/todayAgendaTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
                     android:text="Seus Agendamentos"
                     android:textColor="@color/black"
                     android:textSize="20sp"
@@ -128,9 +132,10 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/todayBookingsRecyclerView"
                     android:layout_width="0dp"
-                    android:layout_height="200dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
                     android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/todayAgendaTitle" />
@@ -142,13 +147,16 @@
                     android:text="Você ainda não possui agendamentos."
                     android:textColor="@color/cinza"
                     android:visibility="gone"
+                    android:layout_marginTop="24dp"
                     app:layout_constraintTop_toBottomOf="@id/todayBookingsRecyclerView"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />
 
                 <ImageView
                     android:id="@+id/noBookingsImage"
                     android:layout_width="200dp"
                     android:layout_height="200dp"
+                    android:layout_marginTop="16dp"
                     android:src="@drawable/sem_agendamentos"
                     android:visibility="gone"
                     app:layout_constraintTop_toBottomOf="@id/noBookingsMessage"

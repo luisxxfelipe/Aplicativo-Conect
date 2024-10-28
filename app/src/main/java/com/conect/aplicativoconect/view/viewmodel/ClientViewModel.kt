@@ -49,7 +49,4 @@ class ClientViewModel : ViewModel() {
         _todayBookings.value = bookings // Agora aceita apenas listas não nulas
     }
 
-    fun setFutureBookings(bookings: List<Booking>) {
-        _futureBookings.value = bookings // Agora aceita apenas listas não nulas
-    }
 }

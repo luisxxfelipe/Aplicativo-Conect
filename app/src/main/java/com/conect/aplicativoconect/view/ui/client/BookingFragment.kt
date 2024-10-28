@@ -11,10 +11,17 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.conect.aplicativoconect.R
+import com.conect.aplicativoconect.view.TokenUtils
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 class BookingFragment : Fragment() {
@@ -39,7 +46,7 @@ class BookingFragment : Fragment() {
         firestore = FirebaseFirestore.getInstance()
 
         setupRecyclerView()
-        loadBookings() // Carregar agendamentos do banco de dados
+        loadBookings()
 
         return view
     }
@@ -47,17 +54,14 @@ class BookingFragment : Fragment() {
     private fun setupRecyclerView() {
         bookingRecyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Passando o contexto para o adapter
         bookingAdapter = ClientBookingAdapter(
-            requireContext(), // Aqui usamos o contexto da Activity ou Fragment
-            bookings,
+            bookings = bookings,
             onConfirmClick = { booking -> confirmBooking(booking) },
             onCancelClick = { booking -> cancelBooking(booking) }
         )
 
         bookingRecyclerView.adapter = bookingAdapter
     }
-
 
     private fun loadBookings() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
@@ -69,15 +73,15 @@ class BookingFragment : Fragment() {
                 .addOnSuccessListener { querySnapshot ->
                     bookings = querySnapshot.documents.mapNotNull { document ->
                         val booking = document.toObject(Booking::class.java)
-                        booking?.id = document.id // Atribui o ID do documento ao objeto Booking
+                        booking?.id = document.id
                         booking
-                    }.filter { isFutureBooking(it) } // Filtrar agendamentos futuros
+                    }.filter { isFutureBooking(it) }
 
                     if (bookings.isEmpty()) {
                         showEmptyBookingsMessage(true)
                     } else {
                         showEmptyBookingsMessage(false)
-                        bookingAdapter.updateBookings(bookings)
+                        bookingAdapter.updateData(bookings)
                     }
                 }
                 .addOnFailureListener { e ->
@@ -87,17 +91,10 @@ class BookingFragment : Fragment() {
         }
     }
 
-
     private fun showEmptyBookingsMessage(show: Boolean) {
-        if (show) {
-            emptyBookingsMessage.visibility = View.VISIBLE
-            emptyBookingsImage.visibility = View.VISIBLE
-            bookingRecyclerView.visibility = View.GONE
-        } else {
-            emptyBookingsMessage.visibility = View.GONE
-            emptyBookingsImage.visibility = View.GONE
-            bookingRecyclerView.visibility = View.VISIBLE
-        }
+        emptyBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
+        emptyBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
+        bookingRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
     }
 
     private fun isFutureBooking(booking: Booking): Boolean {
@@ -121,48 +118,116 @@ class BookingFragment : Fragment() {
     }
 
     private fun confirmBooking(booking: Booking) {
-        booking.id?.let { bookingId ->
-            firestore.collection("bookings").document(bookingId)
-                .update("status_cliente", "confirmed")
-                .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT).show()
-                    loadBookings()
-                }
-                .addOnFailureListener { e ->
-                    Log.e("BookingFragment", "Erro ao confirmar agendamento: ${e.message}")
-                    Toast.makeText(requireContext(), "Erro ao confirmar agendamento.", Toast.LENGTH_SHORT).show()
-                }
-        }
+        firestore.collection("bookings").document(booking.id!!)
+            .update("status_cliente", "confirmed")
+            .addOnSuccessListener {
+                sendNotificationToBusiness(
+                    booking,
+                    "Agendamento Confirmado",
+                    "Olá ${booking.name}, seu agendamento foi confirmado!"
+                )
+                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT).show()
+                loadBookings()
+            }
+            .addOnFailureListener { e ->
+                Log.e("BookingFragment", "Erro ao confirmar agendamento: ${e.message}")
+                Toast.makeText(requireContext(), "Erro ao confirmar agendamento.", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun cancelBooking(booking: Booking) {
-        booking.id?.let { bookingId ->
-            firestore.collection("bookings").document(bookingId)
-                .update("status_cliente", "canceled")
-                .addOnSuccessListener {
-                    // Exclui o agendamento após marcar como cancelado
-                    deleteBooking(bookingId)
-                }
-                .addOnFailureListener { e ->
-                    Log.e("BookingFragment", "Erro ao cancelar agendamento: ${e.message}")
-                    Toast.makeText(requireContext(), "Erro ao cancelar agendamento.", Toast.LENGTH_SHORT).show()
-                }
-        }
+        firestore.collection("bookings").document(booking.id!!)
+            .update("status_cliente", "canceled")
+            .addOnSuccessListener {
+                sendNotificationToBusiness(
+                    booking,
+                    "Agendamento Cancelado",
+                    "Olá ${booking.name}, seu agendamento foi cancelado."
+                )
+                deleteBooking(booking.id!!)
+            }
+            .addOnFailureListener { e ->
+                Log.e("BookingFragment", "Erro ao cancelar agendamento: ${e.message}")
+                Toast.makeText(requireContext(), "Erro ao cancelar agendamento.", Toast.LENGTH_SHORT).show()
+            }
     }
 
-
-    // Função para excluir o agendamento do Firestore
     private fun deleteBooking(bookingId: String) {
         firestore.collection("bookings").document(bookingId)
             .delete()
             .addOnSuccessListener {
                 Toast.makeText(requireContext(), "Agendamento excluído.", Toast.LENGTH_SHORT).show()
-                loadBookings() // Recarrega os agendamentos após a exclusão
+                loadBookings()
             }
             .addOnFailureListener { e ->
                 Log.e("BookingFragment", "Erro ao excluir agendamento: ${e.message}")
-                Toast.makeText(requireContext(), "Erro ao excluir agendamento.", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(requireContext(), "Erro ao excluir agendamento.", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun sendNotificationToBusiness(booking: Booking, title: String, message: String) {
+        val companyId = booking.companyId ?: return
+
+        firestore.collection("business").document(companyId)
+            .get()
+            .addOnSuccessListener { document ->
+                val fcmToken = document.getString("fcmToken")
+                if (!fcmToken.isNullOrEmpty()) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        sendFCMNotification(fcmToken, title, message)
+                    }
+                } else {
+                    Log.e("FCM", "Token FCM não encontrado para empresa: $companyId")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("BookingFragment", "Erro ao buscar token FCM: ${e.message}")
+            }
+    }
+
+    private suspend fun sendFCMNotification(token: String, title: String, message: String) {
+        val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
+        val payload = """
+        {
+          "message": {
+            "token": "$token",
+            "notification": {
+              "title": "$title",
+              "body": "$message"
+            },
+            "android": {
+              "priority": "high"
+            }
+          }
+        }
+        """.trimIndent()
+
+        val accessToken = withContext(Dispatchers.IO) {
+            TokenUtils.getAccessTokenFromServiceAccount(requireContext())
+        }
+
+        if (accessToken == null) {
+            Log.e("FCM", "Erro ao obter token de acesso.")
+            return
+        }
+
+        val request = object : StringRequest(
+            Method.POST, url,
+            { response -> Log.d("FCM", "Notificação enviada: $response") },
+            { error -> Log.e("FCM", "Erro ao enviar notificação: ${error.message}") }
+        ) {
+            override fun getHeaders(): Map<String, String> {
+                return mapOf(
+                    "Authorization" to "Bearer $accessToken",
+                    "Content-Type" to "application/json"
+                )
+            }
+
+            override fun getBody(): ByteArray = payload.toByteArray(Charsets.UTF_8)
+        }
+
+        withContext(Dispatchers.Main) {
+            Volley.newRequestQueue(requireContext()).add(request)
+        }
     }
 }
