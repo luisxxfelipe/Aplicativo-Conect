@@ -12,5 +12,5 @@ data class Booking(
     var price: Double = 0.0,
     val userImageUrl: String? = null,
     var status_cliente: String? = null,
-    val status_adm: String? = null
+    var status_adm: String? = null
 )

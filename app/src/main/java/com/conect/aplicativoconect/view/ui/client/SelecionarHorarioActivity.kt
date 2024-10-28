@@ -68,6 +68,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                                 "userId" to userId,
                                 "companyId" to companyId,
                                 "serviceName" to selectedService.name,
+                                "price" to selectedService.price,
                                 "hour" to hour,
                                 "date" to date,
                                 "name" to userName,

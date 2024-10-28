@@ -27,7 +27,6 @@ class AdminBookingsFragment : Fragment() {
     private lateinit var emptyBookingsMessage: TextView
     private lateinit var emptyBookingsImage: ImageView
     private lateinit var bookingsRecyclerView: RecyclerView
-    private val bookingRepository = BookingRepository()
     private lateinit var firestore: FirebaseFirestore
 
     override fun onCreateView(
@@ -47,51 +46,66 @@ class AdminBookingsFragment : Fragment() {
     }
 
     private fun loadBookings() {
-        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (currentUserUid == null) {
+            return
+        }
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Busca a empresa associada ao usuário logado
+
                 val businessSnapshot = firestore.collection("business")
                     .whereEqualTo("ownerId", currentUserUid)
                     .get()
                     .await()
 
-                val businessId = businessSnapshot.documents.firstOrNull()?.id ?: return@launch
+                val businessId = businessSnapshot.documents.firstOrNull()?.id
 
-                // Busca os agendamentos para a empresa
+                if (businessId == null) {
+                    withContext(Dispatchers.Main) { showErrorMessage("Empresa não encontrada.") }
+                    return@launch
+                }
+
+
                 val bookingsSnapshot = firestore.collection("bookings")
                     .whereEqualTo("companyId", businessId)
                     .get()
                     .await()
 
-                val bookings = bookingsSnapshot.toObjects(Booking::class.java)
+                val bookings = bookingsSnapshot.documents.mapNotNull { document ->
+                    val booking = document.toObject(Booking::class.java)
+                    booking?.id = document.id
+                    booking
+                }
 
                 withContext(Dispatchers.Main) {
+
                     if (bookings.isEmpty()) {
-                        emptyBookingsMessage.visibility = View.VISIBLE
-                        emptyBookingsImage.visibility = View.VISIBLE
-                        bookingsRecyclerView.visibility = View.GONE
+                        showEmptyMessage(true)
                     } else {
-                        emptyBookingsMessage.visibility = View.GONE
-                        emptyBookingsImage.visibility = View.GONE
-                        bookingsRecyclerView.visibility = View.VISIBLE
+                        showEmptyMessage(false)
                         setupRecyclerView(bookings)
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    emptyBookingsMessage.text = "Erro ao carregar agendamentos."
-                    emptyBookingsMessage.visibility = View.VISIBLE
-                    emptyBookingsImage.visibility = View.VISIBLE
-                    bookingsRecyclerView.visibility = View.GONE
-                    Log.e("AdminBookingsFragment", "Erro ao carregar agendamentos: ", e)
+                    showErrorMessage("Erro ao carregar agendamentos.")
                 }
             }
         }
     }
 
+    private fun showEmptyMessage(show: Boolean) {
+        emptyBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
+        emptyBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
+        bookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+    }
 
+    private fun showErrorMessage(message: String) {
+        emptyBookingsMessage.text = message
+        showEmptyMessage(true)
+    }
 
     private fun setupRecyclerView(bookings: List<Booking>) {
         bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())

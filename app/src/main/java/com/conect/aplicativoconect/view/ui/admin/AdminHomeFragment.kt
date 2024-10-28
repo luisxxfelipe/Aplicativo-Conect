@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -48,7 +47,7 @@ class AdminHomeFragment : Fragment() {
         firestore = FirebaseFirestore.getInstance()
 
         setupRecyclerView()
-        loadDataSafely()
+        loadBookingsInRealTime()
         loadBusinessName()
 
         // Observa mudanças nos ViewModels
@@ -85,100 +84,116 @@ class AdminHomeFragment : Fragment() {
         binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
     }
 
-    private fun loadDataSafely() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+    private fun loadBookingsInRealTime() {
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-                val businessSnapshot = firestore.collection("business")
-                    .whereEqualTo("ownerId", currentUserUid)
-                    .get()
-                    .await()
+        firestore.collection("business")
+            .whereEqualTo("ownerId", currentUserUid)
+            .get()
+            .addOnSuccessListener { businessSnapshot ->
+                val businessId = businessSnapshot.documents.firstOrNull()?.id ?: return@addOnSuccessListener
 
-                val businessId = businessSnapshot.documents.firstOrNull()?.id ?: return@launch
+                firestore.collection("bookings")
+                    .whereEqualTo("companyId", businessId)
+                    .addSnapshotListener { querySnapshot, error ->
+                        if (error != null) {
+                            Log.e("AdminHomeFragment", "Erro ao buscar agendamentos: ${error.message}")
+                            showErrorMessage("Erro ao carregar agendamentos.")
+                            return@addSnapshotListener
+                        }
 
-                val allBookings = getAllBookings(businessId)
+                        val bookings = querySnapshot?.documents?.mapNotNull { document ->
+                            document.toObject(Booking::class.java)?.apply { id = document.id }
+                        } ?: emptyList()
 
-                Log.d("AdminHomeFragment", "Total de agendamentos recuperados: ${allBookings.size}")
-
-                val confirmedBookings = allBookings.filter {
-                    it.status_cliente == "confirmed"
-                }
-                Log.d("AdminHomeFragment", "Agendamentos confirmados: ${confirmedBookings.size}")
-
-                val (weeklyBookings, monthBookings) = filterBookingsByDate(confirmedBookings)
-
-                Log.d("AdminHomeFragment", "Agendamentos da semana: ${weeklyBookings.size}")
-                Log.d("AdminHomeFragment", "Agendamentos do mês: ${monthBookings.size}")
-
-                val weeklyProfit = calculateProfit(weeklyBookings)
-                val monthlyProfit = calculateProfit(monthBookings)
-
-                Log.d("AdminHomeFragment", "Lucro da semana: R$ $weeklyProfit")
-                Log.d("AdminHomeFragment", "Lucro do mês: R$ $monthlyProfit")
-
-                withContext(Dispatchers.Main) {
-                    if (!isAdded || _binding == null) return@withContext
-
-                    adminViewModel.setTodayBookingsCount(weeklyBookings.size)
-                    adminViewModel.setMonthBookingsCount(monthBookings.size)
-                    adminViewModel.setTodayProfit(weeklyProfit)
-                    adminViewModel.setMonthProfit(monthlyProfit)
-
-                    val nearestBookings = allBookings
-                        .filter { isFutureBooking(it) }
-                        .sortedBy { it.date?.let { date -> parseDateTime(date, it.hour) } }
-                        .take(2)
-
-                    if (nearestBookings.isEmpty()) {
-                        showNoBookingsMessage(true)
-                    } else {
-                        showNoBookingsMessage(false)
-                        setupNearestBookingsAdapter(nearestBookings)
+                        processBookings(bookings)  // Processa e exibe os agendamentos
                     }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    showErrorMessage("Erro ao carregar dados.")
-                    Log.e("AdminHomeFragment", "Erro ao carregar dados: ", e)
-                }
             }
+            .addOnFailureListener { e ->
+                Log.e("AdminHomeFragment", "Erro ao buscar empresa: ${e.message}")
+                showErrorMessage("Erro ao carregar dados da empresa.")
+            }
+    }
+
+    private fun processBookings(bookings: List<Booking>) {
+        val confirmedBookings = bookings.filter { it.status_cliente == "confirmed" }
+
+        val (weeklyBookings, monthBookings) = filterBookingsByDate(confirmedBookings)
+
+        val weeklyProfit = calculateProfit(weeklyBookings)
+        val monthlyProfit = calculateProfit(monthBookings)
+
+        Log.d("AdminHomeFragment", "Agendamentos confirmados: ${confirmedBookings.size}")
+        Log.d("AdminHomeFragment", "Lucro da semana: R$ $weeklyProfit")
+        Log.d("AdminHomeFragment", "Lucro do mês: R$ $monthlyProfit")
+
+        if (!isAdded || _binding == null) return
+
+        adminViewModel.setTodayBookingsCount(weeklyBookings.size)
+        adminViewModel.setMonthBookingsCount(monthBookings.size)
+        adminViewModel.setTodayProfit(weeklyProfit)
+        adminViewModel.setMonthProfit(monthlyProfit)
+
+        val nearestBookings = bookings
+            .filter { isFutureBooking(it) }
+            .sortedBy { it.date?.let { date -> parseDateTime(date, it.hour) } }
+            .take(2)
+
+        if (nearestBookings.isEmpty()) {
+            showNoBookingsMessage(true)
+        } else {
+            showNoBookingsMessage(false)
+            setupNearestBookingsAdapter(nearestBookings)
         }
     }
 
 
+
     private fun calculateProfit(bookings: List<Booking>): Double {
-        return bookings.sumOf { it.price ?: 0.0 }
+        return bookings.sumOf { it.price }
     }
 
     private fun filterBookingsByDate(bookings: List<Booking>): Pair<List<Booking>, List<Booking>> {
         val calendar = Calendar.getInstance()
 
+        // Definindo o início do mês atual
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startOfMonth = calendar.time
+
+        // Definindo o fim do mês atual
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val endOfMonth = calendar.time
+
+        Log.d("AdminHomeFragment", "Filtro Mensal - Início: $startOfMonth, Fim: $endOfMonth")
+
+        // Filtro para os agendamentos da semana
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
         val startOfWeek = calendar.time
 
         calendar.add(Calendar.DAY_OF_WEEK, 6)
         val endOfWeek = calendar.time
 
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        val startOfMonth = calendar.time
-
-        calendar.add(Calendar.MONTH, 1)
-        calendar.set(Calendar.DAY_OF_MONTH, 0)
-        val endOfMonth = calendar.time
-
-        val weeklyBookings = bookings.filter {
-            val bookingDate = it.date?.let { date -> parseDateTime(date, it.hour).time }
+        val weeklyBookings = bookings.filter { booking ->
+            val bookingDate = booking.date?.let { date -> parseDateTime(date, booking.hour).time }
+            Log.d("AdminHomeFragment", "Verificando agendamento semanal: $bookingDate no intervalo $startOfWeek até $endOfWeek")
             bookingDate != null && bookingDate in startOfWeek..endOfWeek
         }
-        Log.d("AdminHomeFragment", "Agendamentos semanais filtrados: ${weeklyBookings.size}")
 
-        val monthBookings = bookings.filter {
-            val bookingDate = it.date?.let { date -> parseDateTime(date, it.hour).time }
+        val monthBookings = bookings.filter { booking ->
+            val bookingDate = booking.date?.let { date -> parseDateTime(date, booking.hour).time }
+            Log.d("AdminHomeFragment", "Verificando agendamento mensal: $bookingDate no intervalo $startOfMonth até $endOfMonth")
             bookingDate != null && bookingDate in startOfMonth..endOfMonth
         }
-        Log.d("AdminHomeFragment", "Agendamentos mensais filtrados: ${monthBookings.size}")
 
+        Log.d("AdminHomeFragment", "Total de agendamentos do mês: ${monthBookings.size}")
         return Pair(weeklyBookings, monthBookings)
     }
 
@@ -186,7 +201,6 @@ class AdminHomeFragment : Fragment() {
         val businessSnapshot = firestore.collection("business").document(businessId).get().await()
         val business = businessSnapshot.toObject(Business::class.java)
 
-        // Verifica se a lista de serviços foi carregada corretamente
         val services = business?.services ?: emptyList()
         Log.d("AdminHomeFragment", "Total de serviços carregados: ${services.size}")
 
@@ -199,30 +213,32 @@ class AdminHomeFragment : Fragment() {
             val booking = document.toObject(Booking::class.java)
             booking?.id = document.id
 
-            // Logando os detalhes do agendamento
             Log.d(
                 "AdminHomeFragment",
                 "Agendamento ID: ${booking?.id}, Serviço: ${booking?.serviceName}, Preço: ${booking?.price}"
             )
 
-            // Ajuste: Comparação com espaços removidos e ignorando maiúsculas/minúsculas
-            services.firstOrNull { service ->
+            // Buscar serviço correspondente ignorando espaços e diferenças de case
+            val matchedService = services.firstOrNull { service ->
                 service.name.trim().equals(booking?.serviceName?.trim(), ignoreCase = true)
-            }?.let { service ->
-                booking?.price = service.price
+            }
+
+            if (matchedService != null) {
+                booking?.price = matchedService.price
                 Log.d(
                     "AdminHomeFragment",
-                    "Serviço encontrado: ${service.name}, Preço: ${service.price}"
+                    "Serviço encontrado: ${matchedService.name}, Preço: ${matchedService.price}"
                 )
-            } ?: Log.d(
-                "AdminHomeFragment",
-                "Serviço não encontrado para o agendamento: ${booking?.serviceName}"
-            )
+            } else {
+                Log.d(
+                    "AdminHomeFragment",
+                    "Serviço não encontrado para o agendamento: ${booking?.serviceName}"
+                )
+            }
 
             booking
         }
-}
-
+    }
 
     private fun setupNearestBookingsAdapter(nearestBookings: List<Booking>) {
         binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
@@ -245,10 +261,12 @@ class AdminHomeFragment : Fragment() {
         val dateParts = date.split("/").map { it.toInt() }
         return Calendar.getInstance().apply {
             set(Calendar.YEAR, dateParts[2])
-            set(Calendar.MONTH, dateParts[1] - 1)
+            set(Calendar.MONTH, dateParts[1] - 1) // Mês é indexado em 0
             set(Calendar.DAY_OF_MONTH, dateParts[0])
             set(Calendar.HOUR_OF_DAY, hour ?: 0)
             set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
     }
 
@@ -270,7 +288,7 @@ class AdminHomeFragment : Fragment() {
             .update("status_adm", "confirmed")
             .addOnSuccessListener {
                 Log.d("AdminHomeFragment", "Agendamento confirmado com sucesso!")
-                loadDataSafely()
+                loadBookingsInRealTime()
             }
             .addOnFailureListener { e ->
                 Log.w("AdminHomeFragment", "Erro ao confirmar o agendamento: ", e)
@@ -281,7 +299,7 @@ class AdminHomeFragment : Fragment() {
         firestore.collection("bookings").document(bookingId).delete()
             .addOnSuccessListener {
                 Log.d("CancelBooking", "Agendamento cancelado com sucesso!")
-                loadDataSafely()
+                loadBookingsInRealTime()
             }
             .addOnFailureListener { e ->
                 Log.w("CancelBooking", "Erro ao cancelar agendamento", e)
@@ -291,6 +309,7 @@ class AdminHomeFragment : Fragment() {
     private fun loadBusinessName() {
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: run {
             binding.userNameBusiness.text = "Usuário não autenticado"
+            setGreeting("Usuário") // Saudação mesmo que o usuário não esteja autenticado
             return
         }
 
@@ -299,14 +318,19 @@ class AdminHomeFragment : Fragment() {
             .get()
             .addOnSuccessListener { documents ->
                 val business = documents.firstOrNull()?.toObject(Business::class.java)
-                adminViewModel.setBusinessName(business?.name ?: "Nome não disponível")
+                val businessName = business?.name ?: "Nome não disponível"
+
+                binding.userNameBusiness.text = businessName  // Exibe o nome diretamente
+                setGreeting(businessName)  // Chama a saudação com o nome do negócio
                 loadProfileImage(business?.imageUrl)
             }
             .addOnFailureListener { e ->
-                adminViewModel.setBusinessName("Erro ao carregar nome")
                 Log.e("AdminHomeFragment", "Erro ao buscar nome do negócio: ", e)
+                binding.userNameBusiness.text = "Erro ao carregar nome"
+                setGreeting("Usuário")
             }
     }
+
 
     private fun loadProfileImage(imageUrl: String?) {
         imageUrl?.let {

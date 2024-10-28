@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.view.ui.client
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentClienteProfileBinding
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.inappmessaging.MessagesProto
 
 class ClienteProfileFragment : Fragment() {
 
@@ -55,7 +57,15 @@ class ClienteProfileFragment : Fragment() {
         clientViewModel.userEmail.observe(viewLifecycleOwner) { email ->
             binding.userEmail.text = email // Atualiza o TextView com o email
         }
+
+        binding.personalDataButton.setOnClickListener {
+            val intent = Intent(requireContext(), EditProfileActivity::class.java)
+            startActivity(intent)
+        }
+
     }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()

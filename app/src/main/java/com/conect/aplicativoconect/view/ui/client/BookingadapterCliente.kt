@@ -50,15 +50,18 @@ class ClientBookingAdapter(
         holder.bookingDate.text = booking.date
         holder.bookingTime.text = "${booking.hour}:00h"
 
-        // Verificando o status e aplicando cor se for 'confirmed'
+        // Aplique a cor ao CardView diretamente
+        val cardView = holder.itemView as androidx.cardview.widget.CardView
         if (booking.status_cliente == "confirmed") {
-            val randomColor = getRandomColor(holder.itemView)  // Obtém uma cor aleatória
-            holder.itemView.setBackgroundColor(randomColor)
+            val randomColor = getRandomColor(cardView)  // Cor aleatória
+            cardView.setCardBackgroundColor(randomColor)
         }
 
         val showButtons = booking.status_cliente == "pending"
         holder.confirmButton.visibility = if (showButtons) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (showButtons) View.VISIBLE else View.GONE
+
+        cardView.cardElevation = if (showButtons) 8f else 0f  // Aplica ou remove a elevação
 
         holder.confirmButton.setOnClickListener { onConfirmClick(booking) }
         holder.cancelButton.setOnClickListener { onCancelClick(booking) }
