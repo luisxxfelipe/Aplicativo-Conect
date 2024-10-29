@@ -2,7 +2,9 @@ package com.conect.aplicativoconect.view.ui.client
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +21,10 @@ import java.util.*
 class SelecionarHorarioActivity : AppCompatActivity() {
 
     private lateinit var horariosRecyclerView: RecyclerView
+    private lateinit var buttonAgendar: Button
+    private lateinit var emptyStateImage: ImageView
+    private lateinit var emptyStateText: TextView
+
     private lateinit var horariosAdapter: HorariosAdapter
     private lateinit var firestore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
@@ -41,9 +47,17 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         selectedService = intent.getSerializableExtra("selectedService") as Service
 
         horariosRecyclerView = findViewById(R.id.horariosRecyclerView)
+        buttonAgendar = findViewById(R.id.buttonAgendar)
+        emptyStateImage = findViewById(R.id.emptyStateImage)
+        emptyStateText = findViewById(R.id.emptyStateText)
+        textViewSelectedDate = findViewById(R.id.textViewSelectedDate)
+
         horariosRecyclerView.layoutManager = LinearLayoutManager(this)
 
-        textViewSelectedDate = findViewById(R.id.textViewSelectedDate)
+        // Esconde os componentes inicialmente
+        horariosRecyclerView.visibility = View.GONE
+        buttonAgendar.visibility = View.GONE
+
         buttonPickDate = findViewById(R.id.buttonPickDate)
 
         firestore = FirebaseFirestore.getInstance()
@@ -97,6 +111,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         }
     }
 
+
     private fun fetchUserDetails(userId: String, callback: (String, String?) -> Unit) {
         firestore.collection("users").document(userId).get()
             .addOnSuccessListener { documentSnapshot ->
@@ -125,6 +140,12 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 // Atualiza o TextView e a variável de data selecionada
                 selectedDate = formattedDate
                 textViewSelectedDate.text = formattedDate
+
+                // Exibe a lista e o botão, e esconde a imagem e texto
+                emptyStateImage.visibility = View.GONE
+                emptyStateText.visibility = View.GONE
+                horariosRecyclerView.visibility = View.VISIBLE
+                buttonAgendar.visibility = View.VISIBLE
 
                 // Usa uma cópia segura da data para evitar o problema de smart cast
                 fetchExistingBookings(formattedDate)
@@ -187,17 +208,5 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         return allHours.filter { hour ->
             bookedHours.none { bookedHour -> Math.abs(hour - bookedHour) < 1 } // Exclui horários já reservados
         }
-    }
-
-    private fun fetchUserName(userId: String, callback: (String) -> Unit) {
-        firestore.collection("users").document(userId).get()
-            .addOnSuccessListener { documentSnapshot ->
-                val userName = documentSnapshot.getString("name") ?: "Nome não encontrado"
-                callback(userName)
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao buscar nome do usuário: ${e.message}", Toast.LENGTH_SHORT).show()
-                callback("Nome não encontrado")
-            }
     }
 }

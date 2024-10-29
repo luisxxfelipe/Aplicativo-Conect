@@ -34,7 +34,7 @@ class AddServiceFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_add_service, container, false)
 
         recyclerView = view.findViewById(R.id.recyclerViewServiceTypes)
-        recyclerView.layoutManager = GridLayoutManager(requireContext(), 2) // 2 colunas
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), 1) // 1 coluna
 
         addedServicesRecyclerView = view.findViewById(R.id.recyclerViewAddedServices)
         addedServicesRecyclerView.layoutManager = GridLayoutManager(requireContext(), 1) // 1 coluna

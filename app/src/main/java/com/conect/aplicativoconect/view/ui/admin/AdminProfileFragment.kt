@@ -1,5 +1,7 @@
 package com.conect.aplicativoconect.view.ui.admin
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,11 +12,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentAdminProfileBinding
+import com.conect.aplicativoconect.view.ui.PolicyActivity
 import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.storage
 
 class AdminProfileFragment : Fragment() {
 
@@ -54,9 +55,24 @@ class AdminProfileFragment : Fragment() {
         // Carregar os dados do administrador do Firestore
         adminViewModel.loadAdminData()
 
-        // Listener para abrir o fragmento de horários de funcionamento
-        binding.hoursButtonAdmin.setOnClickListener {
-            openOperatingHoursFragment()
+        binding.dadospessoais.setOnClickListener {
+            val intent = Intent(requireContext(), EditBusinessProfileActivity::class.java)
+            startActivity(intent)
+        }
+
+        // Redireciona para o WhatsApp
+        binding.helpButtonAdmin.setOnClickListener {
+            val message = "Olá, preciso de ajuda com o aplicativo."
+            val url = "https://wa.me/5535984478656?text=${Uri.encode(message)}"
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse(url)
+            startActivity(intent)
+        }
+
+        // Redireciona para a tela de política de privacidade
+        binding.aboutpolicy.setOnClickListener {
+            val intent = Intent(requireContext(), PolicyActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -84,15 +100,6 @@ class AdminProfileFragment : Fragment() {
                 // Lidar com falha ao obter a imagem
                 Log.e("AdminProfileFragment", "Error loading profile image", exception)
             }
-    }
-
-
-
-    private fun openOperatingHoursFragment() {
-        parentFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, OperatingHoursFragment())
-            .addToBackStack(null)
-            .commit()
     }
 
     override fun onDestroyView() {

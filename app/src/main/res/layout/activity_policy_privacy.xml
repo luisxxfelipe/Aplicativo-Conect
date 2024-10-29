@@ -1,0 +1,73 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="POLÍTICA DE PRIVACIDADE"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"
+        android:textColor="@android:color/black" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:lineSpacingExtra="8dp"
+            android:textColor="@android:color/black"
+            android:text="
+INTRODUÇÃO
+
+ESTA POLÍTICA DE PRIVACIDADE DESCREVE COMO COLETAMOS, USAMOS E PROTEGEMOS AS INFORMAÇÕES PESSOAIS DOS USUÁRIOS DO NOSSO APLICATIVO.
+
+COLETA DE DADOS
+
+COLETAMOS DADOS FORNECIDOS DIRETAMENTE PELO USUÁRIO, COMO NOME, EMAIL E ENDEREÇO. TAMBÉM PODEMOS COLETAR DADOS AUTOMÁTICOS, COMO INFORMAÇÕES DO DISPOSITIVO E DO USO DO APLICATIVO.
+
+USO DAS INFORMAÇÕES
+
+AS INFORMAÇÕES COLETADAS SÃO UTILIZADAS PARA:
+
+- MELHORAR A EXPERIÊNCIA DO USUÁRIO
+- PERSONALIZAR O CONTEÚDO DO APLICATIVO
+- ENVIAR NOTIFICAÇÕES IMPORTANTES SOBRE SERVIÇOS
+- CUMPRIR OBRIGAÇÕES LEGAIS E REGULATÓRIAS
+
+COMPARTILHAMENTO DE DADOS
+
+NÃO VENDEMOS OU COMPARTILHAMOS DADOS PESSOAIS COM TERCEIROS SEM O CONSENTIMENTO DO USUÁRIO, EXCETO QUANDO EXIGIDO POR LEI OU NECESSÁRIO PARA A PRESTAÇÃO DOS SERVIÇOS.
+
+ARMAZENAMENTO E SEGURANÇA
+
+ARMAZENAMOS AS INFORMAÇÕES EM SERVIDORES SEGUROS E ADOTAMOS MEDIDAS APROPRIADAS PARA PROTEGER OS DADOS CONTRA ACESSO NÃO AUTORIZADO.
+
+COOKIES E TECNOLOGIAS SEMELHANTES
+
+PODEMOS UTILIZAR COOKIES E OUTRAS TECNOLOGIAS PARA COLETAR INFORMAÇÕES SOBRE O USO DO APLICATIVO E MELHORAR NOSSOS SERVIÇOS.
+
+DIREITOS DO USUÁRIO
+
+O USUÁRIO TEM O DIREITO DE ACESSAR, CORRIGIR OU EXCLUIR SEUS DADOS PESSOAIS, BEM COMO SOLICITAR A SUSPENSÃO DO USO DOS DADOS PARA DETERMINADAS FINALIDADES.
+
+ALTERAÇÕES NA POLÍTICA
+
+ESTA POLÍTICA PODE SER ATUALIZADA PERIODICAMENTE. NOTIFICAREMOS OS USUÁRIOS SOBRE MUDANÇAS SIGNIFICATIVAS POR MEIO DE AVISOS NO APLICATIVO.
+
+CONTATO
+
+EM CASO DE DÚVIDAS SOBRE NOSSA POLÍTICA DE PRIVACIDADE, ENTRE EM CONTATO PELO EMAIL: SUPORTE@SEUAPP.COM." />
+    </ScrollView>
+
+</LinearLayout>

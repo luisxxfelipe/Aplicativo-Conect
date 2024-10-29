@@ -3,17 +3,28 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/textViewServiceName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Selecione o horário"
-        android:textSize="18sp"
-        android:layout_gravity="center_horizontal" />
+    <!-- Estado inicial com imagem e texto -->
+    <ImageView
+        android:id="@+id/emptyStateImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/sem_agendamentos" />
 
     <!-- Adicionando os componentes necessários -->
+
+    <TextView
+        android:id="@+id/emptyStateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Escolha uma data para ver os horários disponíveis"
+        android:textSize="18sp"
+        android:textColor="@color/cinza"
+        android:gravity="center"
+        android:layout_marginTop="16dp" />
+
     <TextView
         android:id="@+id/textViewSelectedDate"
         android:layout_width="wrap_content"
@@ -25,25 +36,27 @@
 
     <Button
         android:id="@+id/buttonPickDate"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:textColor="@color/white"
         android:text="Escolher Data"
-        android:layout_marginTop="8dp"
-        android:layout_gravity="center_horizontal" />
+        android:textColor="@android:color/white"
+        android:layout_marginTop="15dp" />
 
+    <!-- RecyclerView e botão agendar escondidos por padrão -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/horariosRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/buttonAgendar"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="Agendar"
-        android:textColor="@color/white"
+        android:textColor="@android:color/white"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="24dp" />
+        android:layout_marginTop="24dp"
+        android:visibility="gone" />
 </LinearLayout>

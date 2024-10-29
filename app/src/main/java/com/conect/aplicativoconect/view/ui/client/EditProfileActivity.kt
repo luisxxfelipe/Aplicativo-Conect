@@ -84,8 +84,9 @@ class EditProfileActivity : AppCompatActivity() {
     private fun saveUserProfile() {
         val name = editUserName.text.toString()
         val email = editUserEmail.text.toString()
-
         val user = firebaseAuth.currentUser ?: return
+
+        // Atualizar as informações no Firebase Authentication
         val profileUpdates = userProfileChangeRequest {
             displayName = name
             photoUri = selectedPhotoUri ?: user.photoUrl
@@ -93,26 +94,45 @@ class EditProfileActivity : AppCompatActivity() {
 
         user.updateProfile(profileUpdates).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                Toast.makeText(this, "Perfil atualizado", Toast.LENGTH_SHORT).show()
-                finish() // Voltar para a tela anterior
+                updateFirestoreData(user.uid, name, email)
             } else {
                 Toast.makeText(this, "Erro ao atualizar perfil", Toast.LENGTH_SHORT).show()
             }
         }
 
+        // Atualizar o e-mail do usuário
         user.updateEmail(email).addOnCompleteListener { task ->
             if (!task.isSuccessful) {
                 Toast.makeText(this, "Erro ao atualizar e-mail", Toast.LENGTH_SHORT).show()
             }
         }
 
+        // Upload da foto de perfil para o Firebase Storage
         selectedPhotoUri?.let { uri ->
             val ref = storage.reference.child("profileImages/${user.uid}")
             ref.putFile(uri).addOnSuccessListener {
                 ref.downloadUrl.addOnSuccessListener { downloadUri ->
                     user.updateProfile(userProfileChangeRequest { photoUri = downloadUri })
+                    updateFirestoreData(user.uid, name, email, downloadUri.toString())
                 }
             }
         }
+    }
+
+    private fun updateFirestoreData(userId: String, name: String, email: String, imageUrl: String? = null) {
+        val userData = mutableMapOf<String, Any>(
+            "name" to name,
+            "email" to email
+        )
+        imageUrl?.let { userData["imageUrl"] = it }
+
+        firestore.collection("users").document(userId).update(userData)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Perfil atualizado com sucesso", Toast.LENGTH_SHORT).show()
+                finish() // Voltar para a tela de perfil
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Erro ao atualizar no Firestore", Toast.LENGTH_SHORT).show()
+            }
     }
 }

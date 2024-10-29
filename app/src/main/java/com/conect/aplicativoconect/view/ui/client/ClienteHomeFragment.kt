@@ -12,15 +12,22 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentClienteHomeBinding
+import com.conect.aplicativoconect.view.TokenUtils
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 class ClienteHomeFragment : Fragment() {
@@ -53,16 +60,9 @@ class ClienteHomeFragment : Fragment() {
         // Mostra categorias e agendamentos ao iniciar
         showDefaultView()
 
-        // Expande o SearchView sem abrir o teclado
-        binding.searchView.isIconified = false  // Expande o campo
-        binding.searchView.clearFocus()  // Remove o foco imediato para não abrir o teclado
 
-        // Configura clique no campo para abrir o teclado apenas quando necessário
-        binding.searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                binding.searchView.requestFocus()
-            }
-        }
+
+
 
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         userId?.let {
@@ -135,6 +135,7 @@ class ClienteHomeFragment : Fragment() {
                         updateBusinessAdapter(businessList)
                     } else {
                         Toast.makeText(requireContext(), "Nenhum estabelecimento encontrado.", Toast.LENGTH_SHORT).show()
+                        fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")  // Atualiza a lista
                     }
                 }
             }
@@ -150,25 +151,58 @@ class ClienteHomeFragment : Fragment() {
         firestore.collection("bookings").document(booking.id!!)
             .update("status_cliente", "confirmed")
             .addOnSuccessListener {
+                sendNotificationToBusiness(
+                    booking,
+                    "Agendamento Confirmado",
+                    "O agendamento de ${booking.name} foi confirmado!"
+                )
                 Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT).show()
-                fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")
+                fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")  // Atualiza a lista
             }
             .addOnFailureListener { e ->
-                Log.e("ClienteHomeFragment", "Erro ao confirmar agendamento: ${e.message}")
+                Log.e("BookingFragment", "Erro ao confirmar agendamento: ${e.message}")
                 Toast.makeText(requireContext(), "Erro ao confirmar agendamento.", Toast.LENGTH_SHORT).show()
             }
     }
 
+
     private fun cancelBooking(booking: Booking) {
         firestore.collection("bookings").document(booking.id!!)
-            .update("status_cliente", "canceled")
+            .delete()
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Agendamento cancelado.", Toast.LENGTH_SHORT).show()
-                fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")
+                sendNotificationToBusiness(
+                    booking,
+                    "Agendamento Cancelado",
+                    "O agendamento de ${booking.name} foi cancelado."
+                )
+                Toast.makeText(requireContext(), "Agendamento cancelado e excluído.", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
-                Log.e("ClienteHomeFragment", "Erro ao cancelar agendamento: ${e.message}")
+                Log.e("BookingFragment", "Erro ao cancelar agendamento: ${e.message}")
                 Toast.makeText(requireContext(), "Erro ao cancelar agendamento.", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+    private fun sendNotificationToBusiness(booking: Booking, title: String, message: String) {
+        val companyId = booking.companyId ?: return
+
+        firestore.collection("business").document(companyId)
+            .get()
+            .addOnSuccessListener { document ->
+                val fcmToken = document.getString("fcmToken")
+                Log.d("FCM", "Token FCM recebido: $fcmToken")  // Log para verificar o token
+
+                if (!fcmToken.isNullOrEmpty()) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        sendFCMNotification(fcmToken, title, message)
+                    }
+                } else {
+                    Log.e("FCM", "Token FCM não encontrado para empresa: $companyId")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("BookingFragment", "Erro ao buscar token FCM: ${e.message}")
             }
     }
 
@@ -179,6 +213,52 @@ class ClienteHomeFragment : Fragment() {
             categoriesRecyclerView.visibility = View.VISIBLE  // Mostra categorias
             establishmentsRecyclerView.visibility = View.VISIBLE  // Mostra estabelecimentos
             categoriesTitle.visibility = View.VISIBLE  // Mostra o título "Categorias"
+        }
+    }
+
+    private suspend fun sendFCMNotification(token: String, title: String, message: String) {
+        val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
+        val payload = """
+        {
+          "message": {
+            "token": "$token",
+            "notification": {
+              "title": "$title",
+              "body": "$message"
+            },
+            "android": {
+              "priority": "high"
+            }
+          }
+        }
+        """.trimIndent()
+
+        val accessToken = withContext(Dispatchers.IO) {
+            TokenUtils.getAccessTokenFromServiceAccount(requireContext())
+        }
+
+        if (accessToken == null) {
+            Log.e("FCM", "Erro ao obter token de acesso.")
+            return
+        }
+
+        val request = object : StringRequest(
+            Method.POST, url,
+            { response -> Log.d("FCM", "Notificação enviada: $response") },
+            { error -> Log.e("FCM", "Erro ao enviar notificação: ${error.message}") }
+        ) {
+            override fun getHeaders(): Map<String, String> {
+                return mapOf(
+                    "Authorization" to "Bearer $accessToken",
+                    "Content-Type" to "application/json"
+                )
+            }
+
+            override fun getBody(): ByteArray = payload.toByteArray(Charsets.UTF_8)
+        }
+
+        withContext(Dispatchers.Main) {
+            Volley.newRequestQueue(requireContext()).add(request)
         }
     }
 

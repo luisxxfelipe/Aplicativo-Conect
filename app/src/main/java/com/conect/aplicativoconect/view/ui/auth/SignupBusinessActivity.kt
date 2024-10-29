@@ -21,7 +21,7 @@ class SignupBusinessActivity : AppCompatActivity() {
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
-    private lateinit var businessNameEditText: EditText
+    private lateinit var nameUser: EditText
     private lateinit var signUpButton: Button
     private lateinit var loginTextView: TextView
 
@@ -35,7 +35,7 @@ class SignupBusinessActivity : AppCompatActivity() {
         emailEditText = findViewById(R.id.emailInput)
         passwordEditText = findViewById(R.id.passwordInput)
         confirmPasswordEditText = findViewById(R.id.confirmPasswordInput)
-        businessNameEditText = findViewById(R.id.businessNameInput)
+        nameUser = findViewById(R.id.nameUser)
         signUpButton = findViewById(R.id.signupButton)
         loginTextView = findViewById(R.id.loginTextView)
 
@@ -43,11 +43,11 @@ class SignupBusinessActivity : AppCompatActivity() {
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
             val confirmPassword = confirmPasswordEditText.text.toString().trim()
-            val businessName = businessNameEditText.text.toString().trim()
+            val nameUser = nameUser.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && businessName.isNotEmpty()) {
+            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && nameUser.isNotEmpty()) {
                 if (password == confirmPassword) {
-                    createBusiness(email, password, businessName)
+                    createBusiness(email, password, nameUser)
                 } else {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
@@ -82,7 +82,7 @@ class SignupBusinessActivity : AppCompatActivity() {
         }
     }
 
-    private fun createBusiness(email: String, password: String, businessName: String) {
+    private fun createBusiness(email: String, password: String, nameUser: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
@@ -94,7 +94,7 @@ class SignupBusinessActivity : AppCompatActivity() {
                         // Cria o objeto com os dados do negócio
                         val businessData = hashMapOf(
                             "email" to email,
-                            "name" to businessName,
+                            "nameUser" to nameUser,
                             "isActive" to true,
                             "type" to "business",
                             "ownerId" to userId // UID do proprietário do negócio

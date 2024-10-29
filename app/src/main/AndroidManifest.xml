@@ -42,6 +42,7 @@
             </intent-filter>
         </activity>
 
+        <!-- Atividades do aplicativo -->
         <activity android:name=".view.ui.WelcomeActivity" android:exported="true" />
         <activity android:name=".view.ui.auth.RoleSelectionActivity" android:exported="true" />
         <activity android:name=".view.ui.auth.LoginActivity" android:exported="true" />
@@ -53,8 +54,11 @@
         <activity android:name=".view.ui.client.EmpresaDetalhesActivity" android:exported="true" />
         <activity android:name=".view.ui.client.SelecionarHorarioActivity" android:exported="true" />
 
-        <!-- Adicionando EditProfileActivity -->
+        <!-- EditProfileActivity e EditBusinessProfileActivity -->
         <activity android:name=".view.ui.client.EditProfileActivity" android:exported="true" />
+        <activity android:name=".view.ui.admin.EditBusinessProfileActivity" android:exported="true" />
+        <activity android:name=".view.ui.PolicyActivity" android:exported="true" />
+
 
         <meta-data
             android:name="preloaded_fonts"

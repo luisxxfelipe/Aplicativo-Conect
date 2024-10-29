@@ -104,7 +104,7 @@ class BookingAdapter(
                 sendNotificationToUser(
                     bookingId,
                     "Agendamento Confirmado",
-                    "Olá ${booking.name}, seu agendamento foi confirmado!"
+                    "O agendamento de ${booking.name} foi confirmado!"
                 )
                 booking.status_adm = "confirmed"  // Atualiza o status localmente
                 notifyItemChanged(position)  // Atualiza a interface

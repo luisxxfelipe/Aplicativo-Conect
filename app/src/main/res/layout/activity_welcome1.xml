@@ -32,6 +32,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:paddingRight="30dp"
+        android:gravity="center"
         android:paddingLeft="30dp"
         android:layout_marginTop="20dp"
         android:text="O seu novo parceiro para agendamentos rápidos e fáceis! Com o ConectX, você pode descobrir e agendar uma variedade de serviços oferecidos por estabelecimentos locais, tudo em um único lugar."
@@ -44,7 +45,7 @@
 
     <Button
         android:id="@+id/nextButton1"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:backgroundTint="@color/roxo"

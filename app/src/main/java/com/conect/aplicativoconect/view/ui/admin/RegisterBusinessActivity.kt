@@ -3,7 +3,6 @@ package com.conect.aplicativoconect.view.ui.admin
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -21,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.data.model.OperatingHours
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -64,7 +62,7 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         email = intent.getStringExtra("EMAIL_KEY") ?: ""
 
         // Referências aos componentes
-        val businessNameInput = findViewById<TextInputEditText>(R.id.businessNameInput)
+        val businessNameInput = findViewById<TextInputEditText>(R.id.nameUser)
         val businessDescriptionInput = findViewById<TextInputEditText>(R.id.businessDescriptionInput)
         val serviceTypeSpinner = findViewById<Spinner>(R.id.serviceTypeSpinner)
         val addressInput = findViewById<TextInputEditText>(R.id.addressInput)
