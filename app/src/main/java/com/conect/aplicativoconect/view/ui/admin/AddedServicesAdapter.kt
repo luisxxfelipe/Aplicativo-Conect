@@ -3,16 +3,15 @@ package com.conect.aplicativoconect.view.ui.admin
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.data.model.ServiceType
+import com.conect.aplicativoconect.view.data.model.Service
 
 class AddedServicesAdapter(
-    private val addedServices: MutableList<Pair<ServiceType, Double>>,
+    private val addedServices: MutableList<Service>, // Usando a classe Service
     private val onRemoveService: (Int) -> Unit // Lambda para remover serviço
 ) : RecyclerView.Adapter<AddedServicesAdapter.AddedServiceViewHolder>() {
 
@@ -21,9 +20,9 @@ class AddedServicesAdapter(
         private val servicePriceEditText: EditText = itemView.findViewById(R.id.editTextServicePrice)
         private val removeServiceButton: ImageButton = itemView.findViewById(R.id.buttonRemoveService)
 
-        fun bind(service: Pair<ServiceType, Double>, position: Int) {
-            serviceNameTextView.text = service.first.name
-            servicePriceEditText.setText(service.second.toString())
+        fun bind(service: Service, position: Int) {
+            serviceNameTextView.text = service.name
+            servicePriceEditText.setText(service.price.toString())
 
             removeServiceButton.setOnClickListener {
                 onRemoveService(position) // Notifica a remoção
@@ -34,7 +33,7 @@ class AddedServicesAdapter(
                 if (!hasFocus) {
                     val newPrice = servicePriceEditText.text.toString().toDoubleOrNull()
                     if (newPrice != null) {
-                        addedServices[position] = Pair(service.first, newPrice) // Atualiza o preço
+                        addedServices[position] = service.copy(price = newPrice) // Atualiza o preço
                     }
                 }
             }

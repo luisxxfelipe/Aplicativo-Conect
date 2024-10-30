@@ -10,7 +10,7 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.ServiceType
 
 class ServiceTypeAdapter(
-    private val serviceTypes: List<ServiceType>,
+    val serviceTypes: List<ServiceType>,
     private val onServiceSelected: (ServiceType) -> Unit // Lambda para tratar a seleção
 ) : RecyclerView.Adapter<ServiceTypeAdapter.ServiceTypeViewHolder>() {
 
@@ -57,4 +57,10 @@ class ServiceTypeAdapter(
     fun getSelectedService(): ServiceType? {
         return selectedService // Retorna o serviço selecionado
     }
+
+    fun clearSelection() {
+        selectedService = null
+        notifyDataSetChanged()
+    }
+
 }

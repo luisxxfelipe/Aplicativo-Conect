@@ -97,7 +97,6 @@ class AdminHomeFragment : Fragment() {
                     .whereEqualTo("companyId", businessId)
                     .addSnapshotListener { querySnapshot, error ->
                         if (error != null) {
-                            Log.e("AdminHomeFragment", "Erro ao buscar agendamentos: ${error.message}")
                             showErrorMessage("Erro ao carregar agendamentos.")
                             return@addSnapshotListener
                         }
@@ -110,7 +109,6 @@ class AdminHomeFragment : Fragment() {
                     }
             }
             .addOnFailureListener { e ->
-                Log.e("AdminHomeFragment", "Erro ao buscar empresa: ${e.message}")
                 showErrorMessage("Erro ao carregar dados da empresa.")
             }
     }
@@ -122,10 +120,6 @@ class AdminHomeFragment : Fragment() {
 
         val weeklyProfit = calculateProfit(weeklyBookings)
         val monthlyProfit = calculateProfit(monthBookings)
-
-        Log.d("AdminHomeFragment", "Agendamentos confirmados: ${confirmedBookings.size}")
-        Log.d("AdminHomeFragment", "Lucro da semana: R$ $weeklyProfit")
-        Log.d("AdminHomeFragment", "Lucro do mês: R$ $monthlyProfit")
 
         if (!isAdded || _binding == null) return
 
@@ -172,8 +166,6 @@ class AdminHomeFragment : Fragment() {
         calendar.set(Calendar.MILLISECOND, 999)
         val endOfMonth = calendar.time
 
-        Log.d("AdminHomeFragment", "Filtro Mensal - Início: $startOfMonth, Fim: $endOfMonth")
-
         // Filtro para os agendamentos da semana
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
         val startOfWeek = calendar.time
@@ -183,17 +175,14 @@ class AdminHomeFragment : Fragment() {
 
         val weeklyBookings = bookings.filter { booking ->
             val bookingDate = booking.date?.let { date -> parseDateTime(date, booking.hour).time }
-            Log.d("AdminHomeFragment", "Verificando agendamento semanal: $bookingDate no intervalo $startOfWeek até $endOfWeek")
             bookingDate != null && bookingDate in startOfWeek..endOfWeek
         }
 
         val monthBookings = bookings.filter { booking ->
             val bookingDate = booking.date?.let { date -> parseDateTime(date, booking.hour).time }
-            Log.d("AdminHomeFragment", "Verificando agendamento mensal: $bookingDate no intervalo $startOfMonth até $endOfMonth")
             bookingDate != null && bookingDate in startOfMonth..endOfMonth
         }
 
-        Log.d("AdminHomeFragment", "Total de agendamentos do mês: ${monthBookings.size}")
         return Pair(weeklyBookings, monthBookings)
     }
 
@@ -202,7 +191,6 @@ class AdminHomeFragment : Fragment() {
         val business = businessSnapshot.toObject(Business::class.java)
 
         val services = business?.services ?: emptyList()
-        Log.d("AdminHomeFragment", "Total de serviços carregados: ${services.size}")
 
         val bookingsSnapshot = firestore.collection("bookings")
             .whereEqualTo("companyId", businessId)
@@ -212,29 +200,6 @@ class AdminHomeFragment : Fragment() {
         return bookingsSnapshot.documents.mapNotNull { document ->
             val booking = document.toObject(Booking::class.java)
             booking?.id = document.id
-
-            Log.d(
-                "AdminHomeFragment",
-                "Agendamento ID: ${booking?.id}, Serviço: ${booking?.serviceName}, Preço: ${booking?.price}"
-            )
-
-            // Buscar serviço correspondente ignorando espaços e diferenças de case
-            val matchedService = services.firstOrNull { service ->
-                service.name.trim().equals(booking?.serviceName?.trim(), ignoreCase = true)
-            }
-
-            if (matchedService != null) {
-                booking?.price = matchedService.price
-                Log.d(
-                    "AdminHomeFragment",
-                    "Serviço encontrado: ${matchedService.name}, Preço: ${matchedService.price}"
-                )
-            } else {
-                Log.d(
-                    "AdminHomeFragment",
-                    "Serviço não encontrado para o agendamento: ${booking?.serviceName}"
-                )
-            }
 
             booking
         }
@@ -325,7 +290,6 @@ class AdminHomeFragment : Fragment() {
                 loadProfileImage(business?.imageUrl)
             }
             .addOnFailureListener { e ->
-                Log.e("AdminHomeFragment", "Erro ao buscar nome do negócio: ", e)
                 binding.userNameBusiness.text = "Erro ao carregar nome"
                 setGreeting("Usuário")
             }

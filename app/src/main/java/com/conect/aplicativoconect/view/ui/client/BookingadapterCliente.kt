@@ -82,6 +82,6 @@ class ClientBookingAdapter(
 
     fun updateData(newBookings: List<Booking>) {
         bookings = newBookings
-        notifyDataSetChanged()
+        notifyDataSetChanged()  // Garante que a UI seja atualizada
     }
 }

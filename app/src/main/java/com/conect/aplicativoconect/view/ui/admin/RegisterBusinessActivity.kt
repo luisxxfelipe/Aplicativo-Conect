@@ -287,17 +287,6 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), storagePermissionCode)
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == storagePermissionCode) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permissão concedida", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Permissão negada", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     // Callback para selecionar horários
     override fun onHoursSelected(openingTime: String, closingTime: String) {
         val operatingHoursText = "$openingTime - $closingTime"

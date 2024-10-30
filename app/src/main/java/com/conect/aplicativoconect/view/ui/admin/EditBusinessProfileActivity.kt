@@ -57,7 +57,7 @@ class EditBusinessProfileActivity : AppCompatActivity() {
         firestore.collection("business").document(userId).get()
             .addOnSuccessListener { document ->
                 if (document != null) {
-                    editOwnerName.setText(document.getString("nameUser"))
+                    editOwnerName.setText(document.getString("ownerName"))
                     editBusinessName.setText(document.getString("name"))
                     editBusinessEmail.setText(document.getString("email"))
                     editBusinessAddress.setText(document.getString("address"))

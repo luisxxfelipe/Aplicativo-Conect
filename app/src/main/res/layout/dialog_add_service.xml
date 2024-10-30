@@ -1,41 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="250dp"
-    android:layout_height="200dp"
-    android:layout_gravity="top|center_horizontal"
-    android:layout_margin="16dp"
-    android:background="@drawable/rounded_corners"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@drawable/rounded_corners"
+    android:padding="24dp"
+    android:gravity="center">
 
+    <!-- Título -->
     <TextView
         android:id="@+id/titulo_popup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:text="Ações"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/cinza"
         android:gravity="center"
-        android:paddingBottom="16dp"
-        android:text="Adicionar ou Ajustar"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:layout_marginBottom="16dp" />
 
+    <!-- Botão Adicionar Serviços -->
     <Button
         android:id="@+id/btn_adicionar_servicos"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="8dp"
-        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
         android:text="Adicionar Serviços"
-        android:textColor="@android:color/white" />
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:textColor="@android:color/white"
+        android:elevation="2dp"
+        android:drawableLeft="@drawable/ic_service"
+        android:drawablePadding="8dp"
+        android:textSize="15sp" />
 
+    <!-- Botão Ajustar Horário -->
     <Button
         android:id="@+id/btn_ajustar_horario"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="8dp"
-        android:padding="10dp"
-        android:text="Horário de Funcionamento"
-        android:textColor="@android:color/white" />
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Ajustar Horário"
+        android:layout_marginBottom="4dp"
+        android:backgroundTint="@color/roxo"
+        android:textColor="@android:color/white"
+        android:elevation="2dp"
+        android:drawableLeft="@drawable/ic_clock"
+        android:drawablePadding="8dp"
+        android:textSize="15sp" />
 </LinearLayout>

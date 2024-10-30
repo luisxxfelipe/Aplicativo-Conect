@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -60,10 +61,6 @@ class ClienteHomeFragment : Fragment() {
         // Mostra categorias e agendamentos ao iniciar
         showDefaultView()
 
-
-
-
-
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         userId?.let {
             fetchUserBookings(it)
@@ -74,7 +71,7 @@ class ClienteHomeFragment : Fragment() {
     }
 
     private fun setupAdapters() {
-        val categories = listOf("Manicure", "Barbearia", "Cabeleireiro", "Massagista", "Maquiagens")
+        val categories = listOf("Manicure", "Barbearia", "Cabeleireiro", "Massagista", "Maquiagens", "Estética")
         _binding?.categoriesRecyclerView?.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
@@ -91,6 +88,10 @@ class ClienteHomeFragment : Fragment() {
     }
 
     private fun fetchUserBookings(userId: String) {
+        if (_binding == null) return  // Verifica se o binding ainda está disponível
+
+        binding.progressBar.visibility = View.VISIBLE  // Exibe o ProgressBar
+
         firestore.collection("bookings")
             .whereEqualTo("userId", userId)
             .get()
@@ -101,16 +102,25 @@ class ClienteHomeFragment : Fragment() {
                     .sortedBy { it.date }
                     .take(2)
 
-                if (bookings.isEmpty()) {
-                    showNoBookingsMessage(true)
-                } else {
-                    showNoBookingsMessage(false)
-                    setupClientBookingAdapter(bookings)
+                if (isAdded && _binding != null) {  // Verifica se o fragmento ainda está anexado
+                    if (bookings.isEmpty()) {
+                        showNoBookingsMessage(true)
+                    } else {
+                        showNoBookingsMessage(false)
+                        setupClientBookingAdapter(bookings)
+                    }
                 }
             }
             .addOnFailureListener { e ->
                 Log.e("ClienteHomeFragment", "Erro ao buscar agendamentos: ${e.message}")
-                Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+                if (isAdded) {
+                    Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnCompleteListener {
+                if (_binding != null) {  // Verifique se o binding ainda existe
+                    binding.progressBar.visibility = View.GONE  // Esconde o ProgressBar
+                }
             }
     }
 

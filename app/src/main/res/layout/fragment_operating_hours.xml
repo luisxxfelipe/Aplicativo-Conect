@@ -16,6 +16,7 @@
             android:layout_height="wrap_content"
             android:text="Selecione os horários de funcionamento:"
             android:textSize="23sp"
+            android:gravity="center"
             android:textColor="@color/black"
             android:layout_marginBottom="16dp"/>
 
