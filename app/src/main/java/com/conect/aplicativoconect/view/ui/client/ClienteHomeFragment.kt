@@ -112,7 +112,6 @@ class ClienteHomeFragment : Fragment() {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("ClienteHomeFragment", "Erro ao buscar agendamentos: ${e.message}")
                 if (isAdded) {
                     Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
                 }
@@ -150,7 +149,6 @@ class ClienteHomeFragment : Fragment() {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("ClienteHomeFragment", "Erro ao buscar estabelecimentos: ${e.message}")
                 if (isAdded) {
                     Toast.makeText(requireContext(), "Erro ao buscar estabelecimentos.", Toast.LENGTH_SHORT).show()
                 }
@@ -170,7 +168,6 @@ class ClienteHomeFragment : Fragment() {
                 fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")  // Atualiza a lista
             }
             .addOnFailureListener { e ->
-                Log.e("BookingFragment", "Erro ao confirmar agendamento: ${e.message}")
                 Toast.makeText(requireContext(), "Erro ao confirmar agendamento.", Toast.LENGTH_SHORT).show()
             }
     }
@@ -188,7 +185,6 @@ class ClienteHomeFragment : Fragment() {
                 Toast.makeText(requireContext(), "Agendamento cancelado e excluído.", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
-                Log.e("BookingFragment", "Erro ao cancelar agendamento: ${e.message}")
                 Toast.makeText(requireContext(), "Erro ao cancelar agendamento.", Toast.LENGTH_SHORT).show()
             }
     }
@@ -201,18 +197,14 @@ class ClienteHomeFragment : Fragment() {
             .get()
             .addOnSuccessListener { document ->
                 val fcmToken = document.getString("fcmToken")
-                Log.d("FCM", "Token FCM recebido: $fcmToken")  // Log para verificar o token
 
                 if (!fcmToken.isNullOrEmpty()) {
                     CoroutineScope(Dispatchers.IO).launch {
                         sendFCMNotification(fcmToken, title, message)
                     }
-                } else {
-                    Log.e("FCM", "Token FCM não encontrado para empresa: $companyId")
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("BookingFragment", "Erro ao buscar token FCM: ${e.message}")
             }
     }
 
@@ -248,7 +240,6 @@ class ClienteHomeFragment : Fragment() {
         }
 
         if (accessToken == null) {
-            Log.e("FCM", "Erro ao obter token de acesso.")
             return
         }
 
@@ -353,8 +344,6 @@ class ClienteHomeFragment : Fragment() {
             }
             _binding?.establishmentsRecyclerView?.adapter = businessAdapter
             businessAdapter.notifyDataSetChanged()
-        } else {
-            Log.e("ClienteHomeFragment", "Fragmento não está anexado. Não é possível atualizar o adapter.")
         }
     }
 

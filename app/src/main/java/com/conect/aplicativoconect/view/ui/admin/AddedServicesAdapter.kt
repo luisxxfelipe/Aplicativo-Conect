@@ -6,12 +6,13 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.data.model.Service
+import com.conect.aplicativoconect.view.data.model.ServiceType
 
 class AddedServicesAdapter(
-    private val addedServices: MutableList<Service>, // Usando a classe Service
+    private val addedServices: MutableList<Pair<ServiceType, Double>>,
     private val onRemoveService: (Int) -> Unit // Lambda para remover serviço
 ) : RecyclerView.Adapter<AddedServicesAdapter.AddedServiceViewHolder>() {
 
@@ -20,20 +21,32 @@ class AddedServicesAdapter(
         private val servicePriceEditText: EditText = itemView.findViewById(R.id.editTextServicePrice)
         private val removeServiceButton: ImageButton = itemView.findViewById(R.id.buttonRemoveService)
 
-        fun bind(service: Service, position: Int) {
-            serviceNameTextView.text = service.name
-            servicePriceEditText.setText(service.price.toString())
+        fun bind(service: Pair<ServiceType, Double>, position: Int) {
+            serviceNameTextView.text = service.first.name
+            servicePriceEditText.setText(service.second.toString())
 
+            // Define um listener para o botão de remoção
             removeServiceButton.setOnClickListener {
                 onRemoveService(position) // Notifica a remoção
             }
 
-            // Atualizar o preço ao sair do campo de texto
+            // Valida e atualiza o preço quando o campo perde o foco
             servicePriceEditText.setOnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
                     val newPrice = servicePriceEditText.text.toString().toDoubleOrNull()
-                    if (newPrice != null) {
-                        addedServices[position] = service.copy(price = newPrice) // Atualiza o preço
+                    if (newPrice != null && newPrice >= 0) {
+                        // Atualiza o preço se for válido
+                        addedServices[position] = Pair(service.first, newPrice)
+                    } else {
+                        // Exibe uma mensagem de erro se o preço for inválido
+                        Toast.makeText(
+                            itemView.context,
+                            "Por favor, insira um preço válido.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        // Restaura o valor anterior no campo de texto
+                        servicePriceEditText.setText(service.second.toString())
                     }
                 }
             }

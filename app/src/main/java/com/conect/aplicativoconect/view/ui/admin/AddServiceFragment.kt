@@ -1,19 +1,21 @@
 package com.conect.aplicativoconect.view.ui.admin
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.data.model.Service
 import com.conect.aplicativoconect.view.data.model.ServiceType
+import com.google.android.material.internal.ViewUtils.hideKeyboard
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -24,9 +26,12 @@ class AddServiceFragment : Fragment() {
     private lateinit var serviceAdapter: ServiceTypeAdapter
     private lateinit var addedServicesAdapter: AddedServicesAdapter
     private lateinit var firestore: FirebaseFirestore
-    private val addedServicesFromFirebase = mutableListOf<String>()
-    private val addedServices = mutableListOf<Service>()
+    private val addedServices = mutableListOf<Pair<ServiceType, Double>>()
     private lateinit var editTextPrice: EditText
+    private lateinit var buttonSave: Button
+    private lateinit var buttonAdd: Button
+
+    private var availableServices = mutableListOf<ServiceType>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,23 +40,21 @@ class AddServiceFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_add_service, container, false)
 
         recyclerView = view.findViewById(R.id.recyclerViewServiceTypes)
-        recyclerView.layoutManager = GridLayoutManager(requireContext(), 1) // 1 coluna
-
         addedServicesRecyclerView = view.findViewById(R.id.recyclerViewAddedServices)
-        addedServicesRecyclerView.layoutManager = GridLayoutManager(requireContext(), 1) // 1 coluna
-
         editTextPrice = view.findViewById(R.id.editTextPrice)
+        buttonSave = view.findViewById(R.id.buttonSaveServices)
+        buttonAdd = view.findViewById(R.id.buttonAddService)
+
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
+        addedServicesRecyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
 
         firestore = FirebaseFirestore.getInstance()
         fetchBusinessType()
 
-        view.findViewById<Button>(R.id.buttonAddService).setOnClickListener {
-            addSelectedService()
-        }
-
-        view.findViewById<Button>(R.id.buttonSaveServices).setOnClickListener {
-            saveServices()
-        }
+        buttonAdd.setOnClickListener {
+            hideKeyboard()
+            addSelectedService() }
+        buttonSave.setOnClickListener { saveServices() }
 
         return view
     }
@@ -62,35 +65,25 @@ class AddServiceFragment : Fragment() {
             firestore.collection("business").document(userId)
                 .get()
                 .addOnSuccessListener { document ->
-                    if (document != null) {
-                        val serviceType = document.getString("serviceType")
-                        if (serviceType != null) {
-                            // Recuperar os serviços já adicionados do Firebase
-                            val services = document.get("services") as? List<HashMap<String, Any>> ?: emptyList()
-                            services.forEach { service ->
-                                val serviceName = service["serviceName"] as String
-                                val price = (service["price"] as Number).toDouble()
-                                addedServices.add(Service(serviceName, price))
-                                addedServicesFromFirebase.add(serviceName)
-                            }
+                    val serviceType = document.getString("serviceType") ?: return@addOnSuccessListener
+                    val services = document.get("services") as? List<HashMap<String, Any>> ?: emptyList()
 
-                            // Filtrar serviços que ainda não foram adicionados
-                            serviceAdapter = ServiceTypeAdapter(getAvailableServiceTypesForCategory(serviceType)) { serviceType ->
-                                // Atualiza a seleção do serviço
-                            }
-                            recyclerView.adapter = serviceAdapter
-
-                            updateAvailableServices()
-                            updateAddedServicesRecyclerView()
-                        }
+                    services.forEach { service ->
+                        val serviceName = service["serviceName"] as String
+                        val price = (service["price"] as Number).toDouble()
+                        addedServices.add(Pair(ServiceType(serviceName), price))
                     }
+
+                    availableServices = getAvailableServiceTypesForCategory(serviceType).toMutableList()
+                    serviceAdapter = ServiceTypeAdapter(availableServices) { updateUI() }
+                    recyclerView.adapter = serviceAdapter
+
+                    updateAddedServicesRecyclerView()
+                    updateUI()
                 }
-                .addOnFailureListener { exception ->
-                    // Tratar erro ao buscar dados
-                }
+                .addOnFailureListener { /* Tratar erro */ }
         }
     }
-
 
     private fun getAvailableServiceTypesForCategory(serviceType: String): List<ServiceType> {
         val allServices = when (serviceType) {
@@ -144,70 +137,32 @@ class AddServiceFragment : Fragment() {
             else -> emptyList()
         }
 
-        // Filtra os serviços que já foram adicionados
-        return allServices.filter { serviceType ->
-            !addedServicesFromFirebase.contains(serviceType.name)
-        }
+        return allServices.filterNot { addedServices.map { it.first.name }.contains(it.name) }
     }
 
     private fun addSelectedService() {
-        val selectedService = serviceAdapter.getSelectedService()
+        val selectedService = serviceAdapter.getSelectedService() // Obtém o serviço selecionado
         val priceInput = editTextPrice.text.toString().toDoubleOrNull()
 
         if (selectedService != null && priceInput != null) {
-            val service = Service(selectedService.name, priceInput)
-            addedServices.add(service)
-            addedServicesFromFirebase.add(service.name)
-            updateAvailableServices()
+            // Adiciona o serviço à lista
+            addedServices.add(Pair(selectedService, priceInput))
+            availableServices.remove(selectedService) // Remove da lista disponível
             updateAddedServicesRecyclerView()
+            serviceAdapter.notifyDataSetChanged()
+
+            // Limpa o campo de preço e reseta a seleção do adaptador
             editTextPrice.text.clear()
-            serviceAdapter.clearSelection()
+            serviceAdapter.clearSelection() // Novo método para limpar a seleção
+            updateUI()
         } else {
+            // Mostra um Toast se faltou selecionar um serviço ou inserir um preço
             Toast.makeText(requireContext(), "Selecione um serviço e insira um preço válido.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putSerializable("addedServices", ArrayList(addedServices))
-    }
-
-    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-        super.onViewStateRestored(savedInstanceState)
-        val restoredServices = savedInstanceState?.getSerializable("addedServices") as? ArrayList<Service>
-        if (restoredServices != null) {
-            addedServices.clear()
-            addedServices.addAll(restoredServices)
-            updateAddedServicesRecyclerView()
-        }
-    }
-
-
-    private fun updateAvailableServices() {
-        val remainingServices = serviceAdapter.serviceTypes.filter {
-            !addedServicesFromFirebase.contains(it.name)
-        }
-
-        if (remainingServices.isEmpty()) {
-            // Esconde os componentes que não são mais necessários
-            view?.findViewById<TextView>(R.id.textViewPrompt)?.visibility = View.GONE
-            view?.findViewById<RecyclerView>(R.id.recyclerViewServiceTypes)?.visibility = View.GONE
-            view?.findViewById<EditText>(R.id.editTextPrice)?.visibility = View.GONE
-            view?.findViewById<Button>(R.id.buttonAddService)?.visibility = View.GONE
-        } else {
-            // Atualiza o adapter e mantém a lista visível se ainda houver serviços
-            serviceAdapter = ServiceTypeAdapter(remainingServices) { serviceType ->
-                // Atualiza a seleção do serviço
-            }
-            recyclerView.adapter = serviceAdapter
-            recyclerView.visibility = View.VISIBLE // Garante que o RecyclerView está visível
-        }
-    }
 
     private fun updateAddedServicesRecyclerView() {
-        val buttonSave = view?.findViewById<Button>(R.id.buttonSaveServices)
-        buttonSave?.visibility = if (addedServices.isEmpty()) View.GONE else View.VISIBLE
-
         if (!::addedServicesAdapter.isInitialized) {
             addedServicesAdapter = AddedServicesAdapter(addedServices) { position ->
                 removeService(position)
@@ -221,58 +176,52 @@ class AddServiceFragment : Fragment() {
     private fun removeService(position: Int) {
         val serviceToRemove = addedServices[position]
         addedServices.removeAt(position)
-        addedServicesFromFirebase.remove(serviceToRemove.name)
-        updateAvailableServices()
+        availableServices.add(serviceToRemove.first)
         updateAddedServicesRecyclerView()
+        serviceAdapter.notifyDataSetChanged()
+        updateUI()
     }
-
 
     private fun saveServices() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
-            // Primeiro, obtenha os serviços existentes do Firestore
+            val serviceData = addedServices.map { service ->
+                hashMapOf(
+                    "serviceName" to service.first.name,
+                    "price" to service.second
+                )
+            }
+
             firestore.collection("business").document(userId)
-                .get()
-                .addOnSuccessListener { document ->
-                    if (document != null) {
-                        // Obtenha os serviços já existentes
-                        val existingServices = document.get("services") as? List<HashMap<String, Any>> ?: emptyList()
+                .update("services", serviceData)
+                .addOnSuccessListener {
+                    // Exibe um Toast indicando sucesso
+                    Toast.makeText(requireContext(), "Serviços salvos com sucesso!", Toast.LENGTH_SHORT).show()
 
-                        // Construa a nova lista de serviços com os serviços existentes e os novos
-                        val allServices = existingServices.toMutableList()
-
-                        // Adicione os novos serviços, verificando se já existem
-                        addedServices.forEach { service ->
-                            val serviceName = service.name
-                            val price = service.price
-
-                            // Verifique se o serviço já existe antes de adicionar
-                            if (allServices.none { it["serviceName"] == serviceName }) {
-                                allServices.add(hashMapOf(
-                                    "serviceName" to serviceName,
-                                    "price" to price
-                                ))
-                            }
-                        }
-
-                        // Atualize a lista de serviços no Firestore
-                        firestore.collection("business").document(userId)
-                            .update("services", allServices)
-                            .addOnSuccessListener {
-                                // Serviços salvos com sucesso, redirecionar para a tela Home do Admin
-                                navigateToAdminHome()
-                            }
-                            .addOnFailureListener { e ->
-                                // Tratar erro ao salvar
-                            }
-                    }
+                    // Redireciona para a tela principal do admin
+                    navigateToAdminHome()
                 }
                 .addOnFailureListener { e ->
-                    // Tratar erro ao buscar serviços existentes
+                    // Exibe um Toast indicando falha
+                    Toast.makeText(requireContext(), "Erro ao salvar serviços: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
         }
     }
 
+    private fun updateUI() {
+        buttonSave.visibility = if (addedServices.isEmpty()) View.GONE else View.VISIBLE
+        recyclerView.visibility = if (availableServices.isEmpty()) View.GONE else View.VISIBLE
+        editTextPrice.visibility = if (availableServices.isEmpty()) View.GONE else View.VISIBLE
+        buttonAdd.visibility = if (availableServices.isEmpty()) View.GONE else View.VISIBLE
+    }
+
+    private fun hideKeyboard() {
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val view = requireActivity().currentFocus
+        if (view != null) {
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
 
     private fun navigateToAdminHome() {
         requireActivity().supportFragmentManager.beginTransaction()

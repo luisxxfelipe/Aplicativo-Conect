@@ -33,7 +33,8 @@ class AdminHomeActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
 
-        bottomNavigation.setOnNavigationItemSelectedListener { item ->
+        // Método atualizado para usar o novo listener
+        bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
                     loadFragment(AdminHomeFragment())

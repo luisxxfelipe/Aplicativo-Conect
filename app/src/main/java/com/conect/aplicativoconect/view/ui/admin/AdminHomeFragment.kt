@@ -1,6 +1,7 @@
 package com.conect.aplicativoconect.view.ui.admin
 
 import BookingAdapter
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -17,11 +18,7 @@ import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 class AdminHomeFragment : Fragment() {
@@ -49,6 +46,13 @@ class AdminHomeFragment : Fragment() {
         setupRecyclerView()
         loadBookingsInRealTime()
         loadBusinessName()
+
+        // Configurando o clique do FAB
+        binding.fabAddBooking.setOnClickListener {
+            // Aqui você inicia a Activity de agendamento
+            val intent = Intent(requireContext(), AddBookingActivity::class.java) // Substitua pelo nome correto da sua Activity
+            startActivity(intent)
+        }
 
         // Observa mudanças nos ViewModels
         adminViewModel.todayBookingsCount.observe(viewLifecycleOwner) { count ->
