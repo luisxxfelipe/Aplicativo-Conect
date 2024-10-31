@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class BookingAdapter(
-    private val bookings: List<Booking>,
+    private var bookings: List<Booking>,
     private val context: Context,
     private val onConfirmBooking: (String) -> Unit,
     private val onCancelBooking: (String) -> Unit
@@ -128,7 +128,10 @@ class BookingAdapter(
         }
     }
 
-
+    fun updateData(newBookings: List<Booking>) {
+        bookings = newBookings
+        notifyDataSetChanged()
+    }
 
     override fun getItemCount(): Int = bookings.size
 
@@ -240,4 +243,5 @@ class BookingAdapter(
             }
         }
     }
+
 }

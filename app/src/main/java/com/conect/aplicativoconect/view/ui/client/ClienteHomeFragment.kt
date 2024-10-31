@@ -380,19 +380,31 @@ class ClienteHomeFragment : Fragment() {
         }
     }
 
-
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance()
-        val dateParts = booking.date?.split("/")?.map { it.toInt() } ?: return false
 
+        // Separa a data e converte para inteiros, retornando `false` caso a data seja inválida
+        val dateParts = booking.date?.split("/")?.mapNotNull { it.toIntOrNull() } ?: return false
+        if (dateParts.size != 3) return false
+
+        // Converte `hour` para `Int` ou usa `0` como valor padrão se for inválido
+        val bookingHour = booking.hour.toIntOrNull() ?: 0
+
+        // Configura a data e hora do agendamento
         val bookingDate = Calendar.getInstance().apply {
             set(Calendar.YEAR, dateParts[2])
-            set(Calendar.MONTH, dateParts[1] - 1)
+            set(Calendar.MONTH, dateParts[1] - 1) // Meses são indexados a partir de 0 no Calendar
             set(Calendar.DAY_OF_MONTH, dateParts[0])
-            set(Calendar.HOUR_OF_DAY, booking.hour ?: 0)
+            set(Calendar.HOUR_OF_DAY, bookingHour)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
+
+        // Retorna `true` se a data do agendamento estiver no futuro
         return bookingDate.after(currentDateTime)
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

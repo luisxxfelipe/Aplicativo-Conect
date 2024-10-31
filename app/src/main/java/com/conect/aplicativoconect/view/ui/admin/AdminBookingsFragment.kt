@@ -21,13 +21,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 class AdminBookingsFragment : Fragment() {
 
+    private lateinit var newBookingsRecyclerView: RecyclerView
+    private lateinit var oldBookingsRecyclerView: RecyclerView
+    private lateinit var newBookingAdapter: BookingAdapter
+    private lateinit var oldBookingAdapter: BookingAdapter
     private lateinit var emptyBookingsMessage: TextView
     private lateinit var emptyBookingsImage: ImageView
-    private lateinit var bookingsRecyclerView: RecyclerView
-    private lateinit var firestore: FirebaseFirestore
+    private lateinit var newBookingsTitle: TextView
+    private lateinit var oldBookingsTitle: TextView
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,26 +41,26 @@ class AdminBookingsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_admin_bookings, container, false)
 
+        // Inicializar as views
+        newBookingsRecyclerView = view.findViewById(R.id.recyclerViewNewBookings)
+        oldBookingsRecyclerView = view.findViewById(R.id.recyclerViewOldBookings)
         emptyBookingsMessage = view.findViewById(R.id.emptyBookingsMessage)
         emptyBookingsImage = view.findViewById(R.id.emptyBookingsImage)
-        bookingsRecyclerView = view.findViewById(R.id.bookingsRecyclerView)
+        newBookingsTitle = view.findViewById(R.id.newBookingsTitle)
+        oldBookingsTitle = view.findViewById(R.id.oldBookingsTitle)
 
-        firestore = FirebaseFirestore.getInstance()
-
+        setupRecyclerViews()
         loadBookings()
+
         return view
     }
 
     private fun loadBookings() {
-        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
-
-        if (currentUserUid == null) {
-            return
-        }
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-
+                // Obter o ID do negócio do admin
                 val businessSnapshot = firestore.collection("business")
                     .whereEqualTo("ownerId", currentUserUid)
                     .get()
@@ -67,26 +73,20 @@ class AdminBookingsFragment : Fragment() {
                     return@launch
                 }
 
-
+                // Obter os agendamentos do negócio
                 val bookingsSnapshot = firestore.collection("bookings")
                     .whereEqualTo("companyId", businessId)
                     .get()
                     .await()
 
-                val bookings = bookingsSnapshot.documents.mapNotNull { document ->
+                val (newBookings, oldBookings) = bookingsSnapshot.documents.mapNotNull { document ->
                     val booking = document.toObject(Booking::class.java)
                     booking?.id = document.id
                     booking
-                }
+                }.partition { isFutureBooking(it) }
 
                 withContext(Dispatchers.Main) {
-
-                    if (bookings.isEmpty()) {
-                        showEmptyMessage(true)
-                    } else {
-                        showEmptyMessage(false)
-                        setupRecyclerView(bookings)
-                    }
+                    updateUI(newBookings, oldBookings)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -96,10 +96,55 @@ class AdminBookingsFragment : Fragment() {
         }
     }
 
+    private fun isFutureBooking(booking: Booking): Boolean {
+        val currentDateTime = Calendar.getInstance()
+
+        // Verifica se date e hour não são nulos
+        val bookingDate = booking.date ?: return false
+        val bookingHourStr = booking.hour ?: return false
+
+        val bookingDateParts = bookingDate.split("/").mapNotNull { it.toIntOrNull() }
+        val bookingTimeParts = bookingHourStr.split(":").mapNotNull { it.toIntOrNull() }
+
+        // Certifique-se de que a data tem 3 partes e o horário tem 2 partes (hora e minuto)
+        if (bookingDateParts.size == 3 && bookingTimeParts.size == 2) {
+            val bookingCalendar = Calendar.getInstance().apply {
+                set(Calendar.YEAR, bookingDateParts[2])
+                set(Calendar.MONTH, bookingDateParts[1] - 1)
+                set(Calendar.DAY_OF_MONTH, bookingDateParts[0])
+                set(Calendar.HOUR_OF_DAY, bookingTimeParts[0])  // Hora extraída de "hour"
+                set(Calendar.MINUTE, bookingTimeParts[1])       // Minuto extraído de "hour"
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            return bookingCalendar.after(currentDateTime)
+        }
+        return false
+    }
+
+
+    private fun updateUI(newBookings: List<Booking>, oldBookings: List<Booking>) {
+        if (newBookings.isEmpty() && oldBookings.isEmpty()) {
+            showEmptyMessage(true)
+        } else {
+            showEmptyMessage(false)
+
+            newBookingsTitle.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            oldBookingsTitle.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+
+            newBookingsRecyclerView.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            oldBookingsRecyclerView.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+
+            newBookingAdapter.updateData(newBookings)
+            oldBookingAdapter.updateData(oldBookings)
+        }
+    }
+
     private fun showEmptyMessage(show: Boolean) {
         emptyBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
         emptyBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
-        bookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        newBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        oldBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
     }
 
     private fun showErrorMessage(message: String) {
@@ -107,16 +152,26 @@ class AdminBookingsFragment : Fragment() {
         showEmptyMessage(true)
     }
 
-    private fun setupRecyclerView(bookings: List<Booking>) {
-        bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+    private fun setupRecyclerViews() {
+        newBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
+        oldBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Configura o adapter com a lista de bookings
-        bookingsRecyclerView.adapter = BookingAdapter(
-            bookings,
-            requireContext(),
-            { bookingId -> confirmBooking(bookingId) },
-            { bookingId -> cancelBooking(bookingId) }
+        newBookingAdapter = BookingAdapter(
+            bookings = listOf(),
+            context = requireContext(),
+            onConfirmBooking = { bookingId -> confirmBooking(bookingId) },
+            onCancelBooking = { bookingId -> cancelBooking(bookingId) }
         )
+
+        oldBookingAdapter = BookingAdapter(
+            bookings = listOf(),
+            context = requireContext(),
+            onConfirmBooking = { bookingId -> confirmBooking(bookingId) },
+            onCancelBooking = { bookingId -> cancelBooking(bookingId) }
+        )
+
+        newBookingsRecyclerView.adapter = newBookingAdapter
+        oldBookingsRecyclerView.adapter = oldBookingAdapter
     }
 
     // Função para confirmar o agendamento

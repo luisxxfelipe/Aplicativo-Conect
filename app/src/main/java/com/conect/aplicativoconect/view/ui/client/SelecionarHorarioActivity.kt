@@ -30,7 +30,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var companyId: String
     private lateinit var selectedService: Service
-    private var selectedHour: Int? = null
+    private var selectedHour: String? = null
     private var selectedDate: String? = null // Armazenar a data selecionada
     private lateinit var operatingHours: Map<String, Any> // Horários de funcionamento da empresa
 
@@ -176,12 +176,10 @@ class SelecionarHorarioActivity : AppCompatActivity() {
     private fun fetchExistingBookings(date: String) {
         firestore.collection("bookings")
             .whereEqualTo("companyId", companyId)
-            .whereEqualTo("date", date) // Busca os agendamentos para a data específica
+            .whereEqualTo("date", date)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 val horariosOcupados = getBookedHours(querySnapshot)
-
-                // Gerar horários disponíveis excluindo os já ocupados
                 val horariosDisponiveis = generateAvailableHours(horariosOcupados)
 
                 horariosAdapter = HorariosAdapter(horariosDisponiveis) { selectedHour ->
@@ -194,19 +192,28 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             }
     }
 
-    private fun getBookedHours(querySnapshot: QuerySnapshot): List<Int> {
+
+    private fun getBookedHours(querySnapshot: QuerySnapshot): List<String> {
         return querySnapshot.documents.mapNotNull { document ->
-            document.getLong("hour")?.toInt() // Extrai a hora reservada
+            document.getString("hour") // Extrai o horário como String (ex: "15:29")
         }
     }
 
-    private fun generateAvailableHours(bookedHours: List<Int>): List<Int> {
-        val opening = (operatingHours["opening"] as String).split(":")[0].toInt()
-        val closing = (operatingHours["closing"] as String).split(":")[0].toInt()
+    private fun generateAvailableHours(bookedHours: List<String>): List<String> {
+        val openingTime = operatingHours["opening"] as? String ?: "09:00"
+        val closingTime = operatingHours["closing"] as? String ?: "18:00"
 
-        val allHours = (opening until closing).toList()
+        val openingHour = openingTime.split(":")[0].toInt()
+        val closingHour = closingTime.split(":")[0].toInt()
+
+        // Gera a lista de horários no formato "HH:mm"
+        val allHours = (openingHour until closingHour).map { hour -> String.format("%02d:00", hour) }
+
+        // Filtra os horários já reservados
         return allHours.filter { hour ->
-            bookedHours.none { bookedHour -> Math.abs(hour - bookedHour) < 1 } // Exclui horários já reservados
+            !bookedHours.contains(hour) // Exclui horários que já estão reservados
         }
     }
+
+
 }

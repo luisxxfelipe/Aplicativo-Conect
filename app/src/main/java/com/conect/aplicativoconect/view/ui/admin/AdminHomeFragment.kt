@@ -18,8 +18,9 @@ import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class AdminHomeFragment : Fragment() {
 
@@ -64,11 +65,11 @@ class AdminHomeFragment : Fragment() {
         }
 
         adminViewModel.todayProfit.observe(viewLifecycleOwner) { profit ->
-            binding.todayProfitTextView.text = String.format("R$ %.2f", profit)
+            binding.todayProfitTextView.text = String.format(Locale.getDefault(), "R$ %.2f", profit)
         }
 
         adminViewModel.monthProfit.observe(viewLifecycleOwner) { profit ->
-            binding.monthProfitTextView.text = String.format("R$ %.2f", profit)
+            binding.monthProfitTextView.text = String.format(Locale.getDefault(), "R$ %.2f", profit)
         }
 
     }
@@ -118,21 +119,24 @@ class AdminHomeFragment : Fragment() {
     }
 
     private fun processBookings(bookings: List<Booking>) {
-        val confirmedBookings = bookings.filter { it.status_cliente == "confirmed" }
+        // Filtra os agendamentos confirmados pelo cliente e pelo administrador
+        val confirmedBookings = bookings.filter {
+            it.status_cliente == "confirmed" && it.status_adm == "confirmed"
+        }
 
         val (weeklyBookings, monthBookings) = filterBookingsByDate(confirmedBookings)
-
-        val weeklyProfit = calculateProfit(weeklyBookings)
         val monthlyProfit = calculateProfit(monthBookings)
+        val weeklyProfit = calculateProfit(weeklyBookings)
 
         if (!isAdded || _binding == null) return
 
-        adminViewModel.setTodayBookingsCount(weeklyBookings.size)
         adminViewModel.setMonthBookingsCount(monthBookings.size)
-        adminViewModel.setTodayProfit(weeklyProfit)
+        adminViewModel.setTodayBookingsCount(weeklyBookings.size)
         adminViewModel.setMonthProfit(monthlyProfit)
+        adminViewModel.setTodayProfit(weeklyProfit)
 
-        val nearestBookings = bookings
+        // Filtra e ordena para exibir os 2 agendamentos futuros mais próximos
+        val nearestBookings = confirmedBookings
             .filter { isFutureBooking(it) }
             .sortedBy { it.date?.let { date -> parseDateTime(date, it.hour) } }
             .take(2)
@@ -154,7 +158,7 @@ class AdminHomeFragment : Fragment() {
     private fun filterBookingsByDate(bookings: List<Booking>): Pair<List<Booking>, List<Booking>> {
         val calendar = Calendar.getInstance()
 
-        // Definindo o início do mês atual
+        // Configura o intervalo do mês atual
         calendar.set(Calendar.DAY_OF_MONTH, 1)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
@@ -162,52 +166,32 @@ class AdminHomeFragment : Fragment() {
         calendar.set(Calendar.MILLISECOND, 0)
         val startOfMonth = calendar.time
 
-        // Definindo o fim do mês atual
-        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        calendar.set(Calendar.MILLISECOND, 999)
+        calendar.add(Calendar.MONTH, 1) // Avança para o próximo mês
+        calendar.set(Calendar.DAY_OF_MONTH, 1) // Define como o primeiro dia do próximo mês
+        calendar.add(Calendar.MILLISECOND, -1) // Volta um milissegundo para obter o último dia do mês atual
         val endOfMonth = calendar.time
 
-        // Filtro para os agendamentos da semana
+        // Configura o intervalo da semana atual
+        calendar.time = Date() // Define a data como hoje
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
         val startOfWeek = calendar.time
-
         calendar.add(Calendar.DAY_OF_WEEK, 6)
         val endOfWeek = calendar.time
 
+        // Filtra os agendamentos semanais e mensais confirmados
         val weeklyBookings = bookings.filter { booking ->
-            val bookingDate = booking.date?.let { date -> parseDateTime(date, booking.hour).time }
+            val bookingDate = booking.date?.let { parseDateTime(it, booking.hour) }
             bookingDate != null && bookingDate in startOfWeek..endOfWeek
         }
 
         val monthBookings = bookings.filter { booking ->
-            val bookingDate = booking.date?.let { date -> parseDateTime(date, booking.hour).time }
+            val bookingDate = booking.date?.let { parseDateTime(it, booking.hour) }
             bookingDate != null && bookingDate in startOfMonth..endOfMonth
         }
 
         return Pair(weeklyBookings, monthBookings)
     }
 
-    private suspend fun getAllBookings(businessId: String): List<Booking> {
-        val businessSnapshot = firestore.collection("business").document(businessId).get().await()
-        val business = businessSnapshot.toObject(Business::class.java)
-
-        val services = business?.services ?: emptyList()
-
-        val bookingsSnapshot = firestore.collection("bookings")
-            .whereEqualTo("companyId", businessId)
-            .get()
-            .await()
-
-        return bookingsSnapshot.documents.mapNotNull { document ->
-            val booking = document.toObject(Booking::class.java)
-            booking?.id = document.id
-
-            booking
-        }
-    }
 
     private fun setupNearestBookingsAdapter(nearestBookings: List<Booking>) {
         binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
@@ -220,22 +204,29 @@ class AdminHomeFragment : Fragment() {
     }
 
     private fun isFutureBooking(booking: Booking): Boolean {
-        val currentDateTime = Calendar.getInstance()
+        val currentDateTime = Calendar.getInstance().time
         val bookingDateTime = booking.date?.let { parseDateTime(it, booking.hour) }
         return bookingDateTime?.after(currentDateTime) ?: false
     }
 
 
-    private fun parseDateTime(date: String, hour: Int?): Calendar {
-        val dateParts = date.split("/").map { it.toInt() }
-        return Calendar.getInstance().apply {
-            set(Calendar.YEAR, dateParts[2])
-            set(Calendar.MONTH, dateParts[1] - 1) // Mês é indexado em 0
-            set(Calendar.DAY_OF_MONTH, dateParts[0])
-            set(Calendar.HOUR_OF_DAY, hour ?: 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
+    private fun parseDateTime(date: String, hour: String): Date? {
+        return try {
+            val dateParts = date.split("/").map { it.toInt() }
+            val timeParts = hour.split(":").map { it.toIntOrNull() ?: 0 }
+
+            Calendar.getInstance().apply {
+                set(Calendar.YEAR, dateParts[2])
+                set(Calendar.MONTH, dateParts[1] - 1)
+                set(Calendar.DAY_OF_MONTH, dateParts[0])
+                set(Calendar.HOUR_OF_DAY, timeParts[0])
+                set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.time
+        } catch (e: Exception) {
+            Log.e("AdminHomeFragment", "Erro ao analisar a data/hora: ${e.message}")
+            null
         }
     }
 

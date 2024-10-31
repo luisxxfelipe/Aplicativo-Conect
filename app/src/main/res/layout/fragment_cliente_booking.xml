@@ -1,34 +1,63 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Novos Agendamentos -->
+    <TextView
+        android:id="@+id/newBookingsTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Novos Agendamentos"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewNewBookings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <!-- Agendamentos Antigos -->
+    <TextView
+        android:id="@+id/oldBookingsTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Agendamentos Antigos"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewOldBookings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <!-- Mensagem de Agendamentos Vazio -->
     <TextView
         android:id="@+id/emptyBookingsMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="Ainda não há agendamentos."
         android:textColor="@color/cinza"
+        android:layout_gravity="center"
         android:visibility="gone" />
 
     <ImageView
         android:id="@+id/emptyBookingsImage"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        android:layout_marginTop="16dp"
-        android:scaleType="centerInside"
+        android:layout_gravity="center"
         android:src="@drawable/sem_agendamentos"
         android:visibility="gone" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewClientBookings"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_weight="1"
-        android:visibility="gone" />
 </LinearLayout>

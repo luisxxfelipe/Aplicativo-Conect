@@ -1,6 +1,5 @@
 package com.conect.aplicativoconect.view.ui.client
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,11 +9,11 @@ import com.conect.aplicativoconect.R
 import android.graphics.Color
 
 class HorariosAdapter(
-    private val horarios: List<Int>,
-    private val onHourSelected: (Int) -> Unit
+    private val horarios: List<String>,
+    private val onHourSelected: (String) -> Unit
 ) : RecyclerView.Adapter<HorariosAdapter.HorarioViewHolder>() {
 
-    private var selectedHour: Int? = null
+    private var selectedHour: String? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HorarioViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_horario, parent, false)
@@ -25,7 +24,6 @@ class HorariosAdapter(
         val hour = horarios[position]
         holder.bind(hour)
 
-        // Alterar a cor do item selecionado
         holder.itemView.setBackgroundColor(
             if (hour == selectedHour) Color.LTGRAY else Color.WHITE
         )
@@ -33,15 +31,15 @@ class HorariosAdapter(
         holder.itemView.setOnClickListener {
             selectedHour = hour
             onHourSelected(hour)
-            notifyDataSetChanged() // Atualizar a visualização
+            notifyDataSetChanged()
         }
     }
 
     override fun getItemCount(): Int = horarios.size
 
     inner class HorarioViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(hour: Int) {
-            itemView.findViewById<TextView>(R.id.textViewHora).text = "$hour:00"
+        fun bind(hour: String) {
+            itemView.findViewById<TextView>(R.id.textViewHora).text = hour
         }
     }
 }

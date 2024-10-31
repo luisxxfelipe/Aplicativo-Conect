@@ -26,12 +26,15 @@ import java.util.Calendar
 
 class BookingFragment : Fragment() {
 
-    private lateinit var bookingRecyclerView: RecyclerView
-    private lateinit var bookingAdapter: ClientBookingAdapter
+    private lateinit var newBookingsRecyclerView: RecyclerView
+    private lateinit var oldBookingsRecyclerView: RecyclerView
+    private lateinit var newBookingAdapter: ClientBookingAdapter
+    private lateinit var oldBookingAdapter: ClientBookingAdapter
     private lateinit var emptyBookingsMessage: TextView
     private lateinit var emptyBookingsImage: ImageView
-    private var bookings: List<Booking> = listOf()
-    private lateinit var firestore: FirebaseFirestore
+    private lateinit var newBookingsTitle: TextView
+    private lateinit var oldBookingsTitle: TextView
+    private var firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,28 +42,37 @@ class BookingFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_cliente_booking, container, false)
 
-        bookingRecyclerView = view.findViewById(R.id.recyclerViewClientBookings)
+        newBookingsRecyclerView = view.findViewById(R.id.recyclerViewNewBookings)
+        oldBookingsRecyclerView = view.findViewById(R.id.recyclerViewOldBookings)
         emptyBookingsMessage = view.findViewById(R.id.emptyBookingsMessage)
         emptyBookingsImage = view.findViewById(R.id.emptyBookingsImage)
+        newBookingsTitle = view.findViewById(R.id.newBookingsTitle)
+        oldBookingsTitle = view.findViewById(R.id.oldBookingsTitle)
 
-        firestore = FirebaseFirestore.getInstance()
-
-        setupRecyclerView()
+        setupRecyclerViews()
         loadBookings()
 
         return view
     }
 
-    private fun setupRecyclerView() {
-        bookingRecyclerView.layoutManager = LinearLayoutManager(context)
+    private fun setupRecyclerViews() {
+        newBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
+        oldBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
 
-        bookingAdapter = ClientBookingAdapter(
-            bookings = bookings,
+        newBookingAdapter = ClientBookingAdapter(
+            bookings = listOf(),
             onConfirmClick = { booking -> confirmBooking(booking) },
             onCancelClick = { booking -> cancelBooking(booking) }
         )
 
-        bookingRecyclerView.adapter = bookingAdapter
+        oldBookingAdapter = ClientBookingAdapter(
+            bookings = listOf(),
+            onConfirmClick = { booking -> confirmBooking(booking) },
+            onCancelClick = { booking -> cancelBooking(booking) }
+        )
+
+        newBookingsRecyclerView.adapter = newBookingAdapter
+        oldBookingsRecyclerView.adapter = oldBookingAdapter
     }
 
     private fun loadBookings() {
@@ -75,47 +87,67 @@ class BookingFragment : Fragment() {
                     return@addSnapshotListener
                 }
 
-                val updatedBookings = querySnapshot?.documents?.mapNotNull { document ->
+                val (newBookings, oldBookings) = querySnapshot?.documents?.mapNotNull { document ->
                     val booking = document.toObject(Booking::class.java)
                     booking?.id = document.id
                     booking
-                }?.filter { isFutureBooking(it) } ?: emptyList()
+                }?.partition { isFutureBooking(it) } ?: Pair(emptyList(), emptyList())
 
-                if (updatedBookings.isEmpty()) {
-                    showEmptyBookingsMessage(true)
-                } else {
-                    showEmptyBookingsMessage(false)
-                    bookingAdapter.updateData(updatedBookings)
-                }
+                updateUI(newBookings, oldBookings)
             }
     }
 
+    private fun updateUI(newBookings: List<Booking>, oldBookings: List<Booking>) {
+        if (newBookings.isEmpty() && oldBookings.isEmpty()) {
+            showEmptyBookingsMessage(true)
+        } else {
+            showEmptyBookingsMessage(false)
+
+            newBookingsTitle.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            oldBookingsTitle.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+
+            newBookingsRecyclerView.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            oldBookingsRecyclerView.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+
+            newBookingAdapter.updateData(newBookings)
+            oldBookingAdapter.updateData(oldBookings)
+        }
+    }
 
     private fun showEmptyBookingsMessage(show: Boolean) {
         emptyBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
         emptyBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
-        bookingRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        newBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        oldBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
     }
 
     private fun isFutureBooking(booking: Booking): Boolean {
-        val currentDate = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
+        val currentDateTime = Calendar.getInstance()
 
-        val bookingDateParts = booking.date?.split("/")?.map { it.toInt() }
-        if (bookingDateParts != null && bookingDateParts.size == 3) {
+        // Verificar se `date` e `hour` estão presentes e processá-los
+        val bookingDateParts = booking.date?.split("/")?.map { it.toIntOrNull() }
+        val bookingHour = booking.hour?.toString()?.toIntOrNull()
+
+        // Verificar se todos os elementos de data foram extraídos corretamente e se `hour` é válido
+        if (bookingDateParts != null && bookingDateParts.size == 3 && bookingHour != null) {
+
+            // Criar o calendário do agendamento com data e hora
             val bookingCalendar = Calendar.getInstance().apply {
-                set(Calendar.YEAR, bookingDateParts[2])
-                set(Calendar.MONTH, bookingDateParts[1] - 1)
-                set(Calendar.DAY_OF_MONTH, bookingDateParts[0])
+                set(Calendar.YEAR, bookingDateParts[2]!!)
+                set(Calendar.MONTH, bookingDateParts[1]!! - 1)
+                set(Calendar.DAY_OF_MONTH, bookingDateParts[0]!!)
+                set(Calendar.HOUR_OF_DAY, bookingHour)
+                set(Calendar.MINUTE, 0) // Caso `minute` não seja especificado, assumimos 0 minutos
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
             }
-            return bookingCalendar.after(currentDate)
+
+            // Comparar o agendamento com a data e hora atuais
+            return bookingCalendar.after(currentDateTime)
         }
         return false
     }
+
 
     private fun confirmBooking(booking: Booking) {
         firestore.collection("bookings").document(booking.id!!)

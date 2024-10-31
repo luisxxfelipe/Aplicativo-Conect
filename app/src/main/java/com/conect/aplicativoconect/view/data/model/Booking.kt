@@ -4,7 +4,7 @@ data class Booking(
     val name: String? = null,
     var id: String? = null,
     val date: String? = null,
-    val hour: Int? = null,
+    val hour: String = "",
     val serviceName: String? = null,
     var fcmToken: String? = null,
     val userId: String? = null,
