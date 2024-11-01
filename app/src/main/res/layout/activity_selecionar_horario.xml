@@ -6,15 +6,6 @@
     android:gravity="center"
     android:padding="16dp">
 
-    <!-- Estado inicial com imagem e texto -->
-    <ImageView
-        android:id="@+id/emptyStateImage"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:src="@drawable/sem_agendamentos" />
-
-    <!-- Adicionando os componentes necessários -->
-
     <TextView
         android:id="@+id/emptyStateText"
         android:layout_width="wrap_content"
@@ -32,7 +23,8 @@
         android:text="Data não selecionada"
         android:textSize="16sp"
         android:layout_marginTop="16dp"
-        android:layout_gravity="center_horizontal" />
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/buttonPickDate"
@@ -41,14 +33,6 @@
         android:text="Escolher Data"
         android:textColor="@android:color/white"
         android:layout_marginTop="15dp" />
-
-    <!-- RecyclerView e botão agendar escondidos por padrão -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/horariosRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:visibility="gone" />
 
     <Button
         android:id="@+id/buttonAgendar"
@@ -59,4 +43,10 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="24dp"
         android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/emptyStateImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/sem_agendamentos" />
 </LinearLayout>

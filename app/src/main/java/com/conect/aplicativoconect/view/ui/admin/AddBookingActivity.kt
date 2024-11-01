@@ -27,6 +27,7 @@ class AddBookingActivity : AppCompatActivity() {
     private val servicesMap = mutableMapOf<String, Double>() // Para associar serviço ao preço
     private var operatingHours: Pair<Int, Int>? = null // Horário de funcionamento (abertura e fechamento)
     private var availableTimes = mutableListOf<String>() // Horários disponíveis
+    private lateinit var progressBarSaving: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +40,7 @@ class AddBookingActivity : AppCompatActivity() {
         buttonSelectDate = findViewById(R.id.buttonSelectDate)
         buttonSelectTime = findViewById(R.id.buttonSelectTime)
         buttonSaveBooking = findViewById(R.id.buttonSaveBooking)
+        progressBarSaving = findViewById(R.id.progressBarSaving)
 
         // Definindo visibilidade inicial
         buttonSelectTime.visibility = View.GONE
@@ -180,6 +182,8 @@ class AddBookingActivity : AppCompatActivity() {
 
         if (companyId != null) {
             uploadImageAndSaveBooking(name, selectedServiceName, selectedDate, selectedHour, servicePrice)
+            progressBarSaving.visibility = View.VISIBLE
+            buttonSaveBooking.isEnabled = false
         } else {
             Toast.makeText(this, "Company ID não encontrado.", Toast.LENGTH_SHORT).show()
         }

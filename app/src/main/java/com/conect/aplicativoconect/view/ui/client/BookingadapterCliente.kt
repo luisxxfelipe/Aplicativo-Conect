@@ -48,7 +48,7 @@ class ClientBookingAdapter(
         holder.bookingUserName.text = booking.name
         holder.bookingServiceType.text = booking.serviceName
         holder.bookingDate.text = booking.date
-        holder.bookingTime.text = "${booking.hour}:00h"
+        holder.bookingTime.text = "${booking.hour}h"
 
         // Aplique a cor ao CardView diretamente
         val cardView = holder.itemView as androidx.cardview.widget.CardView

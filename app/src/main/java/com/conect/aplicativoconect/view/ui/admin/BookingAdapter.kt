@@ -64,7 +64,7 @@ class BookingAdapter(
         holder.userName.text = booking.name
         holder.date.text = booking.date
         holder.serviceType.text = booking.serviceName
-        holder.bookingTime.text = "${booking.hour}:00"
+        holder.bookingTime.text = "${booking.hour}h"
 
         // Carregar a imagem do usuário usando Glide
         Glide.with(context)

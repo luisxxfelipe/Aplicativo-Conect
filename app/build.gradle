@@ -46,6 +46,8 @@ android {
             excludes += [
                     'META-INF/DEPENDENCIES',
                     'META-INF/LICENSE',
+                    'META-INF/LICENSE.md',
+                    'META-INF/LICENSE-notice.md', // adiciona a exclusão do LICENSE-notice.md
                     'META-INF/LICENSE.txt',
                     'META-INF/NOTICE',
                     'META-INF/NOTICE.txt',
@@ -107,4 +109,5 @@ dependencies {
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    androidTestImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
 }

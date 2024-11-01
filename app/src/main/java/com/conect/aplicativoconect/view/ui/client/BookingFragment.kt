@@ -55,6 +55,19 @@ class BookingFragment : Fragment() {
         return view
     }
 
+    private fun adjustNestedScrollViewHeight() {
+        val itemCount = newBookingAdapter.itemCount
+
+        val params = newBookingsRecyclerView.layoutParams
+        params.height = if (itemCount > 3) {
+            resources.getDimensionPixelSize(R.dimen.fixed_height_for_3_items) // Defina como 420dp
+        } else {
+            RecyclerView.LayoutParams.WRAP_CONTENT
+        }
+        newBookingsRecyclerView.layoutParams = params
+    }
+
+
     private fun setupRecyclerViews() {
         newBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
         oldBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
@@ -94,6 +107,7 @@ class BookingFragment : Fragment() {
                 }?.partition { isFutureBooking(it) } ?: Pair(emptyList(), emptyList())
 
                 updateUI(newBookings, oldBookings)
+                adjustNestedScrollViewHeight()
             }
     }
 
@@ -126,18 +140,17 @@ class BookingFragment : Fragment() {
 
         // Verificar se `date` e `hour` estão presentes e processá-los
         val bookingDateParts = booking.date?.split("/")?.map { it.toIntOrNull() }
-        val bookingHour = booking.hour?.toString()?.toIntOrNull()
+        val bookingHourParts = booking.hour?.split(":")?.map { it.toIntOrNull() }
 
         // Verificar se todos os elementos de data foram extraídos corretamente e se `hour` é válido
-        if (bookingDateParts != null && bookingDateParts.size == 3 && bookingHour != null) {
-
+        if (bookingDateParts != null && bookingDateParts.size == 3 && bookingHourParts != null && bookingHourParts.size >= 1) {
             // Criar o calendário do agendamento com data e hora
             val bookingCalendar = Calendar.getInstance().apply {
                 set(Calendar.YEAR, bookingDateParts[2]!!)
                 set(Calendar.MONTH, bookingDateParts[1]!! - 1)
                 set(Calendar.DAY_OF_MONTH, bookingDateParts[0]!!)
-                set(Calendar.HOUR_OF_DAY, bookingHour)
-                set(Calendar.MINUTE, 0) // Caso `minute` não seja especificado, assumimos 0 minutos
+                set(Calendar.HOUR_OF_DAY, bookingHourParts[0]!!)
+                bookingHourParts.getOrElse(1) { 0 }?.let { set(Calendar.MINUTE, it) } // Caso `minute` não seja especificado, assumimos 0 minutos
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
@@ -147,6 +160,7 @@ class BookingFragment : Fragment() {
         }
         return false
     }
+
 
 
     private fun confirmBooking(booking: Booking) {

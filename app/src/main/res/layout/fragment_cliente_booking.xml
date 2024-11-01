@@ -17,11 +17,20 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewNewBookings"
+    <!-- Limita altura para o conteúdo dos novos agendamentos -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone" />
+        android:fillViewport="false"
+        android:overScrollMode="never">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewNewBookings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:visibility="gone" />
+    </androidx.core.widget.NestedScrollView>
 
     <!-- Agendamentos Antigos -->
     <TextView

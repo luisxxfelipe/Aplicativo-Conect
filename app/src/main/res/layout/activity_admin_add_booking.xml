@@ -33,7 +33,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:hint="Nome do Cliente">
+                android:hint="Nome do Cliente"
+                app:boxStrokeWidth="1dp"
+                app:boxBackgroundMode="outline"
+                app:boxStrokeColor="@color/colorPrimary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextName"
@@ -114,6 +117,13 @@
                 android:layout_marginTop="24dp"
                 android:visibility="gone"
                 android:backgroundTint="@color/roxo" />
+
+            <ProgressBar
+                android:id="@+id/progressBarSaving"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

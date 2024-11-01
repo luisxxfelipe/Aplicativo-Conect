@@ -96,6 +96,18 @@ class AdminBookingsFragment : Fragment() {
         }
     }
 
+    private fun adjustNestedScrollViewHeight() {
+        val itemCount = newBookingAdapter.itemCount
+
+        val params = newBookingsRecyclerView.layoutParams
+        params.height = if (itemCount > 3) {
+            resources.getDimensionPixelSize(R.dimen.fixed_height_for_3_items) // Defina 420dp no arquivo dimens.xml
+        } else {
+            RecyclerView.LayoutParams.WRAP_CONTENT
+        }
+        newBookingsRecyclerView.layoutParams = params
+    }
+
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance()
 
@@ -137,6 +149,8 @@ class AdminBookingsFragment : Fragment() {
 
             newBookingAdapter.updateData(newBookings)
             oldBookingAdapter.updateData(oldBookings)
+
+            adjustNestedScrollViewHeight()
         }
     }
 
