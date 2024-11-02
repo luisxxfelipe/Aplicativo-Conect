@@ -76,7 +76,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_password"
+                android:drawableStart="@drawable/ic_senha"
                 android:drawablePadding="15dp"
                 android:gravity="start|center_vertical"
                 android:padding="16dp"

@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.ui.admin
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.conect.aplicativoconect.R
@@ -53,7 +54,7 @@ class AdminHomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.navigation_logout -> {
-                    logout()
+                    showLogoutConfirmationDialog()
                     true
                 }
                 else -> false
@@ -65,6 +66,17 @@ class AdminHomeActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
             .commit()
+    }
+
+    private fun showLogoutConfirmationDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Confirmar Logout")
+            .setMessage("Você tem certeza que deseja sair?")
+            .setPositiveButton("Sim") { _, _ ->
+                logout()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun logout() {

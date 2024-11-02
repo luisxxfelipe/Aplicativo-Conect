@@ -149,8 +149,6 @@ class AdminHomeFragment : Fragment() {
         }
     }
 
-
-
     private fun calculateProfit(bookings: List<Booking>): Double {
         return bookings.sumOf { it.price }
     }
@@ -231,16 +229,21 @@ class AdminHomeFragment : Fragment() {
     }
 
     private fun showNoBookingsMessage(show: Boolean) {
-        binding.noBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
-        binding.noBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
-        binding.todayBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        if (_binding != null) { // Verifica se o binding ainda está disponível
+            binding.noBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
+            binding.noBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
+            binding.todayBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        }
     }
 
+
     private fun showErrorMessage(message: String) {
-        binding.noBookingsMessage.text = message
-        binding.noBookingsMessage.visibility = View.VISIBLE
-        binding.noBookingsImage.visibility = View.VISIBLE
-        binding.todayBookingsRecyclerView.visibility = View.GONE
+        if (_binding != null) { // Verifica se o binding ainda está disponível
+            binding.noBookingsMessage.text = message
+            binding.noBookingsMessage.visibility = View.VISIBLE
+            binding.noBookingsImage.visibility = View.VISIBLE
+            binding.todayBookingsRecyclerView.visibility = View.GONE
+        }
     }
 
     private fun confirmBooking(bookingId: String) {

@@ -38,6 +38,7 @@ class SignupClientActivity : AppCompatActivity() {
     private lateinit var nameEditText: EditText
     private lateinit var signUpButton: Button
     private lateinit var loginTextView: TextView
+    private lateinit var cpfEditText: EditText
     private lateinit var profileImageView: ImageView
     private lateinit var uploadProfileButton: Button
     private lateinit var progressDialog: AlertDialog
@@ -58,6 +59,7 @@ class SignupClientActivity : AppCompatActivity() {
         passwordEditText = findViewById(R.id.passwordInput)
         confirmPasswordEditText = findViewById(R.id.confirmPasswordInput)
         nameEditText = findViewById(R.id.nameInput)
+        cpfEditText = findViewById(R.id.cpfInput)
         signUpButton = findViewById(R.id.signupButton)
         loginTextView = findViewById(R.id.loginTextView)
         profileImageView = findViewById(R.id.profileImageView) // Adicione o ImageView no seu layout
@@ -91,11 +93,12 @@ class SignupClientActivity : AppCompatActivity() {
             val password = passwordEditText.text.toString().trim()
             val confirmPassword = confirmPasswordEditText.text.toString().trim()
             val name = nameEditText.text.toString().trim()
+            val cpf = cpfEditText.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty()) {
+            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty() && cpfEditText.text.toString().isNotEmpty()) {
                 if (password == confirmPassword) {
                     progressDialog.show() // Mostrar progresso
-                    createUser(email, password, name)
+                    createUser(email, password, name, cpf)
                 } else {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
@@ -126,7 +129,7 @@ class SignupClientActivity : AppCompatActivity() {
         getContent.launch(intent)
     }
 
-    private fun createUser(email: String, password: String, name: String) {
+    private fun createUser(email: String, password: String, name: String, cpf: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
@@ -137,6 +140,7 @@ class SignupClientActivity : AppCompatActivity() {
                         "userId" to userId,
                         "email" to email,
                         "name" to name,
+                        "cpf" to cpf,
                         "isActive" to true,
                         "type" to "client"
                     )

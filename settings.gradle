@@ -2,15 +2,18 @@ pluginManagement {
     repositories {
         google()
         mavenCentral()
-        gradlePluginPortal()
+        maven { url "https://artifactory.mercadolibre.com/artifactory/mobile" } // Repositório Mercado Pago
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
+        maven { url "https://artifactory.mercadolibre.com/artifactory/mobile" } // Repositório Mercado Pago
     }
 }
+
 rootProject.name = "AplicativoConect"
 include ':app'

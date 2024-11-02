@@ -61,6 +61,27 @@
         <activity android:name=".view.ui.admin.EditBusinessProfileActivity" android:exported="true" />
         <activity android:name=".view.ui.PolicyActivity" android:exported="true" />
 
+        <!-- Activity para gerenciamento do resultado do pagamento -->
+        <activity android:name=".view.ui.PaymentResultActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="conectapp" android:host="success" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="conectapp" android:host="failure" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="conectapp" android:host="pending" />
+            </intent-filter>
+        </activity>
 
         <meta-data
             android:name="preloaded_fonts"

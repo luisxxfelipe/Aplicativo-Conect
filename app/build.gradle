@@ -1,19 +1,19 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.gms.google-services'
     id 'com.google.devtools.ksp'
+    id 'com.google.gms.google-services'
 }
 
 android {
     namespace 'com.conect.aplicativoconect'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId "com.conect.aplicativoconect"
         minSdk 23
-        targetSdk 33
+        targetSdk 35
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -47,24 +47,32 @@ android {
                     'META-INF/DEPENDENCIES',
                     'META-INF/LICENSE',
                     'META-INF/LICENSE.md',
-                    'META-INF/LICENSE-notice.md', // adiciona a exclusão do LICENSE-notice.md
+                    'META-INF/LICENSE-notice.md',
                     'META-INF/LICENSE.txt',
                     'META-INF/NOTICE',
+                    'META-INF/INDEX.LIST',
                     'META-INF/NOTICE.txt',
                     'META-INF/DEPENDENCIES.txt',
                     'google/**',
-                    'google/firestore/v1/query.proto'
             ]
+        }
+    }
+}
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        if (details.requested.group == 'io.grpc' && details.requested.name == 'grpc-core') {
+            details.useVersion '1.48.0'
         }
     }
 }
 
 dependencies {
     // Android e Material
-    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.core:core-ktx:1.15.0'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
@@ -73,9 +81,13 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.5.1')
     implementation 'com.google.firebase:firebase-messaging-ktx'
     implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation ('com.google.firebase:firebase-firestore-ktx') {
+        exclude group: 'io.grpc' // Evita duplicação de gRPC
+    }
     implementation 'com.google.firebase:firebase-storage-ktx'
-    implementation 'com.google.firebase:firebase-inappmessaging-display'
+    implementation ('com.google.firebase:firebase-inappmessaging-display') {
+        exclude group: 'io.grpc' // Evita duplicação de gRPC
+    }
 
     // Play Services
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
@@ -87,27 +99,41 @@ dependencies {
 
     // Networking e JSON
     implementation 'com.android.volley:volley:1.2.1'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.11.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
 
     // Glide e Firebase UI
-    implementation 'com.github.bumptech.glide:glide:4.12.0'
-    implementation 'com.firebaseui:firebase-ui-storage:8.0.0'
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    implementation 'com.firebaseui:firebase-ui-storage:8.0.2'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
 
     // Firebase Admin SDK e Google Auth para serviços do lado do servidor
-    implementation 'com.google.auth:google-auth-library-oauth2-http:1.18.0'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.29.0'
 
     // Lifecycle
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.6'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.7'
 
     // Testes
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
-    androidTestImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+    androidTestImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
+
+    // Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.11.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
+
+    // gRPC BoM para alinhar as versões do gRPC
+    implementation platform('io.grpc:grpc-bom:1.48.0')
+    implementation 'io.grpc:grpc-core'
+    implementation 'io.grpc:grpc-okhttp'
+    implementation 'io.grpc:grpc-stub'
+    implementation 'io.grpc:grpc-protobuf-lite'
+    implementation 'io.grpc:grpc-android:1.48.0'
 }
+
+apply plugin: 'com.google.gms.google-services'

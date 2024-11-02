@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -47,7 +48,7 @@ class ClienteHomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.navigation_logout -> {
-                    logout()
+                    showLogoutConfirmationDialog()
                     true
                 }
                 else -> false
@@ -136,6 +137,17 @@ class ClienteHomeActivity : AppCompatActivity() {
 
             recyclerView.layoutManager = LinearLayoutManager(this)
         }
+    }
+
+    private fun showLogoutConfirmationDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Confirmar Logout")
+            .setMessage("Você tem certeza que deseja sair?")
+            .setPositiveButton("Sim") { _, _ ->
+                logout()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun logout() {
