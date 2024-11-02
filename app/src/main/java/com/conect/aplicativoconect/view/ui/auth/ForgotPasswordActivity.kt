@@ -31,7 +31,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 // Adicione aqui a lógica para enviar o e-mail
                 Toast.makeText(this, "Instruções enviadas para $email", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Por favor, insira um e-mail válido", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Por favor, insira um e-mail válido", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }

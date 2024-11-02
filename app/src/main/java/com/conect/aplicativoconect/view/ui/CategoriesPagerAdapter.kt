@@ -19,7 +19,8 @@ class CategoriesPagerAdapter(
         R.color.colorCategory3
     )
 
-    private var selectedPosition: Int = RecyclerView.NO_POSITION // Nenhuma posição selecionada inicialmente
+    private var selectedPosition: Int =
+        RecyclerView.NO_POSITION // Nenhuma posição selecionada inicialmente
     private val itemColors = mutableMapOf<Int, Int>() // Mapa para armazenar cores por item
     private var lastUsedColor: Int? = null // Última cor usada para garantir que não repita
 
@@ -49,7 +50,10 @@ class CategoriesPagerAdapter(
 
         // Adiciona borda se o item estiver selecionado
         if (position == selectedPosition) {
-            backgroundDrawable.setStroke(6, ContextCompat.getColor(holder.itemView.context, R.color.colorAccent))
+            backgroundDrawable.setStroke(
+                6,
+                ContextCompat.getColor(holder.itemView.context, R.color.colorAccent)
+            )
         } else {
             backgroundDrawable.setStroke(0, color) // Sem borda
         }

@@ -8,5 +8,5 @@ data class User(
     val imageUrl: String
 ) {
     // Construtor sem argumentos
-    constructor() : this("","", "", "", "")
+    constructor() : this("", "", "", "", "")
 }

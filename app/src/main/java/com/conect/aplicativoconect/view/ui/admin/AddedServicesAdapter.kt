@@ -18,8 +18,10 @@ class AddedServicesAdapter(
 
     inner class AddedServiceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val serviceNameTextView: TextView = itemView.findViewById(R.id.textViewServiceName)
-        private val servicePriceEditText: EditText = itemView.findViewById(R.id.editTextServicePrice)
-        private val removeServiceButton: ImageButton = itemView.findViewById(R.id.buttonRemoveService)
+        private val servicePriceEditText: EditText =
+            itemView.findViewById(R.id.editTextServicePrice)
+        private val removeServiceButton: ImageButton =
+            itemView.findViewById(R.id.buttonRemoveService)
 
         fun bind(service: Pair<ServiceType, Double>, position: Int) {
             serviceNameTextView.text = service.first.name

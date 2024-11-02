@@ -10,12 +10,10 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.ServiceType
-import com.google.android.material.internal.ViewUtils.hideKeyboard
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -53,7 +51,8 @@ class AddServiceFragment : Fragment() {
 
         buttonAdd.setOnClickListener {
             hideKeyboard()
-            addSelectedService() }
+            addSelectedService()
+        }
         buttonSave.setOnClickListener { saveServices() }
 
         return view
@@ -65,8 +64,10 @@ class AddServiceFragment : Fragment() {
             firestore.collection("business").document(userId)
                 .get()
                 .addOnSuccessListener { document ->
-                    val serviceType = document.getString("serviceType") ?: return@addOnSuccessListener
-                    val services = document.get("services") as? List<HashMap<String, Any>> ?: emptyList()
+                    val serviceType =
+                        document.getString("serviceType") ?: return@addOnSuccessListener
+                    val services =
+                        document.get("services") as? List<HashMap<String, Any>> ?: emptyList()
 
                     services.forEach { service ->
                         val serviceName = service["serviceName"] as String
@@ -74,7 +75,8 @@ class AddServiceFragment : Fragment() {
                         addedServices.add(Pair(ServiceType(serviceName), price))
                     }
 
-                    availableServices = getAvailableServiceTypesForCategory(serviceType).toMutableList()
+                    availableServices =
+                        getAvailableServiceTypesForCategory(serviceType).toMutableList()
                     serviceAdapter = ServiceTypeAdapter(availableServices) { updateUI() }
                     recyclerView.adapter = serviceAdapter
 
@@ -97,6 +99,7 @@ class AddServiceFragment : Fragment() {
                 ServiceType("Botox Capilar"),
                 ServiceType("Luzes e Mechas")
             )
+
             "Barbeiro" -> listOf(
                 ServiceType("Corte de Cabelo"),
                 ServiceType("Corte de Barba"),
@@ -106,6 +109,7 @@ class AddServiceFragment : Fragment() {
                 ServiceType("Pigmentação de Barba"),
                 ServiceType("Camuflagem de Fios Brancos")
             )
+
             "Manicure" -> listOf(
                 ServiceType("Manicure Clássica"),
                 ServiceType("Pedicure"),
@@ -115,6 +119,7 @@ class AddServiceFragment : Fragment() {
                 ServiceType("Fortalecimento de Unhas"),
                 ServiceType("Unhas Acrílicas")
             )
+
             "Estética" -> listOf(
                 ServiceType("Depilação"),
                 ServiceType("Limpeza de Pele"),
@@ -124,6 +129,7 @@ class AddServiceFragment : Fragment() {
                 ServiceType("Tratamento Antienvelhecimento"),
                 ServiceType("Bronzeamento Artificial")
             )
+
             "Massagem" -> listOf(
                 ServiceType("Massagem Relaxante"),
                 ServiceType("Massagem Terapêutica"),
@@ -157,7 +163,11 @@ class AddServiceFragment : Fragment() {
             updateUI()
         } else {
             // Mostra um Toast se faltou selecionar um serviço ou inserir um preço
-            Toast.makeText(requireContext(), "Selecione um serviço e insira um preço válido.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Selecione um serviço e insira um preço válido.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -196,14 +206,22 @@ class AddServiceFragment : Fragment() {
                 .update("services", serviceData)
                 .addOnSuccessListener {
                     // Exibe um Toast indicando sucesso
-                    Toast.makeText(requireContext(), "Serviços salvos com sucesso!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Serviços salvos com sucesso!",
+                        Toast.LENGTH_SHORT
+                    ).show()
 
                     // Redireciona para a tela principal do admin
                     navigateToAdminHome()
                 }
                 .addOnFailureListener { e ->
                     // Exibe um Toast indicando falha
-                    Toast.makeText(requireContext(), "Erro ao salvar serviços: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Erro ao salvar serviços: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         }
     }
@@ -216,7 +234,8 @@ class AddServiceFragment : Fragment() {
     }
 
     private fun hideKeyboard() {
-        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         val view = requireActivity().currentFocus
         if (view != null) {
             imm.hideSoftInputFromWindow(view.windowToken, 0)
@@ -228,7 +247,6 @@ class AddServiceFragment : Fragment() {
             .replace(R.id.fragment_container, AdminHomeFragment())
             .commit()
     }
-
 
 
 }

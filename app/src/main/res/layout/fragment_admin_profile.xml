@@ -5,141 +5,164 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/profileCard"
+    <!-- ScrollView para permitir rolagem -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp">
-
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/profileImageAdmin"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_marginTop="16dp"
-                app:civ_border_color="@color/colorPrimary"
-                app:civ_border_width="3dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/userNameAdmin"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:textColor="@color/textPrimary"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/profileImageAdmin" />
-
-            <TextView
-                android:id="@+id/userEmailAdmin"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="@color/textSecondary"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/userNameAdmin" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/optionsCard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/profileCard">
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:fillViewport="true">
 
         <LinearLayout
-            android:id="@+id/buttonLayoutAdmin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/dadospessoais"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+            <!-- Cartão de perfil -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/profileCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_horario"
-                android:drawablePadding="15dp"
-                android:gravity="start|center_vertical"
-                android:padding="16dp"
-                android:text="Gerenciamento da empresa"
-                android:textColor="@color/textPrimary"
-                android:textSize="16sp"
-                app:icon="@drawable/ic_horario"
-                app:iconGravity="start"
-                app:iconPadding="15dp"
-                app:iconTint="@color/colorPrimary" />
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/settingsButtonAdmin"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/profileImageAdmin"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:layout_marginTop="16dp"
+                        app:civ_border_color="@color/colorPrimary"
+                        app:civ_border_width="3dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/userNameAdmin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:textColor="@color/textPrimary"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/profileImageAdmin" />
+
+                    <TextView
+                        android:id="@+id/userEmailAdmin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="@color/textSecondary"
+                        android:textSize="16sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/userNameAdmin" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Opções adicionais -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/optionsCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_configuracao"
-                android:drawablePadding="15dp"
-                android:gravity="start|center_vertical"
-                android:padding="16dp"
-                android:text="Configurações"
-                android:textColor="@color/textPrimary"
-                android:textSize="16sp"
-                app:icon="@drawable/ic_configuracao"
-                app:iconGravity="start"
-                app:iconPadding="15dp"
-                app:iconTint="@color/colorPrimary" />
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/helpButtonAdmin"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+                <LinearLayout
+                    android:id="@+id/buttonLayoutAdmin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/dadospessoais"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/ic_horario"
+                        android:drawablePadding="15dp"
+                        android:gravity="start|center_vertical"
+                        android:padding="16dp"
+                        android:text="Gerenciamento da empresa"
+                        android:textColor="@color/textPrimary"
+                        android:textSize="16sp"
+                        app:icon="@drawable/ic_horario"
+                        app:iconGravity="start"
+                        app:iconPadding="15dp"
+                        app:iconTint="@color/colorPrimary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/settingsButtonAdmin"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/ic_configuracao"
+                        android:drawablePadding="15dp"
+                        android:gravity="start|center_vertical"
+                        android:padding="16dp"
+                        android:text="Configurações"
+                        android:textColor="@color/textPrimary"
+                        android:textSize="16sp"
+                        app:icon="@drawable/ic_configuracao"
+                        app:iconGravity="start"
+                        app:iconPadding="15dp"
+                        app:iconTint="@color/colorPrimary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/helpButtonAdmin"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/ic_suporte"
+                        android:drawablePadding="15dp"
+                        android:gravity="start|center_vertical"
+                        android:padding="16dp"
+                        android:text="Suporte e Feedback"
+                        android:textColor="@color/textPrimary"
+                        android:textSize="16sp"
+                        app:icon="@drawable/ic_suporte"
+                        app:iconGravity="start"
+                        app:iconPadding="15dp"
+                        app:iconTint="@color/colorPrimary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/aboutpolicy"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/ic_policy"
+                        android:drawablePadding="15dp"
+                        android:gravity="start|center_vertical"
+                        android:padding="16dp"
+                        android:text="Sobre e Política"
+                        android:textColor="@color/textPrimary"
+                        android:textSize="16sp"
+                        app:icon="@drawable/ic_policy"
+                        app:iconGravity="start"
+                        app:iconPadding="15dp"
+                        app:iconTint="@color/colorPrimary" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- FrameLayout para exibir Fragments dinamicamente -->
+            <FrameLayout
+                android:id="@+id/adminFragmentContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_suporte"
-                android:drawablePadding="15dp"
-                android:gravity="start|center_vertical"
-                android:padding="16dp"
-                android:text="Suporte e Feedback"
-                android:textColor="@color/textPrimary"
-                android:textSize="16sp"
-                app:icon="@drawable/ic_suporte"
-                app:iconGravity="start"
-                app:iconPadding="15dp"
-                app:iconTint="@color/colorPrimary" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/aboutpolicy"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_policy"
-                android:drawablePadding="15dp"
-                android:gravity="start|center_vertical"
-                android:padding="16dp"
-                android:text="Sobre e Política"
-                android:textColor="@color/textPrimary"
-                android:textSize="16sp"
-                app:icon="@drawable/ic_policy"
-                app:iconGravity="start"
-                app:iconPadding="15dp"
-                app:iconTint="@color/colorPrimary" />
+                android:layout_marginBottom="16dp"/>
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

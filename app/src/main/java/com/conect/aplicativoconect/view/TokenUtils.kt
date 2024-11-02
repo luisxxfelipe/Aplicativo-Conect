@@ -12,7 +12,7 @@ object TokenUtils {
             try {
                 val inputStream = context.assets.open("aplicativo-conect-f253d-firebase-adminsdk-xcfgw-9dc183006f.json")
                 val googleCredentials = GoogleCredentials.fromStream(inputStream)
-                    .createScoped(listOf("https://www.googleapis.com/auth/cloud-platform"))
+                    .createScoped(listOf("https://www.googleapis.com/auth/firebase.messaging"))  // Alteração aqui
                 googleCredentials.refreshIfExpired()
                 googleCredentials.accessToken.tokenValue
             } catch (e: Exception) {

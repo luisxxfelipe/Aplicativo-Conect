@@ -9,14 +9,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.PaymentService
-import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.conect.aplicativoconect.view.ui.admin.AdminHomeActivity
+import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import java.util.Date
 
 class LoginActivity : AppCompatActivity() {
@@ -52,15 +53,13 @@ class LoginActivity : AppCompatActivity() {
 
         signUpButton.setOnClickListener {
             val userType = intent.getStringExtra("USER_TYPE") ?: "client" // Padrão para cliente
-
             val intent = if (userType == "client") {
-                Intent(this, SignupClientActivity::class.java) // Cadastro de cliente
+                Intent(this, SignupClientActivity::class.java)
             } else {
-                Intent(this, SignupBusinessActivity::class.java) // Cadastro de empresa
+                Intent(this, SignupBusinessActivity::class.java)
             }
             startActivity(intent)
         }
-
     }
 
     private fun loginUser(email: String, password: String) {
@@ -76,53 +75,73 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun verifyUserType(userId: String) {
-        db.collection("business").document(userId).get()
-            .addOnSuccessListener { businessDocument ->
-                if (businessDocument.exists()) {
-                    checkSubscriptionStatus(userId) { isSubscriptionValid ->
-                        if (isSubscriptionValid) {
-                            saveFCMToken(userId, "business")
-                            startActivity(Intent(this, AdminHomeActivity::class.java))
-                            finish()
-                        } else {
-                            Toast.makeText(this, "Assinatura expirada. Renove para continuar.", Toast.LENGTH_LONG).show()
-                            FirebaseAuth.getInstance().signOut()  // Desloga o usuário imediatamente
-                            initiatePayment(userId)
-                        }
-                    }
-                } else {
-                    db.collection("users").document(userId).get()
-                        .addOnSuccessListener { userDocument ->
-                            if (userDocument.exists()) {
-                                val userType = userDocument.getString("type")
-                                saveFCMToken(userId, "users")
+        // Primeiramente, verifica se o usuário está na coleção "users"
+        db.collection("users").document(userId).get()
+            .addOnSuccessListener { userDocument ->
+                if (userDocument.exists()) {
+                    val userType = userDocument.getString("type") ?: "client"
+                    saveFCMToken(userId, "users")
 
-                                val intent = if (userType == "client") {
-                                    Intent(this, ClienteHomeActivity::class.java)
-                                } else {
-                                    Intent(this, AdminHomeActivity::class.java)
+                    // Redireciona com base no tipo do usuário
+                    val intent = if (userType == "client") {
+                        Intent(this, ClienteHomeActivity::class.java)
+                    } else {
+                        Intent(this, AdminHomeActivity::class.java)
+                    }
+                    startActivity(intent)
+                    finish()
+                } else {
+                    // Caso o usuário não exista em "users", verifica em "business"
+                    db.collection("business").document(userId).get()
+                        .addOnSuccessListener { businessDocument ->
+                            if (businessDocument.exists()) {
+                                checkSubscriptionStatus(userId) { isSubscriptionValid ->
+                                    if (isSubscriptionValid) {
+                                        saveFCMToken(userId, "business")
+                                        startActivity(Intent(this, AdminHomeActivity::class.java))
+                                        finish()
+                                    } else {
+                                        // Mostra um diálogo de assinatura expirada
+                                        FirebaseAuth.getInstance().signOut()
+                                        showExpiredSubscriptionDialog(userId)
+                                    }
                                 }
-                                startActivity(intent)
-                                finish()
                             } else {
                                 Toast.makeText(this, "Usuário não encontrado.", Toast.LENGTH_SHORT).show()
                             }
                         }
                         .addOnFailureListener { e ->
-                            Log.e("LoginActivity", "Erro ao buscar usuário: ", e)
-                            Toast.makeText(this, "Erro ao recuperar dados do usuário.", Toast.LENGTH_SHORT).show()
+                            Log.e("LoginActivity", "Erro ao buscar empresa: ", e)
+                            Toast.makeText(this, "Erro ao recuperar dados do negócio.", Toast.LENGTH_SHORT).show()
                         }
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("LoginActivity", "Erro ao buscar empresa: ", e)
-                Toast.makeText(this, "Erro ao recuperar dados do negócio.", Toast.LENGTH_SHORT).show()
+                Log.e("LoginActivity", "Erro ao buscar usuário: ", e)
+                Toast.makeText(this, "Erro ao recuperar dados do usuário.", Toast.LENGTH_SHORT).show()
             }
     }
 
 
+    private fun showExpiredSubscriptionDialog(userId: String) {
+        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
+        dialogBuilder.setTitle("Assinatura Expirada")
+            .setMessage("Sua assinatura expirou. Deseja renovar para continuar?")
+            .setPositiveButton("Renovar Assinatura") { _, _ ->
+                initiatePayment(userId)  // Chama o pagamento
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+                // Opcionalmente, você pode redirecionar o usuário para a tela de login novamente
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+            }
+            .setCancelable(false) // Evita que o usuário feche o diálogo fora das opções dadas
+            .show()
+    }
+
     private fun initiatePayment(userId: String) {
-        FirebaseAuth.getInstance().signOut()  // Desloga o usuário imediatamente para garantir que não terá acesso à área de membros
+        FirebaseAuth.getInstance().signOut()  // Desloga o usuário imediatamente
 
         CoroutineScope(Dispatchers.Main).launch {
             val paymentService = PaymentService(this@LoginActivity)
@@ -131,8 +150,7 @@ class LoginActivity : AppCompatActivity() {
                 title = "Assinatura Mensal",
                 payerEmail = auth.currentUser?.email ?: "",
                 onSuccess = {
-                    // Atualizar status da assinatura no Firestore após o pagamento
-                    db.collection("subscriptions").document(userId).update("isActive", true)
+                    renewSubscription(userId)
                     Toast.makeText(this@LoginActivity, "Pagamento bem-sucedido", Toast.LENGTH_SHORT).show()
 
                     // Re-autenticar o usuário após o pagamento bem-sucedido
@@ -140,6 +158,7 @@ class LoginActivity : AppCompatActivity() {
                         .addOnCompleteListener { signInTask ->
                             if (signInTask.isSuccessful) {
                                 startActivity(Intent(this@LoginActivity, AdminHomeActivity::class.java))
+                                finish()
                             } else {
                                 Toast.makeText(this@LoginActivity, "Erro ao re-autenticar após pagamento.", Toast.LENGTH_SHORT).show()
                             }
@@ -147,15 +166,41 @@ class LoginActivity : AppCompatActivity() {
                 },
                 onError = { errorMessage ->
                     Toast.makeText(this@LoginActivity, "Erro no pagamento: $errorMessage", Toast.LENGTH_LONG).show()
-                    // Redireciona para a tela de login após falha no pagamento
                     startActivity(Intent(this@LoginActivity, LoginActivity::class.java))
                 }
             )
         }
     }
 
+    private fun renewSubscription(userId: String) {
+        db.collection("subscriptions").document(userId).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val currentEndDate = document.getTimestamp("endDate")?.toDate() ?: Date()
 
-    // Função para verificar o status da assinatura
+                    // Calcula a nova data de expiração adicionando um mês
+                    val calendar = Calendar.getInstance().apply {
+                        time = currentEndDate
+                        add(Calendar.MONTH, 1)
+                    }
+                    val newEndDate = calendar.time
+
+                    // Atualiza a assinatura com a nova data de expiração e define como ativa
+                    db.collection("subscriptions").document(userId)
+                        .update("endDate", newEndDate, "isActive", true)
+                        .addOnSuccessListener {
+                            Log.d("Subscription", "Assinatura renovada com sucesso.")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Subscription", "Erro ao renovar assinatura: ${e.message}")
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Subscription", "Erro ao acessar assinatura: ${e.message}")
+            }
+    }
+
     private fun checkSubscriptionStatus(userId: String, callback: (Boolean) -> Unit) {
         db.collection("subscriptions").document(userId).get()
             .addOnSuccessListener { document ->
@@ -164,16 +209,14 @@ class LoginActivity : AppCompatActivity() {
                     val isTrialActive = document.getBoolean("isTrialActive") ?: true
                     val isActive = document.getBoolean("isActive") ?: false
 
-                    // Verifica se a assinatura é válida: se está no trial ou ativa com validade
                     val isSubscriptionValid = (isTrialActive && endDate?.after(Date()) == true) || isActive
 
-                    // Se o trial expirou, atualiza para não ativo
                     if (isTrialActive && endDate?.before(Date()) == true) {
                         db.collection("subscriptions").document(userId)
-                            .update("isTrialActive", false, "isActive", false) // define como inativo
+                            .update("isTrialActive", false, "isActive", false)
                             .addOnSuccessListener {
                                 Log.d("Subscription", "Período de teste expirado e atualizado.")
-                                callback(false)  // Agora o callback será falso após o trial expirar
+                                callback(false)
                             }
                             .addOnFailureListener { e ->
                                 Log.e("Subscription", "Erro ao atualizar assinatura: ${e.message}")
@@ -183,7 +226,7 @@ class LoginActivity : AppCompatActivity() {
                         callback(isSubscriptionValid)
                     }
                 } else {
-                    callback(false) // Sem assinatura
+                    callback(false)
                 }
             }
             .addOnFailureListener { e ->
@@ -192,8 +235,6 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
-
-    // Função para obter e salvar o token FCM
     private fun saveFCMToken(userId: String, collection: String) {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -211,5 +252,4 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
-
 }

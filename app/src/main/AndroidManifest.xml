@@ -55,6 +55,7 @@
         <activity android:name=".view.ui.client.EmpresaDetalhesActivity" android:exported="true" />
         <activity android:name=".view.ui.client.SelecionarHorarioActivity" android:exported="true" />
         <activity android:name=".view.ui.admin.AddBookingActivity" android:exported="true" />
+        <activity android:name=".view.ui.admin.AdminSettingsFragment" android:exported="true" />
 
         <!-- EditProfileActivity e EditBusinessProfileActivity -->
         <activity android:name=".view.ui.client.EditProfileActivity" android:exported="true" />

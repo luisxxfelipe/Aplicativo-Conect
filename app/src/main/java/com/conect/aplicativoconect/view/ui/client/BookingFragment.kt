@@ -75,14 +75,17 @@ class BookingFragment : Fragment() {
         newBookingAdapter = ClientBookingAdapter(
             bookings = listOf(),
             onConfirmClick = { booking -> confirmBooking(booking) },
-            onCancelClick = { booking -> cancelBooking(booking) }
+            onCancelClick = { booking -> cancelBooking(booking) },
+            onEmptyList = { showEmptyBookingsMessage(true) } // Callback para lista vazia
         )
 
         oldBookingAdapter = ClientBookingAdapter(
             bookings = listOf(),
             onConfirmClick = { booking -> confirmBooking(booking) },
-            onCancelClick = { booking -> cancelBooking(booking) }
+            onCancelClick = { booking -> cancelBooking(booking) },
+            onEmptyList = { showEmptyBookingsMessage(true) } // Callback para lista vazia
         )
+
 
         newBookingsRecyclerView.adapter = newBookingAdapter
         oldBookingsRecyclerView.adapter = oldBookingAdapter
@@ -96,7 +99,11 @@ class BookingFragment : Fragment() {
             .addSnapshotListener { querySnapshot, error ->
                 if (error != null) {
                     Log.e("BookingFragment", "Erro ao buscar agendamentos: ${error.message}")
-                    Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Erro ao buscar agendamentos.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@addSnapshotListener
                 }
 
@@ -120,8 +127,10 @@ class BookingFragment : Fragment() {
             newBookingsTitle.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
             oldBookingsTitle.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
 
-            newBookingsRecyclerView.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
-            oldBookingsRecyclerView.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            newBookingsRecyclerView.visibility =
+                if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            oldBookingsRecyclerView.visibility =
+                if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
 
             newBookingAdapter.updateData(newBookings)
             oldBookingAdapter.updateData(oldBookings)
@@ -150,7 +159,12 @@ class BookingFragment : Fragment() {
                 set(Calendar.MONTH, bookingDateParts[1]!! - 1)
                 set(Calendar.DAY_OF_MONTH, bookingDateParts[0]!!)
                 set(Calendar.HOUR_OF_DAY, bookingHourParts[0]!!)
-                bookingHourParts.getOrElse(1) { 0 }?.let { set(Calendar.MINUTE, it) } // Caso `minute` não seja especificado, assumimos 0 minutos
+                bookingHourParts.getOrElse(1) { 0 }?.let {
+                    set(
+                        Calendar.MINUTE,
+                        it
+                    )
+                } // Caso `minute` não seja especificado, assumimos 0 minutos
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
@@ -162,7 +176,6 @@ class BookingFragment : Fragment() {
     }
 
 
-
     private fun confirmBooking(booking: Booking) {
         firestore.collection("bookings").document(booking.id!!)
             .update("status_cliente", "confirmed")
@@ -172,12 +185,17 @@ class BookingFragment : Fragment() {
                     "Agendamento Confirmado",
                     "Olá ${booking.name}, seu agendamento foi confirmado!"
                 )
-                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT)
+                    .show()
                 loadBookings()
             }
             .addOnFailureListener { e ->
                 Log.e("BookingFragment", "Erro ao confirmar agendamento: ${e.message}")
-                Toast.makeText(requireContext(), "Erro ao confirmar agendamento.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao confirmar agendamento.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -190,12 +208,20 @@ class BookingFragment : Fragment() {
                     "Agendamento Cancelado",
                     "O agendamento de ${booking.name} foi cancelado."
                 )
-                Toast.makeText(requireContext(), "Agendamento cancelado e excluído.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Agendamento cancelado e excluído.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 loadBookings()
             }
             .addOnFailureListener { e ->
                 Log.e("BookingFragment", "Erro ao cancelar agendamento: ${e.message}")
-                Toast.makeText(requireContext(), "Erro ao cancelar agendamento.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao cancelar agendamento.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 

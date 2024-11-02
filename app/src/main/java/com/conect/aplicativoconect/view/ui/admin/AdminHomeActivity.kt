@@ -41,22 +41,27 @@ class AdminHomeActivity : AppCompatActivity() {
                     loadFragment(AdminHomeFragment())
                     true
                 }
+
                 R.id.navigation_appointments -> {
                     loadFragment(AdminBookingsFragment())
                     true
                 }
+
                 R.id.navigation_profile -> {
                     loadFragment(AdminProfileFragment())
                     true
                 }
+
                 R.id.navigation_add_service -> {
                     showAddServiceDialog() // Chama o método para mostrar o popup
                     true
                 }
+
                 R.id.navigation_logout -> {
                     showLogoutConfirmationDialog()
                     true
                 }
+
                 else -> false
             }
         }

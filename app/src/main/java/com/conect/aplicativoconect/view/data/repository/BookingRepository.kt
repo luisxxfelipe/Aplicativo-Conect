@@ -5,7 +5,9 @@ import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class BookingRepository {
     private val firestore = FirebaseFirestore.getInstance()

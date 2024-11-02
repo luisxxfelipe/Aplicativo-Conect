@@ -34,8 +34,8 @@ class WelcomeActivity : AppCompatActivity() {
 
     private fun updateButton() {
         val nextButton = when (currentPage) {
-            0 -> findViewById<Button>(R.id.nextButton1)
-            1 -> findViewById<Button>(R.id.nextButton2)
+            0 -> findViewById(R.id.nextButton1)
+            1 -> findViewById(R.id.nextButton2)
             else -> findViewById<Button>(R.id.nextButton3)
         }
 
@@ -75,7 +75,6 @@ class WelcomeActivity : AppCompatActivity() {
             } else {
                 Log.d("Permission", "Permissão de notificações negada.")
             }
-            navigateToRoleSelection()
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }

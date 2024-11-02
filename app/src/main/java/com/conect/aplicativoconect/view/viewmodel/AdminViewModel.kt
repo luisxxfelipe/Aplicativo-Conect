@@ -78,12 +78,15 @@ class AdminViewModel : ViewModel() {
                 if (document != null) {
                     val name = document.getString("name") // Campo 'name' no Firestore
                     val email = document.getString("email") // Campo 'email' no Firestore
-                    val companyId = document.getString("companyId") // Campo 'companyId' no Firestore
+                    val companyId =
+                        document.getString("companyId") // Campo 'companyId' no Firestore
 
                     setBusinessName(name ?: "Nome não disponível")
                     setAdminName(name ?: "Nome não disponível")
                     setAdminEmail(email ?: "Email não disponível")
-                    setCompanyId(companyId ?: "ID da empresa não disponível") // Armazena o companyId
+                    setCompanyId(
+                        companyId ?: "ID da empresa não disponível"
+                    ) // Armazena o companyId
                 } else {
                     setAdminName("Nome não disponível")
                     setAdminEmail("Email não disponível")

@@ -21,7 +21,8 @@ class BusinessAdapter(
 
     inner class BusinessViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val businessName: TextView = itemView.findViewById(R.id.businessName)
-        val businessCategory: TextView = itemView.findViewById(R.id.businessAddress) // Reaproveitando o campo
+        val businessCategory: TextView =
+            itemView.findViewById(R.id.businessAddress) // Reaproveitando o campo
         val operatingHours: TextView = itemView.findViewById(R.id.businessOperatingHours)
         val businessImage: ImageView = itemView.findViewById(R.id.businessImage)
         val bookButton: Button = itemView.findViewById(R.id.bookButton)
@@ -32,7 +33,6 @@ class BusinessAdapter(
             .inflate(R.layout.item_business, parent, false) // Use o layout correto aqui
         return BusinessViewHolder(view)
     }
-
 
 
     override fun onBindViewHolder(holder: BusinessViewHolder, position: Int) {

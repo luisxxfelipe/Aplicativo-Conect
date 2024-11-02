@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.bumptech.glide.Glide
@@ -15,7 +16,6 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.TokenUtils
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.firestore.FirebaseFirestore
-import com.android.volley.Response
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -1,12 +1,12 @@
 package com.conect.aplicativoconect.view.ui.auth
 
-import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -18,8 +18,6 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -66,17 +64,19 @@ class SignupClientActivity : AppCompatActivity() {
         uploadProfileButton = findViewById(R.id.uploadButton) // Adicione o botão de upload
 
         // Inicializando o ActivityResultLauncher
-        getContent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val data = result.data
-                imageUri = data?.data
-                profileImageView.setImageURI(imageUri) // Exibir a imagem selecionada
-                profileImageView.visibility = View.VISIBLE // Tornar visível a imagem de perfil
-                findViewById<ImageView>(R.id.uploadIcon).visibility = View.GONE // Ocultar o ícone de upload
-            } else {
-                Toast.makeText(this, "Erro ao obter a imagem.", Toast.LENGTH_SHORT).show()
+        getContent =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val data = result.data
+                    imageUri = data?.data
+                    profileImageView.setImageURI(imageUri) // Exibir a imagem selecionada
+                    profileImageView.visibility = View.VISIBLE // Tornar visível a imagem de perfil
+                    findViewById<ImageView>(R.id.uploadIcon).visibility =
+                        View.GONE // Ocultar o ícone de upload
+                } else {
+                    Toast.makeText(this, "Erro ao obter a imagem.", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
 
         // Abrir galeria para selecionar imagem ao clicar no ImageView
         profileImageView.setOnClickListener {
@@ -95,7 +95,14 @@ class SignupClientActivity : AppCompatActivity() {
             val name = nameEditText.text.toString().trim()
             val cpf = cpfEditText.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty() && cpfEditText.text.toString().isNotEmpty()) {
+            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty() && cpf.isNotEmpty()) {
+
+                // Valida o CPF antes de continuar
+                if (!isValidCPF(cpf)) {
+                    Toast.makeText(this, "CPF inválido. Digite um CPF correto.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
                 if (password == confirmPassword) {
                     progressDialog.show() // Mostrar progresso
                     createUser(email, password, name, cpf)
@@ -106,6 +113,42 @@ class SignupClientActivity : AppCompatActivity() {
                 Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT).show()
             }
         }
+
+        cpfEditText.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            private val mask = "###.###.###-##"
+
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isUpdating) {
+                    isUpdating = false
+                    return
+                }
+
+                var str = s.toString().replace(Regex("[^\\d]"), "")
+
+                val maskedStr = StringBuilder()
+                var index = 0
+
+                for (m in mask.toCharArray()) {
+                    if (m != '#' && index < str.length) {
+                        maskedStr.append(m)
+                        continue
+                    }
+                    if (index >= str.length) break
+                    maskedStr.append(str[index])
+                    index++
+                }
+
+                isUpdating = true
+                cpfEditText.setText(maskedStr.toString())
+                cpfEditText.setSelection(maskedStr.length)
+            }
+        })
+
 
         // Navegar para a tela de login ao clicar no TextView
         loginTextView.setOnClickListener {
@@ -121,6 +164,28 @@ class SignupClientActivity : AppCompatActivity() {
         builder.setView(view)
         builder.setCancelable(false)
         progressDialog = builder.create()
+    }
+
+    // Função para validar CPF
+    fun isValidCPF(cpf: String): Boolean {
+        // Remove caracteres não numéricos
+        val cpfClean = cpf.replace("[^\\d]".toRegex(), "")
+
+        // Verifica se o CPF tem 11 dígitos e se não são todos iguais
+        if (cpfClean.length != 11 || cpfClean.all { it == cpfClean[0] }) return false
+
+        try {
+            // Valida os dois dígitos verificadores
+            for (j in 0..1) {
+                var sum = 0
+                for (i in 0 until 9 + j) sum += (cpfClean[i].toString().toInt()) * (10 + j - i)
+                val check = (sum * 10 % 11) % 10
+                if (cpfClean[9 + j].toString().toInt() != check) return false
+            }
+        } catch (e: NumberFormatException) {
+            return false
+        }
+        return true
     }
 
     private fun openGallery() {
@@ -156,7 +221,8 @@ class SignupClientActivity : AppCompatActivity() {
                     }
                 } else {
                     progressDialog.dismiss()
-                    Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
     }
@@ -204,7 +270,8 @@ class SignupClientActivity : AppCompatActivity() {
 
 
     private fun uploadProfileImage(imageUri: Uri, userId: String?, userData: HashMap<String, Any>) {
-        val storageRef = storage.reference.child("profile_images/$userId/${imageUri.lastPathSegment}")
+        val storageRef =
+            storage.reference.child("profile_images/$userId/${imageUri.lastPathSegment}")
         val uploadTask = storageRef.putFile(imageUri)
 
         uploadTask.continueWithTask { task ->
@@ -215,7 +282,8 @@ class SignupClientActivity : AppCompatActivity() {
         }.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val downloadUri = task.result
-                userData["imageUrl"] = downloadUri.toString() // Adiciona a URL da imagem aos dados do usuário
+                userData["imageUrl"] =
+                    downloadUri.toString() // Adiciona a URL da imagem aos dados do usuário
 
                 // Passando o callback corretamente
                 saveUserToFirestore(userId, userData) {
@@ -242,7 +310,8 @@ class SignupClientActivity : AppCompatActivity() {
                 }
                 .addOnFailureListener {
                     progressDialog.dismiss()
-                    Toast.makeText(this, "Falha ao salvar dados do usuário.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Falha ao salvar dados do usuário.", Toast.LENGTH_SHORT)
+                        .show()
                 }
         }
     }

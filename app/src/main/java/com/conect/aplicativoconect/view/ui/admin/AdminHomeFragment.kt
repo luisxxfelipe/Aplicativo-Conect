@@ -15,6 +15,7 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentAdminHomeBinding
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.data.model.Business
+import com.conect.aplicativoconect.view.ui.client.ClientBookingAdapter
 import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -51,7 +52,10 @@ class AdminHomeFragment : Fragment() {
         // Configurando o clique do FAB
         binding.fabAddBooking.setOnClickListener {
             // Aqui você inicia a Activity de agendamento
-            val intent = Intent(requireContext(), AddBookingActivity::class.java) // Substitua pelo nome correto da sua Activity
+            val intent = Intent(
+                requireContext(),
+                AddBookingActivity::class.java
+            ) // Substitua pelo nome correto da sua Activity
             startActivity(intent)
         }
 
@@ -96,7 +100,8 @@ class AdminHomeFragment : Fragment() {
             .whereEqualTo("ownerId", currentUserUid)
             .get()
             .addOnSuccessListener { businessSnapshot ->
-                val businessId = businessSnapshot.documents.firstOrNull()?.id ?: return@addOnSuccessListener
+                val businessId =
+                    businessSnapshot.documents.firstOrNull()?.id ?: return@addOnSuccessListener
 
                 firestore.collection("bookings")
                     .whereEqualTo("companyId", businessId)
@@ -166,7 +171,10 @@ class AdminHomeFragment : Fragment() {
 
         calendar.add(Calendar.MONTH, 1) // Avança para o próximo mês
         calendar.set(Calendar.DAY_OF_MONTH, 1) // Define como o primeiro dia do próximo mês
-        calendar.add(Calendar.MILLISECOND, -1) // Volta um milissegundo para obter o último dia do mês atual
+        calendar.add(
+            Calendar.MILLISECOND,
+            -1
+        ) // Volta um milissegundo para obter o último dia do mês atual
         val endOfMonth = calendar.time
 
         // Configura o intervalo da semana atual
@@ -193,11 +201,11 @@ class AdminHomeFragment : Fragment() {
 
     private fun setupNearestBookingsAdapter(nearestBookings: List<Booking>) {
         binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
-        binding.todayBookingsRecyclerView.adapter = BookingAdapter(
+        binding.todayBookingsRecyclerView.adapter = ClientBookingAdapter(
             nearestBookings,
-            requireContext(),
-            { bookingId -> confirmBooking(bookingId) },
-            { bookingId -> cancelBooking(bookingId) }
+            onConfirmClick = { bookingId -> confirmBooking(bookingId.toString()) },
+            onCancelClick = { bookingId -> cancelBooking(bookingId.toString()) },
+            onEmptyList = { showNoBookingsMessage(true) } // Callback para lista vazia
         )
     }
 

@@ -1,6 +1,5 @@
 package com.conect.aplicativoconect.view.ui.client
 
-import BookingAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -39,18 +38,22 @@ class ClienteHomeActivity : AppCompatActivity() {
                     loadFragment(ClienteHomeFragment())
                     true
                 }
+
                 R.id.navigation_appointments -> {
                     loadFragment(BookingFragment())
                     true
                 }
+
                 R.id.navigation_profile -> {
                     loadFragment(ClienteProfileFragment())
                     true
                 }
+
                 R.id.navigation_logout -> {
                     showLogoutConfirmationDialog()
                     true
                 }
+
                 else -> false
             }
         }
@@ -89,9 +92,14 @@ class ClienteHomeActivity : AppCompatActivity() {
                         if (!querySnapshot.isEmpty) {
                             val userDocument = querySnapshot.documents[0]
                             val userName = userDocument.getString("name")
-                            clientViewModel.setUserName(userName ?: "Nome não encontrado") // Atualiza o nome no ViewModel
+                            clientViewModel.setUserName(
+                                userName ?: "Nome não encontrado"
+                            ) // Atualiza o nome no ViewModel
                             // Carregue o HomeFragment e passe o nome do usuário
-                            loadFragment(ClienteHomeFragment(), userName) // Passando o nome do usuário
+                            loadFragment(
+                                ClienteHomeFragment(),
+                                userName
+                            ) // Passando o nome do usuário
                             fetchTodayBookings(userEmail) // Chama o método para buscar agendamentos
                         }
                     }

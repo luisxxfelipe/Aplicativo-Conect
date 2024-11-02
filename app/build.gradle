@@ -128,12 +128,12 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
 
     // gRPC BoM para alinhar as versões do gRPC
-    implementation platform('io.grpc:grpc-bom:1.48.0')
+    implementation platform('io.grpc:grpc-bom:1.50.1')
     implementation 'io.grpc:grpc-core'
     implementation 'io.grpc:grpc-okhttp'
     implementation 'io.grpc:grpc-stub'
     implementation 'io.grpc:grpc-protobuf-lite'
-    implementation 'io.grpc:grpc-android:1.48.0'
+    implementation 'io.grpc:grpc-android:1.62.2'
 }
 
 apply plugin: 'com.google.gms.google-services'

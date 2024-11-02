@@ -24,7 +24,8 @@ class ClientViewModel : ViewModel() {
     private val _todayBookings = MutableLiveData<List<Booking>>() // Mudando para não permitir nulos
     val todayBookings: LiveData<List<Booking>> get() = _todayBookings
 
-    private val _futureBookings = MutableLiveData<List<Booking>>() // Mudando para não permitir nulos
+    private val _futureBookings =
+        MutableLiveData<List<Booking>>() // Mudando para não permitir nulos
     val futureBookings: LiveData<List<Booking>> get() = _futureBookings
 
     private val userRepository = UserRepository()
@@ -36,7 +37,10 @@ class ClientViewModel : ViewModel() {
                 _userName.value = it.name
                 _userEmail.value = it.email
                 _userImage.value = it.imageUrl
-                Log.d("ClientViewModel", "Image URL: ${it.imageUrl}, Name: ${it.name}, Email: ${it.email}")
+                Log.d(
+                    "ClientViewModel",
+                    "Image URL: ${it.imageUrl}, Name: ${it.name}, Email: ${it.email}"
+                )
             }
         }
     }

@@ -9,7 +9,10 @@ object RetrofitInstance {
     private val client = OkHttpClient.Builder().apply {
         addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer TEST-4420457494967421-103123-921492acbeaeb11cc125a32eec719ef7-474980834") // Token de acesso do Mercado Pago
+                .addHeader(
+                    "Authorization",
+                    "Bearer APP_USR-4420457494967421-103123-3808288c4ac3409dcec40d2de9aec76a-474980834"
+                )
                 .build()
             chain.proceed(request)
         }

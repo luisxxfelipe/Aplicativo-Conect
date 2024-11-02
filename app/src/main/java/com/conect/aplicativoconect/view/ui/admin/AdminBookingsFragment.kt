@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
-import com.conect.aplicativoconect.view.data.repository.BookingRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
@@ -144,8 +143,10 @@ class AdminBookingsFragment : Fragment() {
             newBookingsTitle.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
             oldBookingsTitle.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
 
-            newBookingsRecyclerView.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
-            oldBookingsRecyclerView.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            newBookingsRecyclerView.visibility =
+                if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            oldBookingsRecyclerView.visibility =
+                if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
 
             newBookingAdapter.updateData(newBookings)
             oldBookingAdapter.updateData(oldBookings)

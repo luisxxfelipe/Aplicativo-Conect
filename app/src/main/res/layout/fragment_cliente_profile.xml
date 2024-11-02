@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
     <!-- Card para o perfil do cliente -->
     <androidx.cardview.widget.CardView
@@ -70,7 +71,8 @@
             android:id="@+id/buttonLayoutClient"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="8dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/personalDataButton"
@@ -85,23 +87,6 @@
                 android:textColor="@color/textPrimary"
                 android:textSize="16sp"
                 app:icon="@drawable/ic_dadospessoais"
-                app:iconGravity="start"
-                app:iconPadding="15dp"
-                app:iconTint="@color/colorPrimary" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/settingsButton"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_configuracao"
-                android:drawablePadding="15dp"
-                android:gravity="start|center_vertical"
-                android:padding="16dp"
-                android:text="Configurações"
-                android:textColor="@color/textPrimary"
-                android:textSize="16sp"
-                app:icon="@drawable/ic_configuracao"
                 app:iconGravity="start"
                 app:iconPadding="15dp"
                 app:iconTint="@color/colorPrimary" />
@@ -139,6 +124,28 @@
                 app:iconGravity="start"
                 app:iconPadding="15dp"
                 app:iconTint="@color/colorPrimary" />
+
+            <!-- Configurações Adicionais -->
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/notificationsSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Receber Notificações"
+                android:textSize="16sp"
+                android:textColor="@color/textPrimary"
+                app:thumbTint="@color/colorPrimary"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/deleteAccountButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/red"
+                android:text="Excluir Conta"
+                android:textColor="@android:color/white"/>
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

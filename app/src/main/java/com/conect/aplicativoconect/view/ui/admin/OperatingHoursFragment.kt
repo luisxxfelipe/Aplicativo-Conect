@@ -10,7 +10,6 @@ import android.widget.TimePicker
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.ui.admin.AdminHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -88,7 +87,11 @@ class OperatingHoursFragment : Fragment() {
         val closingHour = "${timePickerClose.hour}:00" // Formato "HH:mm"
 
         // Capturando o ID do usuário
-        val userId = auth.currentUser?.uid ?: return Toast.makeText(context, "Usuário não autenticado", Toast.LENGTH_SHORT).show()
+        val userId = auth.currentUser?.uid ?: return Toast.makeText(
+            context,
+            "Usuário não autenticado",
+            Toast.LENGTH_SHORT
+        ).show()
 
         // Lógica para salvar os horários no Firestore
         val hours = hashMapOf(
@@ -106,7 +109,8 @@ class OperatingHoursFragment : Fragment() {
                 redirectToHome()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(context, "Erro ao salvar horários: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Erro ao salvar horários: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 

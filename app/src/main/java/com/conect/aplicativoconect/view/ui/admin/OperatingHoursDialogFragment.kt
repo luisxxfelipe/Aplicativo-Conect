@@ -12,7 +12,7 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.conect.aplicativoconect.R
 import com.google.android.material.textfield.TextInputEditText
-import java.util.*
+import java.util.Calendar
 
 class OperatingHoursDialogFragment : DialogFragment() {
 
@@ -78,9 +78,15 @@ class OperatingHoursDialogFragment : DialogFragment() {
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val minute = calendar.get(Calendar.MINUTE)
 
-        TimePickerDialog(requireContext(), { _: TimePicker, selectedHour: Int, selectedMinute: Int ->
-            val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
-            onTimeSelected(formattedTime)
-        }, hour, minute, true).show()
+        TimePickerDialog(
+            requireContext(),
+            { _: TimePicker, selectedHour: Int, selectedMinute: Int ->
+                val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
+                onTimeSelected(formattedTime)
+            },
+            hour,
+            minute,
+            true
+        ).show()
     }
 }

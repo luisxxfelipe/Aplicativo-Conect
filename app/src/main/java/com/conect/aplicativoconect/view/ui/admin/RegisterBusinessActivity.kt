@@ -28,7 +28,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 
-class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragment.OnHoursSelectedListener {
+class RegisterBusinessActivity : AppCompatActivity(),
+    OperatingHoursDialogFragment.OnHoursSelectedListener {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
@@ -57,13 +58,13 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         // Inicializar o AlertDialog personalizado
         setupProgressDialog()
 
-
         // Recuperar o email passado pela SignupBusinessActivity
         email = intent.getStringExtra("EMAIL_KEY") ?: ""
 
         // Referências aos componentes
         val businessNameInput = findViewById<TextInputEditText>(R.id.nameUser)
-        val businessDescriptionInput = findViewById<TextInputEditText>(R.id.businessDescriptionInput)
+        val businessDescriptionInput =
+            findViewById<TextInputEditText>(R.id.businessDescriptionInput)
         val serviceTypeSpinner = findViewById<Spinner>(R.id.serviceTypeSpinner)
         val addressInput = findViewById<TextInputEditText>(R.id.addressInput)
         operatingHoursInput = findViewById(R.id.operatingHoursInput)
@@ -75,13 +76,19 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         uploadIcon = findViewById(R.id.uploadButton)
 
         // Configurar o Spinner com opções de serviços
-        val serviceTypes = listOf("Cabeleireiro", "Manicure", "Estética", "Cabeleireiro", "Massagem")
+        val serviceTypes =
+            listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, serviceTypes)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         serviceTypeSpinner.adapter = adapter
 
         serviceTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
                 selectedServiceType = serviceTypes[position]
             }
 
@@ -103,19 +110,20 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
         }
 
         // Inicializando o ActivityResultLauncher
-        getContent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val data = result.data
-                imageUri = data?.data
-                if (imageUri != null) {
-                    businessImageView.setImageURI(imageUri)
-                    businessImageView.visibility = View.VISIBLE
-                    uploadIcon.visibility = View.GONE
-                } else {
-                    Toast.makeText(this, "Erro ao obter a imagem.", Toast.LENGTH_SHORT).show()
+        getContent =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val data = result.data
+                    imageUri = data?.data
+                    if (imageUri != null) {
+                        businessImageView.setImageURI(imageUri)
+                        businessImageView.visibility = View.VISIBLE
+                        uploadIcon.visibility = View.GONE
+                    } else {
+                        Toast.makeText(this, "Erro ao obter a imagem.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
-        }
 
         // Configurar o clique para selecionar imagem no ImageView
         businessImageView.setOnClickListener {
@@ -135,7 +143,8 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
 
             if (validateInputs(businessName, businessDescription, address, phone, email)) {
                 // Use a imagem padrão se imageUri for nulo
-                val finalImageUri = imageUri ?: Uri.parse("android.resource://${packageName}/drawable/default_img")
+                val finalImageUri =
+                    imageUri ?: Uri.parse("android.resource://${packageName}/drawable/default_img")
 
                 // Criar uma instância de OperatingHours
                 val operatingHours = OperatingHours(
@@ -164,7 +173,8 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     private fun setupProgressDialog() {
         val builder = AlertDialog.Builder(this)
         val inflater = LayoutInflater.from(this)
-        val view = inflater.inflate(R.layout.dialog_progress, null) // Layout personalizado do diálogo
+        val view =
+            inflater.inflate(R.layout.dialog_progress, null) // Layout personalizado do diálogo
 
         builder.setView(view)
         builder.setCancelable(false) // Impede que o usuário feche o diálogo
@@ -181,25 +191,35 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     ): Boolean {
         return when {
             businessName.isEmpty() -> {
-                Toast.makeText(this, "Por favor, insira o nome da empresa.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Por favor, insira o nome da empresa.", Toast.LENGTH_SHORT)
+                    .show()
                 false
             }
+
             businessDescription.isEmpty() -> {
-                Toast.makeText(this, "Por favor, insira a descrição da empresa.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Por favor, insira a descrição da empresa.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 false
             }
+
             address.isEmpty() -> {
                 Toast.makeText(this, "Por favor, insira o endereço.", Toast.LENGTH_SHORT).show()
                 false
             }
+
             phone.isEmpty() -> {
                 Toast.makeText(this, "Por favor, insira o telefone.", Toast.LENGTH_SHORT).show()
                 false
             }
+
             email.isEmpty() -> {
                 Toast.makeText(this, "Por favor, insira o email.", Toast.LENGTH_SHORT).show()
                 false
             }
+
             else -> true
         }
     }
@@ -222,7 +242,8 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
                 val fcmToken = task.result
 
                 // Definir o caminho para salvar a imagem no Firebase Storage
-                val storageRef = storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
+                val storageRef =
+                    storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
 
                 // Fazer o upload da imagem para o Firebase Storage
                 val uploadTask = storageRef.putFile(imageUri)
@@ -247,24 +268,33 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
                             "imageUrl" to downloadUri.toString(),
                             "email" to email,
                             "isActive" to true,
-                            "ownerId" to userId, // UID do usuário autenticado
-                            "fcmToken" to fcmToken // Token FCM do proprietário
+                            "ownerId" to userId,
+                            "fcmToken" to fcmToken
                         )
 
                         // Usa `set` para garantir que o documento seja atualizado ou criado
                         firestore.collection("business").document(userId)
                             .set(business)
                             .addOnSuccessListener {
-                                Toast.makeText(this, "Empresa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this,
+                                    "Empresa cadastrada com sucesso!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 val intent = Intent(this, AdminHomeActivity::class.java)
                                 startActivity(intent)
                                 finish()
                             }
                             .addOnFailureListener { e ->
-                                Toast.makeText(this, "Erro ao cadastrar: ${e.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this,
+                                    "Erro ao cadastrar: ${e.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                     } else {
-                        Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             } else {
@@ -280,11 +310,18 @@ class RegisterBusinessActivity : AppCompatActivity(), OperatingHoursDialogFragme
     }
 
     private fun checkStoragePermission(): Boolean {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestStoragePermission() {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), storagePermissionCode)
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+            storagePermissionCode
+        )
     }
 
     // Callback para selecionar horários

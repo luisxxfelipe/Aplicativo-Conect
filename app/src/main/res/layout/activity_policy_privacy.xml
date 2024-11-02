@@ -6,6 +6,7 @@
     android:padding="16dp"
     android:background="@android:color/white">
 
+    <!-- Title -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,59 +16,189 @@
         android:layout_marginBottom="16dp"
         android:textColor="@android:color/black" />
 
+    <!-- Scrollable Content -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:lineSpacingExtra="8dp"
-            android:textColor="@android:color/black"
-            android:text="
-INTRODUÇÃO
+            android:orientation="vertical">
 
-ESTA POLÍTICA DE PRIVACIDADE DESCREVE COMO COLETAMOS, USAMOS E PROTEGEMOS AS INFORMAÇÕES PESSOAIS DOS USUÁRIOS DO NOSSO APLICATIVO.
+            <!-- Introduction Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="INTRODUÇÃO"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-COLETA DE DADOS
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Esta política de privacidade descreve como coletamos, usamos e protegemos as informações pessoais dos usuários do nosso aplicativo."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
 
-COLETAMOS DADOS FORNECIDOS DIRETAMENTE PELO USUÁRIO, COMO NOME, EMAIL E ENDEREÇO. TAMBÉM PODEMOS COLETAR DADOS AUTOMÁTICOS, COMO INFORMAÇÕES DO DISPOSITIVO E DO USO DO APLICATIVO.
+            <!-- Data Collection Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="COLETA DE DADOS"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-USO DAS INFORMAÇÕES
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Coletamos dados fornecidos diretamente pelo usuário, como nome, email e endereço. Também podemos coletar dados automáticos, como informações do dispositivo e do uso do aplicativo."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
 
-AS INFORMAÇÕES COLETADAS SÃO UTILIZADAS PARA:
+            <!-- Information Usage Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="USO DAS INFORMAÇÕES"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-- MELHORAR A EXPERIÊNCIA DO USUÁRIO
-- PERSONALIZAR O CONTEÚDO DO APLICATIVO
-- ENVIAR NOTIFICAÇÕES IMPORTANTES SOBRE SERVIÇOS
-- CUMPRIR OBRIGAÇÕES LEGAIS E REGULATÓRIAS
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="As informações coletadas são utilizadas para melhorar a experiência do usuário, personalizar o conteúdo do aplicativo, enviar notificações importantes sobre serviços e cumprir obrigações legais e regulatórias."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
 
-COMPARTILHAMENTO DE DADOS
+            <!-- Data Sharing Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="COMPARTILHAMENTO DE DADOS"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-NÃO VENDEMOS OU COMPARTILHAMOS DADOS PESSOAIS COM TERCEIROS SEM O CONSENTIMENTO DO USUÁRIO, EXCETO QUANDO EXIGIDO POR LEI OU NECESSÁRIO PARA A PRESTAÇÃO DOS SERVIÇOS.
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Não vendemos ou compartilhamos dados pessoais com terceiros sem o consentimento do usuário, exceto quando exigido por lei ou necessário para a prestação dos serviços."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
 
-ARMAZENAMENTO E SEGURANÇA
+            <!-- Storage and Security Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ARMAZENAMENTO E SEGURANÇA"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-ARMAZENAMOS AS INFORMAÇÕES EM SERVIDORES SEGUROS E ADOTAMOS MEDIDAS APROPRIADAS PARA PROTEGER OS DADOS CONTRA ACESSO NÃO AUTORIZADO.
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Armazenamos as informações em servidores seguros e adotamos medidas apropriadas para proteger os dados contra acesso não autorizado."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
 
-COOKIES E TECNOLOGIAS SEMELHANTES
+            <!-- Cookies Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="COOKIES E TECNOLOGIAS SEMELHANTES"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-PODEMOS UTILIZAR COOKIES E OUTRAS TECNOLOGIAS PARA COLETAR INFORMAÇÕES SOBRE O USO DO APLICATIVO E MELHORAR NOSSOS SERVIÇOS.
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Podemos utilizar cookies e outras tecnologias para coletar informações sobre o uso do aplicativo e melhorar nossos serviços."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
 
-DIREITOS DO USUÁRIO
+            <!-- User Rights Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DIREITOS DO USUÁRIO"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-O USUÁRIO TEM O DIREITO DE ACESSAR, CORRIGIR OU EXCLUIR SEUS DADOS PESSOAIS, BEM COMO SOLICITAR A SUSPENSÃO DO USO DOS DADOS PARA DETERMINADAS FINALIDADES.
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="O usuário tem o direito de acessar, corrigir ou excluir seus dados pessoais, bem como solicitar a suspensão do uso dos dados para determinadas finalidades."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
 
-ALTERAÇÕES NA POLÍTICA
+            <!-- Policy Changes Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ALTERAÇÕES NA POLÍTICA"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-ESTA POLÍTICA PODE SER ATUALIZADA PERIODICAMENTE. NOTIFICAREMOS OS USUÁRIOS SOBRE MUDANÇAS SIGNIFICATIVAS POR MEIO DE AVISOS NO APLICATIVO.
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Esta política pode ser atualizada periodicamente. Notificaremos os usuários sobre mudanças significativas por meio de avisos no aplicativo."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
 
-CONTATO
+            <!-- Contact Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CONTATO"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/colorPrimary" />
 
-EM CASO DE DÚVIDAS SOBRE NOSSA POLÍTICA DE PRIVACIDADE, ENTRE EM CONTATO PELO EMAIL: SUPORTE@SEUAPP.COM." />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Em caso de dúvidas sobre nossa política de privacidade, entre em contato pelo email: conectexoficial@gmail.com."
+                android:textSize="16sp"
+                android:lineSpacingExtra="8dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@android:color/black" />
+
+        </LinearLayout>
     </ScrollView>
-
 </LinearLayout>

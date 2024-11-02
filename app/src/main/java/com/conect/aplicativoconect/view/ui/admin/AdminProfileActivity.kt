@@ -1,9 +1,7 @@
 package com.conect.aplicativoconect.view.ui.admin
 
 import android.os.Bundle
-import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
 import com.conect.aplicativoconect.R
 
 class AdminProfileActivity : AppCompatActivity() {

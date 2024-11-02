@@ -14,7 +14,8 @@ import com.conect.aplicativoconect.view.data.model.Booking
 class ClientBookingAdapter(
     private var bookings: List<Booking>,
     private val onConfirmClick: (Booking) -> Unit,
-    private val onCancelClick: (Booking) -> Unit
+    private val onCancelClick: (Booking) -> Unit,
+    private val onEmptyList: () -> Unit // Callback para lista vazia
 ) : RecyclerView.Adapter<ClientBookingAdapter.ClientBookingViewHolder>() {
 
     // Lista de cores disponíveis
@@ -50,22 +51,40 @@ class ClientBookingAdapter(
         holder.bookingDate.text = booking.date
         holder.bookingTime.text = "${booking.hour}h"
 
-        // Aplique a cor ao CardView diretamente
-        val cardView = holder.itemView as androidx.cardview.widget.CardView
-        if (booking.status_cliente == "confirmed") {
-            val randomColor = getRandomColor(cardView)  // Cor aleatória
-            cardView.setCardBackgroundColor(randomColor)
+        // Define a barra lateral de cor para indicar o status
+        val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
+        val statusColor = if (booking.status_cliente == "confirmed") {
+            getRandomColor(statusIndicator)  // Cor aleatória para confirmado
+        } else {
+            ContextCompat.getColor(holder.itemView.context, R.color.yellow)  // Cor amarela para pendente
         }
+        statusIndicator.setBackgroundColor(statusColor)
 
+        // Mostra ou esconde os botões dependendo do status
         val showButtons = booking.status_cliente == "pending"
         holder.confirmButton.visibility = if (showButtons) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (showButtons) View.VISIBLE else View.GONE
 
-        cardView.cardElevation = if (showButtons) 8f else 0f  // Aplica ou remove a elevação
-
         holder.confirmButton.setOnClickListener { onConfirmClick(booking) }
-        holder.cancelButton.setOnClickListener { onCancelClick(booking) }
+        holder.cancelButton.setOnClickListener {
+            onCancelClick(booking)
+            removeBookingAtPosition(holder.adapterPosition)
+        }
     }
+
+    // Função para remover um agendamento da lista local e atualizar o RecyclerView
+    private fun removeBookingAtPosition(position: Int) {
+        bookings = bookings.toMutableList().apply {
+            removeAt(position)
+        }
+        notifyItemRemoved(position)
+        notifyItemRangeChanged(position, bookings.size) // Atualiza as posições dos itens restantes
+
+        if (bookings.isEmpty()) {
+            onEmptyList() // Chama o callback quando a lista estiver vazia
+        }
+    }
+
 
     override fun getItemCount(): Int = bookings.size
 
@@ -83,5 +102,9 @@ class ClientBookingAdapter(
     fun updateData(newBookings: List<Booking>) {
         bookings = newBookings
         notifyDataSetChanged()  // Garante que a UI seja atualizada
+
+        if (bookings.isEmpty()) {
+            onEmptyList() // Notifica se a lista está vazia após a atualização
+        }
     }
 }

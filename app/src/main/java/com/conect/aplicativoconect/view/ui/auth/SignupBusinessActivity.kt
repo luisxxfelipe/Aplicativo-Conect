@@ -2,6 +2,8 @@ package com.conect.aplicativoconect.view.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
@@ -23,7 +25,7 @@ class SignupBusinessActivity : AppCompatActivity() {
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
-    private lateinit var nameUser: EditText
+    private lateinit var nameUserEditText: EditText
     private lateinit var cpfEditText: EditText
     private lateinit var signUpButton: Button
     private lateinit var loginTextView: TextView
@@ -39,15 +41,17 @@ class SignupBusinessActivity : AppCompatActivity() {
         passwordEditText = findViewById(R.id.passwordInput)
         confirmPasswordEditText = findViewById(R.id.confirmPasswordInput)
         cpfEditText = findViewById(R.id.cpfInput)
-        nameUser = findViewById(R.id.nameUser)
+        nameUserEditText = findViewById(R.id.nameUser)
         signUpButton = findViewById(R.id.signupButton)
         loginTextView = findViewById(R.id.loginTextView)
+
+        applyCpfMask()
 
         signUpButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
             val confirmPassword = confirmPasswordEditText.text.toString().trim()
-            val nameUser = nameUser.text.toString().trim()
+            val nameUser = nameUserEditText.text.toString().trim()
             val cpf = cpfEditText.text.toString().trim()
 
             if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && nameUser.isNotEmpty() && cpf.isNotEmpty()) {
@@ -57,7 +61,8 @@ class SignupBusinessActivity : AppCompatActivity() {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 
@@ -65,6 +70,38 @@ class SignupBusinessActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
+    }
+
+    private fun applyCpfMask() {
+        cpfEditText.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            private val mask = "###.###.###-##"
+            override fun afterTextChanged(s: Editable?) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isUpdating) {
+                    isUpdating = false
+                    return
+                }
+
+                var str = s.toString().replace(Regex("[^\\d]"), "")
+                val maskedStr = StringBuilder()
+                var index = 0
+                for (m in mask.toCharArray()) {
+                    if (m != '#' && index < str.length) {
+                        maskedStr.append(m)
+                        continue
+                    }
+                    if (index >= str.length) break
+                    maskedStr.append(str[index])
+                    index++
+                }
+
+                isUpdating = true
+                cpfEditText.setText(maskedStr.toString())
+                cpfEditText.setSelection(maskedStr.length)
+            }
+        })
     }
 
     // Função para criar o usuário de negócio no Firebase Authentication
@@ -76,7 +113,8 @@ class SignupBusinessActivity : AppCompatActivity() {
                     checkCpfAndCreateBusiness(email, nameUser, cpf)
                 } else {
                     Log.e("CreateBusinessUser", "Erro ao criar usuário: ${task.exception?.message}")
-                    Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
     }
@@ -91,7 +129,11 @@ class SignupBusinessActivity : AppCompatActivity() {
                     // CPF não encontrado, pode criar o negócio
                     createBusinessData(email, nameUser, cpf)
                 } else {
-                    Toast.makeText(this, "Este CPF já foi utilizado para uma assinatura.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Este CPF já foi utilizado para uma assinatura.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
             .addOnFailureListener { e ->
@@ -126,7 +168,7 @@ class SignupBusinessActivity : AppCompatActivity() {
             val businessData = hashMapOf(
                 "email" to email,
                 "cpf" to cpf,
-                "nameUser" to nameUser,
+                "ownerName" to nameUser,
                 "isActive" to true,
                 "type" to "business",
                 "ownerId" to businessId
@@ -137,7 +179,8 @@ class SignupBusinessActivity : AppCompatActivity() {
             db.collection("business").document(businessId)
                 .set(businessData)
                 .addOnSuccessListener {
-                    Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT)
+                        .show()
                     createInitialSubscription(businessId, cpf)
 
                     // Redireciona para a tela de registro de mais dados
@@ -148,7 +191,8 @@ class SignupBusinessActivity : AppCompatActivity() {
                 }
                 .addOnFailureListener { e ->
                     Log.e("CreateBusinessData", "Erro ao salvar dados do negócio: ${e.message}")
-                    Toast.makeText(this, "Falha ao salvar dados do negócio.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Falha ao salvar dados do negócio.", Toast.LENGTH_SHORT)
+                        .show()
                 }
         } else {
             Toast.makeText(this, "Erro: UID do usuário não encontrado.", Toast.LENGTH_SHORT).show()

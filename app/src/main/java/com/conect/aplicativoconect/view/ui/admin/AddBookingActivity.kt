@@ -5,14 +5,20 @@ import android.app.DatePickerDialog
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ProgressBar
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Calendar
+import java.util.UUID
 
 class AddBookingActivity : AppCompatActivity() {
 
@@ -25,7 +31,8 @@ class AddBookingActivity : AppCompatActivity() {
     private lateinit var buttonSaveBooking: Button
     private var companyId: String? = null
     private val servicesMap = mutableMapOf<String, Double>() // Para associar serviço ao preço
-    private var operatingHours: Pair<Int, Int>? = null // Horário de funcionamento (abertura e fechamento)
+    private var operatingHours: Pair<Int, Int>? =
+        null // Horário de funcionamento (abertura e fechamento)
     private var availableTimes = mutableListOf<String>() // Horários disponíveis
     private lateinit var progressBarSaving: ProgressBar
 
@@ -62,14 +69,19 @@ class AddBookingActivity : AppCompatActivity() {
                 .get()
                 .addOnSuccessListener { documents ->
                     if (documents.isEmpty) {
-                        Toast.makeText(this, "Nenhuma empresa encontrada.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Nenhuma empresa encontrada.", Toast.LENGTH_SHORT)
+                            .show()
                         return@addOnSuccessListener
                     }
                     companyId = documents.documents[0].id
                     loadServicesAndOperatingHours() // Carrega os serviços e horários
                 }
                 .addOnFailureListener { exception ->
-                    Toast.makeText(this, "Erro ao buscar companyId: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Erro ao buscar companyId: ${exception.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         } ?: Toast.makeText(this, "Usuário não autenticado", Toast.LENGTH_SHORT).show()
     }
@@ -79,7 +91,8 @@ class AddBookingActivity : AppCompatActivity() {
             FirebaseFirestore.getInstance().collection("business").document(id)
                 .get()
                 .addOnSuccessListener { document ->
-                    val services = document.get("services") as? List<Map<String, Any>> ?: emptyList()
+                    val services =
+                        document.get("services") as? List<Map<String, Any>> ?: emptyList()
                     services.forEach { service ->
                         val serviceName = service["serviceName"] as? String ?: ""
                         val price = (service["price"] as? Number)?.toDouble() ?: 0.0
@@ -88,12 +101,18 @@ class AddBookingActivity : AppCompatActivity() {
                     setupServiceSpinner(servicesMap.keys.toList())
 
                     // Obter horários de funcionamento do negócio
-                    val openingTime = (document.getString("opening")?.split(":")?.get(0)?.toInt()) ?: 9
-                    val closingTime = (document.getString("closing")?.split(":")?.get(0)?.toInt()) ?: 18
+                    val openingTime =
+                        (document.getString("opening")?.split(":")?.get(0)?.toInt()) ?: 9
+                    val closingTime =
+                        (document.getString("closing")?.split(":")?.get(0)?.toInt()) ?: 18
                     operatingHours = Pair(openingTime, closingTime)
                 }
                 .addOnFailureListener {
-                    Toast.makeText(this, "Erro ao carregar serviços e horários.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Erro ao carregar serviços e horários.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         }
     }
@@ -150,7 +169,11 @@ class AddBookingActivity : AppCompatActivity() {
 
     private fun showAvailableTimesDialog() {
         if (availableTimes.isEmpty()) {
-            Toast.makeText(this, "Selecione uma data para ver horários disponíveis.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Selecione uma data para ver horários disponíveis.",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
@@ -181,7 +204,13 @@ class AddBookingActivity : AppCompatActivity() {
         val servicePrice = servicesMap[selectedServiceName] ?: 0.0
 
         if (companyId != null) {
-            uploadImageAndSaveBooking(name, selectedServiceName, selectedDate, selectedHour, servicePrice)
+            uploadImageAndSaveBooking(
+                name,
+                selectedServiceName,
+                selectedDate,
+                selectedHour,
+                servicePrice
+            )
             progressBarSaving.visibility = View.VISIBLE
             buttonSaveBooking.isEnabled = false
         } else {
@@ -207,7 +236,11 @@ class AddBookingActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener { exception ->
-                Toast.makeText(this, "Erro ao enviar imagem: ${exception.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Erro ao enviar imagem: ${exception.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -239,7 +272,11 @@ class AddBookingActivity : AppCompatActivity() {
                 finish()
             }
             .addOnFailureListener { exception ->
-                Toast.makeText(this, "Erro ao salvar agendamento: ${exception.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Erro ao salvar agendamento: ${exception.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 }

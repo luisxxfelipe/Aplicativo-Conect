@@ -11,7 +11,6 @@ import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -71,13 +70,15 @@ class ClienteHomeFragment : Fragment() {
     }
 
     private fun setupAdapters() {
-        val categories = listOf("Manicure", "Barbearia", "Cabeleireiro", "Massagista", "Maquiagens", "Estética")
+        val categories =
+            listOf("Manicure", "Barbearia", "Cabeleireiro", "Massagista", "Maquiagens", "Estética")
         _binding?.categoriesRecyclerView?.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
-        _binding?.categoriesRecyclerView?.adapter = CategoriesPagerAdapter(categories) { selectedCategory ->
-            filterBusinessesByCategory(selectedCategory)
-        }
+        _binding?.categoriesRecyclerView?.adapter =
+            CategoriesPagerAdapter(categories) { selectedCategory ->
+                filterBusinessesByCategory(selectedCategory)
+            }
 
         businessAdapter = BusinessAdapter(requireContext(), businessList) { business ->
             fetchBusinessIdAndOpenDetails(business.name)
@@ -113,7 +114,11 @@ class ClienteHomeFragment : Fragment() {
             }
             .addOnFailureListener { e ->
                 if (isAdded) {
-                    Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Erro ao buscar agendamentos.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
             .addOnCompleteListener {
@@ -127,11 +132,13 @@ class ClienteHomeFragment : Fragment() {
         clientBookingAdapter = ClientBookingAdapter(
             bookings = bookings,
             onConfirmClick = { booking -> confirmBooking(booking) },
-            onCancelClick = { booking -> cancelBooking(booking) }
+            onCancelClick = { booking -> cancelBooking(booking) },
+            onEmptyList = { showNoBookingsMessage(true) }  // Callback para lista vazia
         )
         _binding?.todayBookingsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
         _binding?.todayBookingsRecyclerView?.adapter = clientBookingAdapter
     }
+
 
     private fun fetchBusinesses() {
         firestore.collection("business")
@@ -143,14 +150,24 @@ class ClienteHomeFragment : Fragment() {
                         businessList.addAll(querySnapshot.toObjects(Business::class.java))
                         updateBusinessAdapter(businessList)
                     } else {
-                        Toast.makeText(requireContext(), "Nenhum estabelecimento encontrado.", Toast.LENGTH_SHORT).show()
-                        fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")  // Atualiza a lista
+                        Toast.makeText(
+                            requireContext(),
+                            "Nenhum estabelecimento encontrado.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        fetchUserBookings(
+                            FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                        )  // Atualiza a lista
                     }
                 }
             }
             .addOnFailureListener { e ->
                 if (isAdded) {
-                    Toast.makeText(requireContext(), "Erro ao buscar estabelecimentos.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Erro ao buscar estabelecimentos.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
     }
@@ -164,11 +181,18 @@ class ClienteHomeFragment : Fragment() {
                     "Agendamento Confirmado",
                     "O agendamento de ${booking.name} foi confirmado!"
                 )
-                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT).show()
-                fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")  // Atualiza a lista
+                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT)
+                    .show()
+                fetchUserBookings(
+                    FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                )  // Atualiza a lista
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Erro ao confirmar agendamento.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao confirmar agendamento.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -182,10 +206,18 @@ class ClienteHomeFragment : Fragment() {
                     "Agendamento Cancelado",
                     "O agendamento de ${booking.name} foi cancelado."
                 )
-                Toast.makeText(requireContext(), "Agendamento cancelado e excluído.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Agendamento cancelado e excluído.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Erro ao cancelar agendamento.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao cancelar agendamento.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -283,7 +315,11 @@ class ClienteHomeFragment : Fragment() {
     private fun filterBusinessesByCategory(category: String) {
         val filteredBusinesses = businessList.filter { it.serviceType == category }
         if (filteredBusinesses.isEmpty()) {
-            Toast.makeText(requireContext(), "Nenhum estabelecimento encontrado.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Nenhum estabelecimento encontrado.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
         updateBusinessAdapter(filteredBusinesses)
     }
@@ -353,9 +389,10 @@ class ClienteHomeFragment : Fragment() {
             .get()
             .addOnSuccessListener { documents ->
                 documents.firstOrNull()?.id?.let { businessId ->
-                    val intent = Intent(requireContext(), EmpresaDetalhesActivity::class.java).apply {
-                        putExtra("companyId", businessId)
-                    }
+                    val intent =
+                        Intent(requireContext(), EmpresaDetalhesActivity::class.java).apply {
+                            putExtra("companyId", businessId)
+                        }
                     startActivity(intent)
                 }
             }

@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
@@ -25,6 +27,8 @@ class EditBusinessProfileActivity : AppCompatActivity() {
     private lateinit var editBusinessEmail: com.google.android.material.textfield.TextInputEditText
     private lateinit var editBusinessAddress: com.google.android.material.textfield.TextInputEditText
     private lateinit var editBusinessDescription: com.google.android.material.textfield.TextInputEditText
+    private lateinit var editBusinessCpf: com.google.android.material.textfield.TextInputEditText
+    private lateinit var editBusinessPhone: com.google.android.material.textfield.TextInputEditText
     private lateinit var saveBusinessProfileButton: com.google.android.material.button.MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,9 +42,13 @@ class EditBusinessProfileActivity : AppCompatActivity() {
         editBusinessEmail = findViewById(R.id.editBusinessEmail)
         editBusinessAddress = findViewById(R.id.editBusinessAddress)
         editBusinessDescription = findViewById(R.id.editBusinessDescription)
+        editBusinessCpf = findViewById(R.id.editBusinessCpf)
+        editBusinessPhone = findViewById(R.id.editBusinessPhone)
         saveBusinessProfileButton = findViewById(R.id.saveBusinessProfileButton)
 
         loadBusinessProfile()
+        applyCpfMask()
+        applyPhoneMask()
 
         editBusinessImage.setOnClickListener {
             selectPhotoFromGallery()
@@ -49,6 +57,70 @@ class EditBusinessProfileActivity : AppCompatActivity() {
         saveBusinessProfileButton.setOnClickListener {
             saveBusinessProfile()
         }
+    }
+
+    private fun applyCpfMask() {
+        editBusinessCpf.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            private val mask = "###.###.###-##"
+            override fun afterTextChanged(s: Editable?) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isUpdating) {
+                    isUpdating = false
+                    return
+                }
+
+                var str = s.toString().replace(Regex("[^\\d]"), "")
+                val maskedStr = StringBuilder()
+                var index = 0
+                for (m in mask.toCharArray()) {
+                    if (m != '#' && index < str.length) {
+                        maskedStr.append(m)
+                        continue
+                    }
+                    if (index >= str.length) break
+                    maskedStr.append(str[index])
+                    index++
+                }
+
+                isUpdating = true
+                editBusinessCpf.setText(maskedStr.toString())
+                editBusinessCpf.setSelection(maskedStr.length)
+            }
+        })
+    }
+
+    private fun applyPhoneMask() {
+        editBusinessPhone.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            private val mask = "(##) #####-####"
+            override fun afterTextChanged(s: Editable?) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isUpdating) {
+                    isUpdating = false
+                    return
+                }
+
+                var str = s.toString().replace(Regex("[^\\d]"), "")
+                val maskedStr = StringBuilder()
+                var index = 0
+                for (m in mask.toCharArray()) {
+                    if (m != '#' && index < str.length) {
+                        maskedStr.append(m)
+                        continue
+                    }
+                    if (index >= str.length) break
+                    maskedStr.append(str[index])
+                    index++
+                }
+
+                isUpdating = true
+                editBusinessPhone.setText(maskedStr.toString())
+                editBusinessPhone.setSelection(maskedStr.length)
+            }
+        })
     }
 
     private fun loadBusinessProfile() {

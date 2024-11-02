@@ -6,8 +6,8 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.conect.aplicativoconect.view.ui.admin.AdminHomeActivity
+import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 

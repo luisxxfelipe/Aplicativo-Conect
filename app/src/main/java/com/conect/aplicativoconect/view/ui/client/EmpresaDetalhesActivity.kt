@@ -65,7 +65,8 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                     loadImage(profileImageUrl, profileImageView)
 
                     // Configurar RecyclerView dos serviços
-                    val services = document.get("services") as? List<Map<String, Any>> ?: emptyList()
+                    val services =
+                        document.get("services") as? List<Map<String, Any>> ?: emptyList()
                     val serviceList = services.map { serviceMap ->
                         Service(
                             name = serviceMap["serviceName"] as String,

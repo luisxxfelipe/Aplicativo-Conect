@@ -36,7 +36,12 @@ class PaymentService(private val context: Context) {
                 openCheckoutUrl(checkoutUrl)
                 onSuccess()
             } else {
-                Log.e("PaymentService", "Erro ao criar preferência de pagamento: Código HTTP ${response.code()} - ${response.errorBody()?.string()}")
+                Log.e(
+                    "PaymentService",
+                    "Erro ao criar preferência de pagamento: Código HTTP ${response.code()} - ${
+                        response.errorBody()?.string()
+                    }"
+                )
                 onError("Erro ao criar preferência de pagamento: Código HTTP ${response.code()}")
             }
         } catch (e: Exception) {

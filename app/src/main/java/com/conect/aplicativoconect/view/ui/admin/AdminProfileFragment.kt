@@ -74,10 +74,18 @@ class AdminProfileFragment : Fragment() {
             val intent = Intent(requireContext(), PolicyActivity::class.java)
             startActivity(intent)
         }
+
+        binding.settingsButtonAdmin.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.adminFragmentContainer, AdminSettingsFragment())
+                .addToBackStack(null)
+                .commit()
+        }
     }
 
     private fun loadProfileImage() {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return // Obtendo o ID do usuário
+        val userId =
+            FirebaseAuth.getInstance().currentUser?.uid ?: return // Obtendo o ID do usuário
 
         // Recuperar a URL da imagem de perfil do Firestore
         firestore.collection("business")

@@ -2,7 +2,6 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.widget.EditText
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.DialogFragment
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.ServiceType

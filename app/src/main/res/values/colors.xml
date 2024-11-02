@@ -6,6 +6,8 @@
     <color name="white">#FFFFFFFF</color>
     <color name="red">#F47387</color>
     <color name="orange">#EE8265</color>
+    <color name="green">#4CAF50</color>
+    <color name="yellow">#FFC107</color>
     <color name="transparente">#00F54855</color>
     <color name="verde_agua">#1DBFC2</color>
     <color name="cinza">#BAB9B9</color>

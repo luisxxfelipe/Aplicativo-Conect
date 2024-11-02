@@ -15,7 +15,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class SelecionarHorarioActivity : AppCompatActivity() {
 
@@ -91,7 +93,8 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 operatingHours = documentSnapshot.get("operatingHours") as Map<String, Any>
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao buscar horários: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Erro ao buscar horários: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -106,7 +109,11 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 showHourSelectionDialog(availableHours)
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao buscar agendamentos: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Erro ao buscar agendamentos: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -122,9 +129,11 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         val closingHour = closingTime.split(":")[0].toInt()
 
         val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val isToday = selectedDate == SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+        val isToday =
+            selectedDate == SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
 
-        val allHours = (openingHour until closingHour).map { hour -> String.format("%02d:00", hour) }
+        val allHours =
+            (openingHour until closingHour).map { hour -> String.format("%02d:00", hour) }
 
         return allHours.filter { hour ->
             (!isToday || hour.split(":")[0].toInt() > currentHour) && !bookedHours.contains(hour)
@@ -169,7 +178,8 @@ class SelecionarHorarioActivity : AppCompatActivity() {
 
             firestore.collection("bookings").add(bookingData)
                 .addOnSuccessListener {
-                    Toast.makeText(this, "Agendamento realizado com sucesso!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Agendamento realizado com sucesso!", Toast.LENGTH_SHORT)
+                        .show()
                     finish()
                 }
                 .addOnFailureListener { e ->
