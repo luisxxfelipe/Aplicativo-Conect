@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -56,6 +58,7 @@
         <activity android:name=".view.ui.client.SelecionarHorarioActivity" android:exported="true" />
         <activity android:name=".view.ui.admin.AddBookingActivity" android:exported="true" />
         <activity android:name=".view.ui.admin.AdminSettingsFragment" android:exported="true" />
+        <activity android:name=".view.ui.admin.PublishPhotoActivity" android:exported="true" />
 
         <!-- EditProfileActivity e EditBusinessProfileActivity -->
         <activity android:name=".view.ui.client.EditProfileActivity" android:exported="true" />

@@ -1,0 +1,68 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Section Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Adicionar Fotos do Serviço"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:layout_gravity="center"
+        android:layout_marginBottom="12dp"
+        android:textStyle="bold"/>
+
+    <!-- RecyclerView for displaying selected photos -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewSelectedPhotos"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:background="@drawable/rounded_border"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="visible"/>
+
+    <!-- Caption Input -->
+    <EditText
+        android:id="@+id/editTextPhotoCaption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Legenda para a foto (Opcional)"
+        android:inputType="textCapSentences"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Button to select more photos -->
+    <Button
+        android:id="@+id/buttonSelectPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/roxo"
+        android:text="Selecionar Fotos"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Button to save photo and caption -->
+    <Button
+        android:id="@+id/buttonSavePhoto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/green"
+        android:text="Salvar Fotos"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="12dp"
+        android:enabled="false"/>
+
+    <!-- ProgressBar for loading feedback -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:layout_marginTop="20dp"/>
+</LinearLayout>

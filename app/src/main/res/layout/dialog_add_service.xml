@@ -15,7 +15,7 @@
         android:text="Ações"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/black"
+        android:textColor="@color/cinza_escuro"
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
@@ -46,4 +46,18 @@
         android:drawableLeft="@drawable/ic_clock"
         android:drawablePadding="8dp"
         android:textSize="15sp" />
+
+    <Button
+        android:id="@+id/btn_publicar_fotos"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Publicar Fotos"
+        android:layout_marginBottom="4dp"
+        android:backgroundTint="@color/roxo"
+        android:textColor="@android:color/white"
+        android:elevation="2dp"
+        android:drawableLeft="@drawable/ic_photo"
+        android:drawablePadding="8dp"
+        android:textSize="15sp" />
+
 </LinearLayout>

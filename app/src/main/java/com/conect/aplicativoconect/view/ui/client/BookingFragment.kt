@@ -232,11 +232,13 @@ class BookingFragment : Fragment() {
             .get()
             .addOnSuccessListener { document ->
                 val fcmToken = document.getString("fcmToken")
-                Log.d("FCM", "Token FCM recebido: $fcmToken")  // Log para verificar o token
+                Log.d("FCM", "Token FCM recebido: $fcmToken")
 
                 if (!fcmToken.isNullOrEmpty()) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        sendFCMNotification(fcmToken, title, message)
+                        if (isAdded) {
+                            sendFCMNotification(fcmToken, title, message)
+                        }
                     }
                 } else {
                     Log.e("FCM", "Token FCM não encontrado para empresa: $companyId")
@@ -246,7 +248,6 @@ class BookingFragment : Fragment() {
                 Log.e("BookingFragment", "Erro ao buscar token FCM: ${e.message}")
             }
     }
-
 
     private suspend fun sendFCMNotification(token: String, title: String, message: String) {
         val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
@@ -266,7 +267,7 @@ class BookingFragment : Fragment() {
         """.trimIndent()
 
         val accessToken = withContext(Dispatchers.IO) {
-            TokenUtils.getAccessTokenFromServiceAccount(requireContext())
+            context?.let { TokenUtils.getAccessTokenFromServiceAccount(it) }
         }
 
         if (accessToken == null) {
@@ -290,7 +291,7 @@ class BookingFragment : Fragment() {
         }
 
         withContext(Dispatchers.Main) {
-            Volley.newRequestQueue(requireContext()).add(request)
+            context?.let { Volley.newRequestQueue(it).add(request) }
         }
     }
 }

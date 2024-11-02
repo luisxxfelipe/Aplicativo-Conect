@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.ui.admin
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -14,6 +15,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 class AdminHomeActivity : AppCompatActivity() {
 
     private lateinit var firestore: FirebaseFirestore
+    private var companyId: String? = null  // Armazena o companyId
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +23,9 @@ class AdminHomeActivity : AppCompatActivity() {
 
         firestore = FirebaseFirestore.getInstance()
 
-        // Configuração do fragmento inicial
+        // Buscar o companyId do administrador logado
+        fetchCompanyId()
+
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, AdminHomeFragment())
@@ -31,40 +35,62 @@ class AdminHomeActivity : AppCompatActivity() {
         setupBottomNavigation()
     }
 
+    private fun fetchCompanyId() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            firestore.collection("business")
+                .whereEqualTo("ownerId", userId)  // Alterado para buscar pelo campo "ownerId"
+                .get()
+                .addOnSuccessListener { documents ->
+                    if (!documents.isEmpty) {
+                        companyId = documents.documents[0].id  // Armazena o ID da empresa
+                    } else {
+                        Toast.makeText(this, "Empresa não encontrada para este usuário.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Erro ao buscar empresa.", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
     private fun setupBottomNavigation() {
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
 
-        // Método atualizado para usar o novo listener
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
                     loadFragment(AdminHomeFragment())
                     true
                 }
-
                 R.id.navigation_appointments -> {
                     loadFragment(AdminBookingsFragment())
                     true
                 }
-
                 R.id.navigation_profile -> {
                     loadFragment(AdminProfileFragment())
                     true
                 }
-
                 R.id.navigation_add_service -> {
-                    showAddServiceDialog() // Chama o método para mostrar o popup
+                    showAddServiceDialog()
                     true
                 }
-
                 R.id.navigation_logout -> {
                     showLogoutConfirmationDialog()
                     true
                 }
-
                 else -> false
             }
         }
+    }
+
+    private fun showAddServiceDialog() {
+        val dialog = AddServiceDialogFragment()
+        val args = Bundle().apply {
+            putString("companyId", companyId)  // Adiciona o companyId aos argumentos
+        }
+        dialog.arguments = args
+        dialog.show(supportFragmentManager, "AddServiceDialog")
     }
 
     private fun loadFragment(fragment: Fragment) {
@@ -77,9 +103,7 @@ class AdminHomeActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Confirmar Logout")
             .setMessage("Você tem certeza que deseja sair?")
-            .setPositiveButton("Sim") { _, _ ->
-                logout()
-            }
+            .setPositiveButton("Sim") { _, _ -> logout() }
             .setNegativeButton("Cancelar", null)
             .show()
     }
@@ -90,10 +114,5 @@ class AdminHomeActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
-    }
-
-    private fun showAddServiceDialog() {
-        val dialog = AddServiceDialogFragment()
-        dialog.show(supportFragmentManager, "AddServiceDialog")
     }
 }
