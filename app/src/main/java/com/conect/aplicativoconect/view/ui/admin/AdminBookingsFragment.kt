@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.Calendar
+import java.util.Date
 
 class AdminBookingsFragment : Fragment() {
 
@@ -78,6 +79,7 @@ class AdminBookingsFragment : Fragment() {
                     .get()
                     .await()
 
+                // Particiona os agendamentos em futuros e antigos
                 val (newBookings, oldBookings) = bookingsSnapshot.documents.mapNotNull { document ->
                     val booking = document.toObject(Booking::class.java)
                     booking?.id = document.id
@@ -108,31 +110,33 @@ class AdminBookingsFragment : Fragment() {
     }
 
     private fun isFutureBooking(booking: Booking): Boolean {
-        val currentDateTime = Calendar.getInstance()
+        val currentDateTime = Calendar.getInstance().time
 
-        // Verifica se date e hour não são nulos
-        val bookingDate = booking.date ?: return false
-        val bookingHourStr = booking.hour ?: return false
+        val bookingDateTime = booking.date?.let { parseDateTime(it, booking.hour) } ?: return false
 
-        val bookingDateParts = bookingDate.split("/").mapNotNull { it.toIntOrNull() }
-        val bookingTimeParts = bookingHourStr.split(":").mapNotNull { it.toIntOrNull() }
-
-        // Certifique-se de que a data tem 3 partes e o horário tem 2 partes (hora e minuto)
-        if (bookingDateParts.size == 3 && bookingTimeParts.size == 2) {
-            val bookingCalendar = Calendar.getInstance().apply {
-                set(Calendar.YEAR, bookingDateParts[2])
-                set(Calendar.MONTH, bookingDateParts[1] - 1)
-                set(Calendar.DAY_OF_MONTH, bookingDateParts[0])
-                set(Calendar.HOUR_OF_DAY, bookingTimeParts[0])  // Hora extraída de "hour"
-                set(Calendar.MINUTE, bookingTimeParts[1])       // Minuto extraído de "hour"
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            return bookingCalendar.after(currentDateTime)
-        }
-        return false
+        // Retorna `true` se o agendamento estiver no futuro em relação ao horário atual
+        return bookingDateTime.after(currentDateTime)
     }
 
+    private fun parseDateTime(date: String, hour: String): Date? {
+        return try {
+            val dateParts = date.split("/").map { it.toInt() }
+            val timeParts = hour.split(":").map { it.toIntOrNull() ?: 0 }
+
+            Calendar.getInstance().apply {
+                set(Calendar.YEAR, dateParts[2])
+                set(Calendar.MONTH, dateParts[1] - 1)
+                set(Calendar.DAY_OF_MONTH, dateParts[0])
+                set(Calendar.HOUR_OF_DAY, timeParts[0])
+                set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.time
+        } catch (e: Exception) {
+            Log.e("AdminBookingsFragment", "Erro ao analisar a data/hora: ${e.message}")
+            null
+        }
+    }
 
     private fun updateUI(newBookings: List<Booking>, oldBookings: List<Booking>) {
         if (newBookings.isEmpty() && oldBookings.isEmpty()) {

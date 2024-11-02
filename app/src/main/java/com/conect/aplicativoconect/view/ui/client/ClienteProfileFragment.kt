@@ -143,6 +143,8 @@ class ClienteProfileFragment : Fragment() {
                     activity?.finish()
                 } else {
                     Toast.makeText(context, "Falha ao excluir a conta", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(requireContext(), LoginActivity::class.java))
+                    activity?.finish()
                 }
             }
     }

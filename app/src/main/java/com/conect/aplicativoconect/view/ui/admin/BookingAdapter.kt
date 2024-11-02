@@ -78,19 +78,19 @@ class BookingAdapter(
         // Acessa o CardView diretamente para aplicar cor e elevação
         val cardView = holder.itemView as androidx.cardview.widget.CardView
 
-        // Definir cor de fundo baseada no status do agendamento
-        val backgroundColor = if (booking.status_adm == "confirmed") {
-            getRandomColor(cardView)  // Aplica cor aleatória para "confirmed"
+        // Define a barra lateral de cor para indicar o status
+        val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
+        val statusColor = if (booking.status_cliente == "confirmed" && booking.status_adm == "pending") {
+            ContextCompat.getColor(holder.itemView.context, R.color.yellow)  // Cor amarela para pendente
+        } else if (booking.status_adm == "confirmed") {
+            getRandomColor(statusIndicator)  // Cor aleatória para confirmado
         } else {
-            ContextCompat.getColor(context, R.color.white)  // Cor padrão
+            ContextCompat.getColor(holder.itemView.context, R.color.white)  // Cor padrão
         }
-        cardView.setCardBackgroundColor(backgroundColor)
+        statusIndicator.setBackgroundColor(statusColor)
 
-        // Ajustar elevação baseada na visibilidade dos botões
-        val showButtons = booking.status_adm == "pending"
-        cardView.cardElevation = if (showButtons) 8f else 0f
-
-        // Controla a visibilidade dos botões
+        // Ajusta a visibilidade dos botões com base no `status_adm`
+        val showButtons = booking.status_adm != "confirmed" // Botões visíveis se não estiver confirmado
         holder.confirmButton.visibility = if (showButtons) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (showButtons) View.VISIBLE else View.GONE
 
@@ -127,6 +127,7 @@ class BookingAdapter(
             }
         }
     }
+
 
     fun updateData(newBookings: List<Booking>) {
         bookings = newBookings

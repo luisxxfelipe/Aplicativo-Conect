@@ -98,14 +98,14 @@ class BookingFragment : Fragment() {
             .whereEqualTo("userId", userId)
             .addSnapshotListener { querySnapshot, error ->
                 if (error != null) {
-                    Log.e("BookingFragment", "Erro ao buscar agendamentos: ${error.message}")
-                    Toast.makeText(
-                        requireContext(),
-                        "Erro ao buscar agendamentos.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    if (isAdded) { // Verifique se o fragmento ainda está anexado antes de usar o contexto
+                        Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+                    }
                     return@addSnapshotListener
                 }
+
+                // Verifique novamente se o fragmento está anexado ao contexto antes de continuar
+                if (!isAdded) return@addSnapshotListener
 
                 val (newBookings, oldBookings) = querySnapshot?.documents?.mapNotNull { document ->
                     val booking = document.toObject(Booking::class.java)
@@ -119,30 +119,29 @@ class BookingFragment : Fragment() {
     }
 
     private fun updateUI(newBookings: List<Booking>, oldBookings: List<Booking>) {
-        if (newBookings.isEmpty() && oldBookings.isEmpty()) {
-            showEmptyBookingsMessage(true)
-        } else {
-            showEmptyBookingsMessage(false)
+        // Atualiza os adaptadores primeiro
+        newBookingAdapter.updateData(newBookings)
+        oldBookingAdapter.updateData(oldBookings)
 
-            newBookingsTitle.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
-            oldBookingsTitle.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+        // Verifica se há novos ou antigos agendamentos
+        val hasNewBookings = newBookings.isNotEmpty()
+        val hasOldBookings = oldBookings.isNotEmpty()
 
-            newBookingsRecyclerView.visibility =
-                if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
-            oldBookingsRecyclerView.visibility =
-                if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+        // Define visibilidade dos títulos e RecyclerViews
+        newBookingsTitle.visibility = if (hasNewBookings) View.VISIBLE else View.GONE
+        oldBookingsTitle.visibility = if (hasOldBookings) View.VISIBLE else View.GONE
+        newBookingsRecyclerView.visibility = if (hasNewBookings) View.VISIBLE else View.GONE
+        oldBookingsRecyclerView.visibility = if (hasOldBookings) View.VISIBLE else View.GONE
 
-            newBookingAdapter.updateData(newBookings)
-            oldBookingAdapter.updateData(oldBookings)
-        }
+        // Exibe a imagem e mensagem de vazio somente se ambos os RecyclerViews estiverem vazios
+        showEmptyBookingsMessage(!hasNewBookings && !hasOldBookings)
     }
 
     private fun showEmptyBookingsMessage(show: Boolean) {
         emptyBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
         emptyBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
-        newBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
-        oldBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
     }
+
 
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance()

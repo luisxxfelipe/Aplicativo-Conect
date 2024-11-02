@@ -66,7 +66,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/cinza"
+        android:background="@color/cinza_claro"
         android:layout_marginTop="12dp"
         android:layout_marginBottom="12dp"/> <!-- Espaço adicional entre os itens -->
 </LinearLayout>

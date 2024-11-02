@@ -24,11 +24,13 @@ import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.internal.Util.parseDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Calendar
+import java.util.Date
 
 class ClienteHomeFragment : Fragment() {
 
@@ -87,6 +89,31 @@ class ClienteHomeFragment : Fragment() {
         _binding?.establishmentsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
         _binding?.establishmentsRecyclerView?.adapter = businessAdapter
     }
+    private fun isFutureBooking(booking: Booking): Boolean {
+        val currentDateTime = Calendar.getInstance().time  // Data e hora atual como Date
+
+        // Separa a data e converte para inteiros, retornando `false` caso a data seja inválida
+        val dateParts = booking.date?.split("/")?.mapNotNull { it.toIntOrNull() } ?: return false
+        if (dateParts.size != 3) return false
+
+        // Converte `hour` para partes de hora e minuto
+        val timeParts = booking.hour?.split(":")?.mapNotNull { it.toIntOrNull() } ?: listOf(0, 0)
+        if (timeParts.size < 1) return false
+
+        // Configura a data e hora do agendamento usando ano, mês, dia, hora e minuto
+        val bookingDate = Calendar.getInstance().apply {
+            set(Calendar.YEAR, dateParts[2])
+            set(Calendar.MONTH, dateParts[1] - 1) // Meses são indexados a partir de 0 no Calendar
+            set(Calendar.DAY_OF_MONTH, dateParts[0])
+            set(Calendar.HOUR_OF_DAY, timeParts[0])  // Usa a primeira parte do horário como horas
+            set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })  // Usa a segunda parte como minutos, ou 0
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+
+        // Retorna `true` se a data e hora do agendamento estiverem no futuro
+        return bookingDate.after(currentDateTime)
+    }
 
     private fun fetchUserBookings(userId: String) {
         if (_binding == null) return  // Verifica se o binding ainda está disponível
@@ -95,37 +122,55 @@ class ClienteHomeFragment : Fragment() {
 
         firestore.collection("bookings")
             .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                val bookings = querySnapshot.documents.mapNotNull { document ->
-                    document.toObject(Booking::class.java)?.apply { id = document.id }
-                }.filter { isFutureBooking(it) }
-                    .sortedBy { it.date }
-                    .take(2)
+            .addSnapshotListener { querySnapshot, error ->
+                if (error != null) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Erro ao buscar agendamentos.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    binding.progressBar.visibility = View.GONE  // Esconde o ProgressBar
+                    return@addSnapshotListener
+                }
 
-                if (isAdded && _binding != null) {  // Verifica se o fragmento ainda está anexado
+                // Obtém todos os agendamentos, ordena e seleciona os dois mais próximos
+                val bookings = querySnapshot?.documents?.mapNotNull { document ->
+                    document.toObject(Booking::class.java)?.apply { id = document.id }
+                }.orEmpty()
+                    .filter { isFutureBooking(it) }  // Filtra apenas os agendamentos futuros
+                    .sortedBy { parseDateTime(it.date ?: "", it.hour ?: "") }  // Ordena por data e hora
+                    .take(2)  // Seleciona os dois primeiros
+
+                if (_binding != null) {  // Verifica se o fragmento ainda está anexado
                     if (bookings.isEmpty()) {
                         showNoBookingsMessage(true)
                     } else {
                         showNoBookingsMessage(false)
                         setupClientBookingAdapter(bookings)
                     }
-                }
-            }
-            .addOnFailureListener { e ->
-                if (isAdded) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Erro ao buscar agendamentos.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-            .addOnCompleteListener {
-                if (_binding != null) {  // Verifique se o binding ainda existe
                     binding.progressBar.visibility = View.GONE  // Esconde o ProgressBar
                 }
             }
+    }
+
+    private fun parseDateTime(date: String, hour: String): Date? {
+        return try {
+            val dateParts = date.split("/").map { it.toInt() }
+            val timeParts = hour.split(":").map { it.toIntOrNull() ?: 0 }
+
+            Calendar.getInstance().apply {
+                set(Calendar.YEAR, dateParts[2])
+                set(Calendar.MONTH, dateParts[1] - 1)
+                set(Calendar.DAY_OF_MONTH, dateParts[0])
+                set(Calendar.HOUR_OF_DAY, timeParts[0])
+                set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.time
+        } catch (e: Exception) {
+            Log.e("ClienteHomeFragment", "Erro ao analisar a data/hora: ${e.message}")
+            null
+        }
     }
 
     private fun setupClientBookingAdapter(bookings: List<Booking>) {
@@ -265,13 +310,20 @@ class ClienteHomeFragment : Fragment() {
             }
           }
         }
-        """.trimIndent()
+    """.trimIndent()
+
+        // Verifica se o fragmento ainda está anexado ao contexto antes de acessar o `requireContext()`
+        if (!isAdded) {
+            Log.w("BookingFragment", "Fragment não está mais anexado ao contexto. Notificação não enviada.")
+            return
+        }
 
         val accessToken = withContext(Dispatchers.IO) {
             TokenUtils.getAccessTokenFromServiceAccount(requireContext())
         }
 
         if (accessToken == null) {
+            Log.e("FCM", "Erro ao obter token de acesso.")
             return
         }
 
@@ -291,9 +343,14 @@ class ClienteHomeFragment : Fragment() {
         }
 
         withContext(Dispatchers.Main) {
-            Volley.newRequestQueue(requireContext()).add(request)
+            if (isAdded) {  // Verifica novamente antes de adicionar a requisição à fila
+                Volley.newRequestQueue(requireContext()).add(request)
+            } else {
+                Log.w("BookingFragment", "Fragment não está mais anexado ao contexto. Requisição FCM não adicionada.")
+            }
         }
     }
+
 
     private fun observeUserData() {
         clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
@@ -417,29 +474,12 @@ class ClienteHomeFragment : Fragment() {
         }
     }
 
-    private fun isFutureBooking(booking: Booking): Boolean {
-        val currentDateTime = Calendar.getInstance()
-
-        // Separa a data e converte para inteiros, retornando `false` caso a data seja inválida
-        val dateParts = booking.date?.split("/")?.mapNotNull { it.toIntOrNull() } ?: return false
-        if (dateParts.size != 3) return false
-
-        // Converte `hour` para `Int` ou usa `0` como valor padrão se for inválido
-        val bookingHour = booking.hour.toIntOrNull() ?: 0
-
-        // Configura a data e hora do agendamento
-        val bookingDate = Calendar.getInstance().apply {
-            set(Calendar.YEAR, dateParts[2])
-            set(Calendar.MONTH, dateParts[1] - 1) // Meses são indexados a partir de 0 no Calendar
-            set(Calendar.DAY_OF_MONTH, dateParts[0])
-            set(Calendar.HOUR_OF_DAY, bookingHour)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
+    override fun onResume() {
+        super.onResume()
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        userId?.let {
+            fetchUserBookings(it)
         }
-
-        // Retorna `true` se a data do agendamento estiver no futuro
-        return bookingDate.after(currentDateTime)
     }
 
 

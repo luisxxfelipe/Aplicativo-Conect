@@ -17,7 +17,6 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
-    <!-- Limita altura para o conteúdo dos novos agendamentos -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,7 +31,6 @@
             android:visibility="gone" />
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Agendamentos Antigos -->
     <TextView
         android:id="@+id/oldBookingsTitle"
         android:layout_width="wrap_content"
@@ -50,23 +48,36 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
-    <!-- Mensagem de Agendamentos Vazio -->
-    <TextView
-        android:id="@+id/emptyBookingsMessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Ainda não há agendamentos."
-        android:textColor="@color/cinza"
-        android:layout_gravity="center"
-        android:visibility="gone" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-    <ImageView
-        android:id="@+id/emptyBookingsImage"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:layout_gravity="center"
-        android:src="@drawable/sem_agendamentos"
-        android:visibility="gone" />
+        <LinearLayout
+            android:id="@+id/emptyBookingsLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:visibility="gone">
 
+            <TextView
+                android:id="@+id/emptyBookingsMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ainda não há agendamentos."
+                android:textColor="@color/cinza"
+                android:textAlignment="center"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/emptyBookingsImage"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:layout_marginTop="8dp"
+                android:src="@drawable/sem_agendamentos"
+                android:visibility="gone" />
+        </LinearLayout>
+    </FrameLayout>
 </LinearLayout>

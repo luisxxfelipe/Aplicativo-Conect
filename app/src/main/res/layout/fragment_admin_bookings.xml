@@ -50,23 +50,29 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
-    <!-- Mensagem de Agendamentos Vazio -->
-    <TextView
-        android:id="@+id/emptyBookingsMessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Ainda não há agendamentos."
-        android:textColor="@color/cinza"
-        android:layout_gravity="center"
-        android:visibility="gone" />
+    <!-- Centralize a mensagem de vazio e a imagem -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
 
-    <ImageView
-        android:id="@+id/emptyBookingsImage"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:layout_gravity="center"
-        android:src="@drawable/sem_agendamentos"
-        android:visibility="gone" />
+        <TextView
+            android:id="@+id/emptyBookingsMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ainda não há agendamentos."
+            android:textColor="@color/cinza"
+            android:textAlignment="center"
+            android:visibility="gone" />
 
+        <ImageView
+            android:id="@+id/emptyBookingsImage"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/sem_agendamentos"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>

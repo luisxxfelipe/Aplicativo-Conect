@@ -134,6 +134,9 @@ class EditBusinessProfileActivity : AppCompatActivity() {
                     editBusinessEmail.setText(document.getString("email"))
                     editBusinessAddress.setText(document.getString("address"))
                     editBusinessDescription.setText(document.getString("description"))
+                    editBusinessCpf.setText(document.getString("cpf"))
+                    editBusinessPhone.setText(document.getString("phone"))
+
                     Glide.with(this)
                         .load(document.getString("imageUrl"))
                         .placeholder(R.drawable.foto_perfil_generica)
@@ -167,7 +170,9 @@ class EditBusinessProfileActivity : AppCompatActivity() {
             "name" to editBusinessName.text.toString(),
             "email" to editBusinessEmail.text.toString(),
             "address" to editBusinessAddress.text.toString(),
-            "description" to editBusinessDescription.text.toString()
+            "description" to editBusinessDescription.text.toString(),
+            "cpf" to editBusinessCpf.text.toString(),
+            "phone" to editBusinessPhone.text.toString()
         )
 
         firestore.collection("business").document(userId).update(updatedData)
