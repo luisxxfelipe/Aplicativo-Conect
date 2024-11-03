@@ -8,9 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.ui.UpcomingBookingWorker
@@ -36,7 +34,6 @@ class AdminHomeActivity : AppCompatActivity() {
 
         firestore = FirebaseFirestore.getInstance()
 
-        // Buscar o companyId do administrador logado e verificar expiração da assinatura
         fetchCompanyIdAndCheckSubscription()
 
         if (savedInstanceState == null) {
@@ -44,8 +41,9 @@ class AdminHomeActivity : AppCompatActivity() {
                 .replace(R.id.fragment_container, AdminHomeFragment())
                 .commit()
         }
-        testWorkerExecution()
-        setupUpcomingBookingWorker()
+
+        testWorkerExecution()  // Apenas para teste
+
         setupBottomNavigation()
     }
 
@@ -58,11 +56,9 @@ class AdminHomeActivity : AppCompatActivity() {
                 .addOnSuccessListener { documents ->
                     if (!documents.isEmpty) {
                         val document = documents.documents[0]
-                        companyId = document.id  // Armazena o ID da empresa
-
+                        companyId = document.id
                         val endDate = document.getTimestamp("endDate")
                         val isActive = document.getBoolean("isActive") ?: false
-
                         Log.d("SubscriptionCheck", "isActive: $isActive, endDate: $endDate")
 
                         if (endDate == null) {
@@ -71,10 +67,9 @@ class AdminHomeActivity : AppCompatActivity() {
                             return@addOnSuccessListener
                         }
 
-                        // Remove a condição `isActive` para exibir o alerta se a data de expiração estiver próxima
                         if (daysUntil(endDate) <= 2) {
                             Log.d("SubscriptionCheck", "Conditions met for subscription expiry alert.")
-                            showSubscriptionExpiryAlert(endDate) // Passe o endDate aqui
+                            showSubscriptionExpiryAlert(endDate)
                         } else {
                             Log.d("SubscriptionCheck", "No alert needed: isActive=$isActive, daysUntilEndDate=${daysUntil(endDate)}")
                         }
@@ -95,30 +90,13 @@ class AdminHomeActivity : AppCompatActivity() {
         Log.d("AdminHomeActivity", "Enfileirando execução de teste do worker.")
     }
 
-
-    private fun setupUpcomingBookingWorker() {
-        Log.d("AdminHomeActivity", "Configurando o worker para verificações de agendamentos.")
-        val workRequest = PeriodicWorkRequestBuilder<UpcomingBookingWorker>(1, TimeUnit.HOURS)
-            .build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "UpcomingBookingWork",
-            ExistingPeriodicWorkPolicy.KEEP,
-            workRequest
-        )
-        Log.d("AdminHomeActivity", "Worker enfileirado com sucesso.")
-    }
-
-
-    // Calcula os dias restantes até o fim da assinatura
     private fun daysUntil(endDate: Timestamp): Long {
         val currentDate = Calendar.getInstance().time
         val endDateMillis = endDate.toDate().time
         val diffMillis = endDateMillis - currentDate.time
-        val daysRemaining = TimeUnit.MILLISECONDS.toDays(diffMillis)
-        return daysRemaining
+        return TimeUnit.MILLISECONDS.toDays(diffMillis)
     }
 
-    // Atualize showSubscriptionExpiryAlert para aceitar endDate como parâmetro
     private fun showSubscriptionExpiryAlert(endDate: Timestamp) {
         val sharedPreferences = getSharedPreferences("SubscriptionPrefs", Context.MODE_PRIVATE)
         val today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
@@ -130,21 +108,15 @@ class AdminHomeActivity : AppCompatActivity() {
         }
 
         if (dailyAlertCount < MAX_DAILY_ALERTS) {
-            // Formata a data de vencimento
             val endDateFormatted = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate.toDate())
-
-            val alertDialog = AlertDialog.Builder(this)
+            AlertDialog.Builder(this)
                 .setTitle("Sua assinatura está quase vencendo!")
                 .setMessage("Sua assinatura vencerá em breve em $endDateFormatted. Garanta sua renovação para continuar aproveitando os serviços.")
-                .setPositiveButton("OK") { dialog, _ ->
-                    dialog.dismiss()
-                }
+                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                 .create()
-            alertDialog.show()
+                .show()
 
-            sharedPreferences.edit()
-                .putInt("dailyAlertCount", dailyAlertCount + 1)
-                .apply()
+            sharedPreferences.edit().putInt("dailyAlertCount", dailyAlertCount + 1).apply()
             Log.d("SubscriptionCheck", "Alert shown, count updated to: ${dailyAlertCount + 1}")
         } else {
             Log.d("SubscriptionCheck", "Alert not shown due to daily limit.")
@@ -153,7 +125,6 @@ class AdminHomeActivity : AppCompatActivity() {
 
     private fun setupBottomNavigation() {
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
-
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
@@ -183,22 +154,18 @@ class AdminHomeActivity : AppCompatActivity() {
 
     private fun showAddServiceDialog() {
         val dialog = AddServiceDialogFragment()
-        val args = Bundle().apply {
-            putString("companyId", companyId)
-        }
+        val args = Bundle().apply { putString("companyId", companyId) }
         dialog.arguments = args
         dialog.show(supportFragmentManager, "AddServiceDialog")
     }
 
     private fun loadFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment)
-            .commit()
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment).commit()
     }
 
     private fun showLogoutConfirmationDialog() {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Confirmar Logout")
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar Logout")
             .setMessage("Você tem certeza que deseja sair?")
             .setPositiveButton("Sim") { _, _ -> logout() }
             .setNegativeButton("Cancelar", null)
@@ -207,9 +174,9 @@ class AdminHomeActivity : AppCompatActivity() {
 
     private fun logout() {
         FirebaseAuth.getInstance().signOut()
-        val intent = Intent(this, WelcomeActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
+        startActivity(Intent(this, WelcomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
         finish()
     }
 }

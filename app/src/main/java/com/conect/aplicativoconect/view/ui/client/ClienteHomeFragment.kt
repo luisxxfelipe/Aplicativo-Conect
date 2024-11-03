@@ -356,7 +356,7 @@ class ClienteHomeFragment : Fragment() {
 
     private fun observeUserData() {
         clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
-            _binding?.userName?.text = userName ?: "Nome do Usuário"
+            if (_binding != null) binding.userName.text = userName ?: "Nome do Usuário"
             updateGreeting()  // Atualiza a saudação com base no horário do dia
         }
 
@@ -437,7 +437,7 @@ class ClienteHomeFragment : Fragment() {
             businessAdapter = BusinessAdapter(requireContext(), filteredBusinesses) { business ->
                 fetchBusinessIdAndOpenDetails(business.name)
             }
-            _binding?.establishmentsRecyclerView?.adapter = businessAdapter
+            binding.establishmentsRecyclerView.adapter = businessAdapter
             businessAdapter.notifyDataSetChanged()
         }
     }
@@ -486,8 +486,8 @@ class ClienteHomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Evita memory leaks
-        bookingsListener?.remove() // Remove o listener ao sair do fragmento
+        _binding = null // Avoid memory leaks
+        bookingsListener?.remove() // Remove listener when fragment view is destroyed
         bookingsListener = null
     }
 }

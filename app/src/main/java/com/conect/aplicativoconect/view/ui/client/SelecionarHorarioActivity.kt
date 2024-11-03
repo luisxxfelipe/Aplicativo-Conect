@@ -203,7 +203,8 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 "name" to userName,
                 "userImageUrl" to userImageUrl,
                 "status_cliente" to "pending",
-                "status_adm" to "pending"
+                "status_adm" to "pending",
+                "notified" to false
             )
 
             firestore.collection("bookings").add(bookingData)

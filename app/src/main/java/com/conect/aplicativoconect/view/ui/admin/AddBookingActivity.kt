@@ -262,7 +262,8 @@ class AddBookingActivity : AppCompatActivity() {
             "companyId" to companyId!!,
             "status_cliente" to "confirmed",
             "status_adm" to "confirmed",
-            "imageUrl" to imageUrl
+            "imageUrl" to imageUrl,
+            "notified" to false
         )
 
         FirebaseFirestore.getInstance().collection("bookings")

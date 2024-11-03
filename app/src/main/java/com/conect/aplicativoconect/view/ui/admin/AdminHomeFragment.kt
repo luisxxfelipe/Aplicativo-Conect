@@ -1,6 +1,5 @@
 package com.conect.aplicativoconect.view.ui.admin
 
-import BookingAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -19,6 +18,7 @@ import com.conect.aplicativoconect.view.ui.client.ClientBookingAdapter
 import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -29,7 +29,7 @@ class AdminHomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var firestore: FirebaseFirestore
-
+    private var bookingListener: ListenerRegistration? = null
     private val adminViewModel: AdminViewModel by activityViewModels()
 
     private var startOfWeek: Date? = null
@@ -105,9 +105,12 @@ class AdminHomeFragment : Fragment() {
             .addOnSuccessListener { businessSnapshot ->
                 val businessId = businessSnapshot.documents.firstOrNull()?.id ?: return@addOnSuccessListener
 
-                firestore.collection("bookings")
+                // Atribui o listener à variável `bookingListener` para podermos removê-lo depois
+                bookingListener = firestore.collection("bookings")
                     .whereEqualTo("companyId", businessId)
                     .addSnapshotListener { querySnapshot, error ->
+                        if (!isAdded || _binding == null) return@addSnapshotListener  // Verifica se o fragmento ainda está anexado
+
                         if (error != null) {
                             showErrorMessage("Erro ao carregar agendamentos.")
                             return@addSnapshotListener
@@ -121,7 +124,9 @@ class AdminHomeFragment : Fragment() {
                     }
             }
             .addOnFailureListener { e ->
-                showErrorMessage("Erro ao carregar dados da empresa.")
+                if (isAdded && _binding != null) { // Verifica se o fragmento ainda está anexado
+                    showErrorMessage("Erro ao carregar dados da empresa.")
+                }
             }
     }
 
@@ -310,5 +315,7 @@ class AdminHomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        // Remove o listener para evitar leaks e erros quando o fragmento for destruído
+        bookingListener?.remove()
     }
 }

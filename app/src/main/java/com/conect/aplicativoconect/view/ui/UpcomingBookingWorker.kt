@@ -33,10 +33,11 @@ class UpcomingBookingWorker(
 
     private fun checkUpcomingBookings() {
         val currentTimeMillis = Calendar.getInstance().timeInMillis
-        val timeWindow = currentTimeMillis + TimeUnit.HOURS.toMillis(2)
+        val timeWindow = currentTimeMillis + TimeUnit.HOURS.toMillis(10)
 
         firestore.collection("bookings")
             .whereEqualTo("status_adm", "confirmed")
+            .whereEqualTo("notified", false) // Apenas os não notificados
             .get()
             .addOnSuccessListener { querySnapshot ->
                 Log.d("UpcomingBookingWorker", "Agendamentos obtidos com sucesso.")
@@ -51,14 +52,11 @@ class UpcomingBookingWorker(
 
                     if (bookingDateMillis != null && bookingDateMillis in currentTimeMillis until timeWindow) {
                         Log.d("UpcomingBookingWorker", "Preparando para enviar notificação para o agendamento $bookingId.")
+                        val notificationMessage = "Seu agendamento para $serviceName é em breve, às ${bookingHourStr}h!"
                         sendNotificationToUser(
-                            userId, "Lembrete de Agendamento",
-                            "Seu agendamento para $serviceName é em breve!"
+                            userId, "Lembrete de Agendamento", notificationMessage
                         )
-                        sendNotificationToAdmin(
-                            bookingId, "Lembrete de Agendamento",
-                            "Agendamento para $serviceName está em menos de 2 horas."
-                        )
+                        markBookingAsNotified(bookingId) // Marca o agendamento como notificado
                     } else {
                         Log.d("UpcomingBookingWorker", "Agendamento $bookingId fora do intervalo para notificação.")
                     }
@@ -171,5 +169,17 @@ class UpcomingBookingWorker(
 
             Volley.newRequestQueue(applicationContext).add(request)
         }
+    }
+
+    // Marcar o booking como notificado após o envio
+    private fun markBookingAsNotified(bookingId: String) {
+        firestore.collection("bookings").document(bookingId)
+            .update("notified", true)
+            .addOnSuccessListener {
+                Log.d("UpcomingBookingWorker", "Agendamento $bookingId marcado como notificado.")
+            }
+            .addOnFailureListener { e ->
+                Log.e("UpcomingBookingWorker", "Erro ao marcar o agendamento como notificado: ${e.message}")
+            }
     }
 }
