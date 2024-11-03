@@ -24,7 +24,7 @@ import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.internal.Util.parseDateTime
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,6 +41,8 @@ class ClienteHomeFragment : Fragment() {
     private lateinit var clientBookingAdapter: ClientBookingAdapter
     private val businessList = mutableListOf<Business>()
     private val clientViewModel: ClientViewModel by activityViewModels()
+
+    private var bookingsListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -141,14 +143,14 @@ class ClienteHomeFragment : Fragment() {
                     .sortedBy { parseDateTime(it.date ?: "", it.hour ?: "") }  // Ordena por data e hora
                     .take(2)  // Seleciona os dois primeiros
 
-                if (_binding != null) {  // Verifica se o fragmento ainda está anexado
+                if (_binding != null && isAdded) {
                     if (bookings.isEmpty()) {
                         showNoBookingsMessage(true)
                     } else {
                         showNoBookingsMessage(false)
                         setupClientBookingAdapter(bookings)
                     }
-                    binding.progressBar.visibility = View.GONE  // Esconde o ProgressBar
+                    binding.progressBar.visibility = View.GONE
                 }
             }
     }
@@ -482,9 +484,10 @@ class ClienteHomeFragment : Fragment() {
         }
     }
 
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null // Evita memory leaks
+        bookingsListener?.remove() // Remove o listener ao sair do fragmento
+        bookingsListener = null
     }
 }

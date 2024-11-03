@@ -5,7 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.viewpager2.widget.ViewPager2
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.ServicePhoto
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,14 +20,15 @@ class PhotosFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_photos, container, false)
         companyId = arguments?.getString("companyId") ?: ""
         firestore = FirebaseFirestore.getInstance()
-        setupViewPager(view)
+        setupRecyclerView(view)
         return view
     }
 
-    private fun setupViewPager(view: View) {
-        val viewPager = view.findViewById<ViewPager2>(R.id.photosViewPager)
+    private fun setupRecyclerView(view: View) {
+        val recyclerView = view.findViewById<RecyclerView>(R.id.photosRecyclerView)
+        recyclerView.layoutManager = GridLayoutManager(context, 1) // 2 columns
         fetchPhotos { photos ->
-            viewPager.adapter = PhotosAdapter(photos)
+            recyclerView.adapter = PhotosAdapter(photos)
         }
     }
 

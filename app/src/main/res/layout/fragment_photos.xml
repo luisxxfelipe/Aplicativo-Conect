@@ -1,12 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/photosViewPager"
+    <TextView
+        android:id="@+id/swipeHintText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Deslize para baixo para ver mais fotos"
+        android:textSize="14sp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:padding="8dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/photosRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</LinearLayout>
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        android:layout_below="@id/swipeHintText"/>
+</RelativeLayout>

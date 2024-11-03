@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Agendar"
-        android:backgroundTint="@android:color/holo_blue_light"
+        android:backgroundTint="@color/roxo"
         android:textColor="@android:color/white"
         android:layout_gravity="end" />
 </LinearLayout>

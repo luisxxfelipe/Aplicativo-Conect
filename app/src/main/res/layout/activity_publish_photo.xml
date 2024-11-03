@@ -1,63 +1,78 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Section Title -->
+    <!-- Título da tela -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Adicionar Fotos do Serviço"
-        android:textSize="18sp"
-        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textColor="@color/cinza_escuro"
         android:layout_gravity="center"
-        android:layout_marginBottom="12dp"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
 
-    <!-- RecyclerView for displaying selected photos -->
+    <!-- Texto de dica para o usuário -->
+    <TextView
+        android:id="@+id/tipText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Adicione várias fotos para ilustrar o serviço, mostrando diferentes estilos, resultados ou etapas. Isso ajudará seus clientes a visualizar melhor o que você oferece."
+        android:textColor="@color/cinza"
+        android:textSize="16sp"
+        android:padding="12dp"
+        android:background="@drawable/rounded_border"
+        android:gravity="center"/>
+
+    <!-- Título da Foto -->
+    <EditText
+        android:id="@+id/editTextPhotoTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Título da Foto (Opcional)"
+        android:inputType="textCapSentences"
+        android:padding="12dp"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- RecyclerView para exibir as fotos selecionadas em duas colunas -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewSelectedPhotos"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:background="@drawable/rounded_border"
-        android:padding="8dp"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:visibility="visible"/>
+        android:padding="4dp"/>
 
-    <!-- Caption Input -->
-    <EditText
-        android:id="@+id/editTextPhotoCaption"
-        android:layout_width="match_parent"
+    <!-- Botão flutuante para adicionar novas fotos -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/buttonAddPhoto"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="Legenda para a foto (Opcional)"
-        android:inputType="textCapSentences"
-        android:padding="12dp"
-        android:layout_marginBottom="16dp"/>
+        android:src="@drawable/ic_adicionar"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="@color/orange"
+        app:tint="@color/white" />
 
-    <!-- Button to select more photos -->
-    <Button
-        android:id="@+id/buttonSelectPhoto"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@color/roxo"
-        android:text="Selecionar Fotos"
-        android:textColor="@android:color/white"
-        android:layout_marginBottom="12dp"/>
-
-    <!-- Button to save photo and caption -->
+    <!-- Botão de salvar com ícone, posicionado acima do final da tela -->
     <Button
         android:id="@+id/buttonSavePhoto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/green"
-        android:text="Salvar Fotos"
+        android:backgroundTint="@color/roxo"
+        android:text="Salvar"
         android:textColor="@android:color/white"
-        android:layout_marginTop="12dp"
+        android:drawableStart="@drawable/ic_prox"
+        android:drawablePadding="8dp"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp"
         android:enabled="false"/>
 
-    <!-- ProgressBar for loading feedback -->
+    <!-- Barra de progresso -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"

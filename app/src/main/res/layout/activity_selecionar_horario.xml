@@ -1,10 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:gravity="center"
     android:padding="16dp">
+
+    <!-- Imagem e texto para o estado vazio -->
+    <ImageView
+        android:id="@+id/emptyStateImage"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        app:srcCompat="@drawable/ic_selecionar_agendamentos"
+        android:layout_gravity="center" />
 
     <TextView
         android:id="@+id/emptyStateText"
@@ -14,39 +22,123 @@
         android:textSize="18sp"
         android:textColor="@color/cinza"
         android:gravity="center"
-        android:layout_marginTop="16dp" />
+        android:layout_marginBottom="16dp" />
 
-    <TextView
-        android:id="@+id/textViewSelectedDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Data não selecionada"
-        android:textSize="16sp"
-        android:layout_marginTop="16dp"
-        android:layout_gravity="center_horizontal"
-        android:visibility="gone" />
-
+    <!-- Botão para escolher ou ajustar a data -->
     <Button
         android:id="@+id/buttonPickDate"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="Escolher Data"
         android:textColor="@android:color/white"
-        android:layout_marginTop="15dp" />
+        android:backgroundTint="@color/roxo"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/buttonAgendar"
-        android:layout_width="200dp"
+    <!-- Título do resumo (aparece após escolher o horário) -->
+    <TextView
+        android:id="@+id/summaryTitle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Agendar"
-        android:textColor="@android:color/white"
-        android:layout_gravity="center_horizontal"
+        android:text="Resumo do Agendamento"
+        android:textSize="20sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
         android:layout_marginTop="24dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
         android:visibility="gone" />
 
-    <ImageView
-        android:id="@+id/emptyStateImage"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:src="@drawable/sem_agendamentos" />
+    <!-- Detalhes do resumo do agendamento -->
+    <LinearLayout
+        android:id="@+id/appointmentSummaryLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/summaryServiceName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:text="Serviço: "
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/summaryDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Data: "
+            android:textSize="16sp"
+            android:layout_marginLeft="20dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/summaryHour"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Horário: "
+            android:textSize="16sp"
+            android:layout_marginLeft="20dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/summaryPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:text="Preço: "
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Imagem para confirmação do agendamento -->
+        <ImageView
+            android:id="@+id/confirmationImage"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            app:srcCompat="@drawable/ic_agendamento_confirmado"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
+    </LinearLayout>
+
+    <!-- Container para os botões -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="24dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <Button
+            android:id="@+id/buttonAdjustDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Ajustar Data"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/orange"
+            android:layout_marginEnd="8dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/buttonAgendar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Agendar"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/roxo"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>

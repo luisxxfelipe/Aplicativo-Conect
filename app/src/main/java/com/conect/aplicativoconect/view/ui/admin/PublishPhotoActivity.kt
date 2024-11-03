@@ -7,13 +7,17 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 
@@ -26,6 +30,7 @@ class PublishPhotoActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PhotoAdapter
+    private var photosUploaded = 0 // Contador de fotos enviadas
 
     companion object {
         private const val PHOTO_PICKER_REQUEST_CODE = 1001
@@ -48,11 +53,12 @@ class PublishPhotoActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         recyclerView = findViewById(R.id.recyclerViewSelectedPhotos)
 
-        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        // Configuração do RecyclerView para mostrar fotos em duas colunas
+        recyclerView.layoutManager = GridLayoutManager(this, 3)
         adapter = PhotoAdapter(selectedPhotoUris)
         recyclerView.adapter = adapter
 
-        findViewById<Button>(R.id.buttonSelectPhoto).setOnClickListener { checkStoragePermission() }
+        findViewById<FloatingActionButton>(R.id.buttonAddPhoto).setOnClickListener { checkStoragePermission() }
         findViewById<Button>(R.id.buttonSavePhoto).setOnClickListener { uploadPhotosWithCaption() }
     }
 
@@ -93,7 +99,7 @@ class PublishPhotoActivity : AppCompatActivity() {
     }
 
     private fun uploadPhotosWithCaption() {
-        val caption = findViewById<EditText>(R.id.editTextPhotoCaption).text.toString().trim()
+        val caption = findViewById<EditText>(R.id.editTextPhotoTitle).text.toString().trim()
 
         if (selectedPhotoUris.isEmpty()) {
             Toast.makeText(this, "Selecione pelo menos uma foto!", Toast.LENGTH_SHORT).show()
@@ -101,6 +107,8 @@ class PublishPhotoActivity : AppCompatActivity() {
         }
 
         progressBar.visibility = View.VISIBLE
+        photosUploaded = 0 // Reinicia o contador
+
         selectedPhotoUris.forEach { photoUri ->
             val ref = storage.reference.child("service_photos/$companyId/${photoUri.lastPathSegment}")
             ref.putFile(photoUri)
@@ -123,9 +131,14 @@ class PublishPhotoActivity : AppCompatActivity() {
             .collection("servicePhotos")
             .add(photoData)
             .addOnSuccessListener {
-                Toast.makeText(this, "Foto salva com sucesso!", Toast.LENGTH_SHORT).show()
-                if (selectedPhotoUris.last() == Uri.parse(photoUrl)) {
+                photosUploaded++ // Incrementa o contador de fotos enviadas
+                if (photosUploaded == selectedPhotoUris.size) { // Checa se todas as fotos foram enviadas
                     progressBar.visibility = View.GONE
+                    Toast.makeText(
+                        this,
+                        "Todas as fotos foram salvas com sucesso!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     finish()
                 }
             }

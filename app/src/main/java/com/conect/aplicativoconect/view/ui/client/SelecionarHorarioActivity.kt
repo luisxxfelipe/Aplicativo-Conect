@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -21,11 +22,18 @@ import java.util.Locale
 
 class SelecionarHorarioActivity : AppCompatActivity() {
 
+    private lateinit var buttonAdjustDate: Button
     private lateinit var buttonAgendar: Button
     private lateinit var emptyStateImage: ImageView
     private lateinit var emptyStateText: TextView
-    private lateinit var textViewSelectedDate: TextView
     private lateinit var buttonPickDate: Button
+
+    private lateinit var summaryTitle: TextView
+    private lateinit var summaryServiceName: TextView
+    private lateinit var summaryDate: TextView
+    private lateinit var summaryHour: TextView
+    private lateinit var summaryPrice: TextView
+    private lateinit var appointmentSummaryLayout: LinearLayout // Add this line
 
     private lateinit var firestore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
@@ -46,15 +54,24 @@ class SelecionarHorarioActivity : AppCompatActivity() {
 
         emptyStateImage = findViewById(R.id.emptyStateImage)
         emptyStateText = findViewById(R.id.emptyStateText)
-        textViewSelectedDate = findViewById(R.id.textViewSelectedDate)
         buttonPickDate = findViewById(R.id.buttonPickDate)
+        buttonAdjustDate = findViewById(R.id.buttonAdjustDate)
         buttonAgendar = findViewById(R.id.buttonAgendar)
 
-        // Configurações iniciais
-        textViewSelectedDate.visibility = View.GONE
+        summaryTitle = findViewById(R.id.summaryTitle)
+        summaryServiceName = findViewById(R.id.summaryServiceName)
+        summaryDate = findViewById(R.id.summaryDate)
+        summaryHour = findViewById(R.id.summaryHour)
+        summaryPrice = findViewById(R.id.summaryPrice)
+        appointmentSummaryLayout = findViewById(R.id.appointmentSummaryLayout) // Initialize here
+
+        buttonAdjustDate.visibility = View.GONE
         buttonAgendar.visibility = View.GONE
+        summaryTitle.visibility = View.GONE
+        appointmentSummaryLayout.visibility = View.GONE // Ensure it's initially hidden
 
         buttonPickDate.setOnClickListener { openDatePicker() }
+        buttonAdjustDate.setOnClickListener { openDatePicker() }
         buttonAgendar.setOnClickListener { scheduleAppointment() }
 
         fetchOperatingHours()
@@ -70,22 +87,16 @@ class SelecionarHorarioActivity : AppCompatActivity() {
 
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 selectedDate = dateFormat.format(selectedCalendar.time)
-                textViewSelectedDate.text = selectedDate
-                textViewSelectedDate.visibility = View.VISIBLE
-                emptyStateImage.visibility = View.GONE
-                emptyStateText.visibility = View.GONE
-
+                buttonPickDate.text = "Ajustar Data"
                 fetchExistingBookings(selectedDate!!)
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
-        // Define a data mínima para o dia atual
         datePickerDialog.datePicker.minDate = calendar.timeInMillis
         datePickerDialog.show()
     }
-
 
     private fun fetchOperatingHours() {
         firestore.collection("business").document(companyId).get()
@@ -150,9 +161,28 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         builder.setTitle("Selecione um horário")
         builder.setItems(availableHours.toTypedArray()) { _, which ->
             selectedHour = availableHours[which]
+            buttonAdjustDate.visibility = View.VISIBLE
             buttonAgendar.visibility = View.VISIBLE
+            displayAppointmentSummary()
         }
         builder.show()
+    }
+
+    private fun displayAppointmentSummary() {
+        summaryTitle.visibility = View.VISIBLE
+        appointmentSummaryLayout.visibility = View.VISIBLE
+
+        summaryServiceName.text = "Serviço: ${selectedService.name}"
+        summaryDate.text = "Data: $selectedDate"
+        summaryHour.text = "Horário: $selectedHour"
+        summaryPrice.text = "Preço: R$${selectedService.price}0"
+
+        buttonAdjustDate.visibility = View.VISIBLE
+        buttonAgendar.visibility = View.VISIBLE
+
+        emptyStateImage.visibility = View.GONE
+        emptyStateText.visibility = View.GONE
+        buttonPickDate.visibility = View.GONE
     }
 
     private fun scheduleAppointment() {

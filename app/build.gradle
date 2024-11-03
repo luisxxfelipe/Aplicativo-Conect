@@ -81,11 +81,11 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.5.1')
     implementation 'com.google.firebase:firebase-messaging-ktx'
     implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation ('com.google.firebase:firebase-firestore-ktx') {
+    implementation('com.google.firebase:firebase-firestore-ktx') {
         exclude group: 'io.grpc' // Evita duplicação de gRPC
     }
     implementation 'com.google.firebase:firebase-storage-ktx'
-    implementation ('com.google.firebase:firebase-inappmessaging-display') {
+    implementation('com.google.firebase:firebase-inappmessaging-display') {
         exclude group: 'io.grpc' // Evita duplicação de gRPC
     }
 
@@ -96,6 +96,9 @@ dependencies {
     // Navegação
     implementation 'androidx.navigation:navigation-fragment-ktx:2.8.3'
     implementation 'androidx.navigation:navigation-ui-ktx:2.8.3'
+
+    // WorkManager para gerenciamento de tarefas em segundo plano
+    implementation 'androidx.work:work-runtime-ktx:2.7.1'
 
     // Networking e JSON
     implementation 'com.android.volley:volley:1.2.1'
@@ -120,13 +123,10 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 
+    // Coroutines para uso com Firebase e WorkManager
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
     androidTestImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
-
-    // Retrofit
-    implementation 'com.squareup.retrofit2:retrofit:2.11.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
 
     // gRPC BoM para alinhar as versões do gRPC
     implementation platform('io.grpc:grpc-bom:1.50.1')

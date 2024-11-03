@@ -123,6 +123,7 @@
                     android:layout_marginTop="8dp"
                     android:text="Você ainda não possui agendamentos."
                     android:textColor="@color/cinza"
+                    android:gravity="center"
                     android:visibility="gone"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/todayBookingsRecyclerView" />
@@ -131,7 +132,7 @@
                     android:id="@+id/noBookingsImage"
                     android:layout_width="200dp"
                     android:layout_height="200dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="13dp"
                     android:src="@drawable/sem_agendamentos"
                     android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
