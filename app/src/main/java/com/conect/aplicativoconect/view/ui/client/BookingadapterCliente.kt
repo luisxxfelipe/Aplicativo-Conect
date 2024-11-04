@@ -76,7 +76,8 @@ class ClientBookingAdapter(
         holder.cancelButton.visibility = if (isPending) View.VISIBLE else View.GONE
 
         // Mostra o botão de avaliação apenas se o booking está confirmado, o horário já passou e ainda não há avaliação
-        holder.rateButton.visibility = if (isConfirmed && hasPassedTime && !hasRating) View.VISIBLE else View.GONE
+        holder.rateButton.visibility =
+            if (isConfirmed && hasPassedTime && !hasRating) View.VISIBLE else View.GONE
 
         holder.confirmButton.setOnClickListener { onConfirmClick(booking) }
         holder.cancelButton.setOnClickListener {
@@ -92,7 +93,8 @@ class ClientBookingAdapter(
         val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
         val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
-        val commentEditText = dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
+        val commentEditText =
+            dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
         val dialog = AlertDialog.Builder(context)
@@ -104,7 +106,8 @@ class ClientBookingAdapter(
             val qualityRating = ratingQuality.rating.toInt()
             val punctualityRating = ratingPunctuality.rating.toInt()
             val serviceRating = ratingService.rating.toInt()
-            val comment = commentEditText.text.toString().takeIf { it.isNotBlank() } // Pega o comentário se não estiver vazio
+            val comment = commentEditText.text.toString()
+                .takeIf { it.isNotBlank() } // Pega o comentário se não estiver vazio
 
             saveRatings(booking.id, qualityRating, punctualityRating, serviceRating, comment)
             dialog.dismiss()
@@ -112,7 +115,13 @@ class ClientBookingAdapter(
         dialog.show()
     }
 
-    private fun saveRatings(bookingId: String?, quality: Int, punctuality: Int, service: Int, comment: String?) {
+    private fun saveRatings(
+        bookingId: String?,
+        quality: Int,
+        punctuality: Int,
+        service: Int,
+        comment: String?
+    ) {
         if (bookingId == null) return
 
         // Inclui o comentário no mapa de dados, mesmo que esteja vazio
@@ -158,7 +167,8 @@ class ClientBookingAdapter(
 
             // Calcula a nova média
             val updatedRatingCount = ratingCount + 1
-            val updatedAverageRating = (currentRating * ratingCount + newRating) / updatedRatingCount
+            val updatedAverageRating =
+                (currentRating * ratingCount + newRating) / updatedRatingCount
 
             transaction.update(businessRef, "averageRating", updatedAverageRating)
             transaction.update(businessRef, "ratingCount", updatedRatingCount)

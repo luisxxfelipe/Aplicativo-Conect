@@ -9,10 +9,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 
-class PhotoAdapter(private val photos: List<Uri>) : RecyclerView.Adapter<PhotoAdapter.PhotoViewHolder>() {
+class PhotoAdapter(private val photos: List<Uri>) :
+    RecyclerView.Adapter<PhotoAdapter.PhotoViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_selected_photo, parent, false)
+        val view =
+            LayoutInflater.from(parent.context).inflate(R.layout.item_selected_photo, parent, false)
         return PhotoViewHolder(view)
     }
 

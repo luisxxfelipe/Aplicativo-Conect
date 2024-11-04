@@ -110,7 +110,7 @@ class SignupBusinessActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     // Se o usuário foi criado, ele agora está autenticado
-                    checkCpfAndCreateBusiness(email, nameUser, cpf)
+                    createBusinessAndSubscription(email, nameUser, cpf)
                 } else {
                     Log.e("CreateBusinessUser", "Erro ao criar usuário: ${task.exception?.message}")
                     Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT)
@@ -119,27 +119,41 @@ class SignupBusinessActivity : AppCompatActivity() {
             }
     }
 
-    // Verifica se o CPF já existe e, se não, cria o negócio
     private fun checkCpfAndCreateBusiness(email: String, nameUser: String, cpf: String) {
+        val userId = auth.currentUser?.uid ?: return
+
+        // Verifica se já existe uma assinatura para o usuário atual usando seu `userId` como o documento
         db.collection("subscriptions")
-            .whereEqualTo("cpf", cpf)
+            .document(userId)  // Diretamente pelo ID do usuário
             .get()
-            .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    // CPF não encontrado, pode criar o negócio
-                    createBusinessData(email, nameUser, cpf)
-                } else {
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    // O usuário já possui uma assinatura
                     Toast.makeText(
                         this,
                         "Este CPF já foi utilizado para uma assinatura.",
                         Toast.LENGTH_SHORT
                     ).show()
+                } else {
+                    // O CPF/usuário não tem assinatura ativa, pode criar o negócio
+                    createBusinessData(email, nameUser, cpf)
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("SubscriptionCheck", "Erro ao verificar CPF: ${e.message}")
+                Log.e("SubscriptionCheck", "Erro ao verificar assinatura: ${e.message}")
             }
     }
+
+    private fun createBusinessAndSubscription(email: String, nameUser: String, cpf: String) {
+        val userId = auth.currentUser?.uid ?: return
+
+        // Criar assinatura inicial sem verificação prévia
+        createInitialSubscription(userId, cpf)
+
+        // Criar dados do negócio
+        createBusinessData(email, nameUser, cpf)
+    }
+
 
     // Salva o token FCM para o usuário de negócio
     private fun saveFCMToken(businessId: String) {
@@ -176,14 +190,16 @@ class SignupBusinessActivity : AppCompatActivity() {
                 "ratingCount" to 0
             )
 
+            // Log para verificar os dados antes de salvar
+            Log.d("BusinessData", "Dados do negócio: $businessData")
+
             saveFCMToken(businessId)
 
             db.collection("business").document(businessId)
                 .set(businessData)
                 .addOnSuccessListener {
-                    Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT)
-                        .show()
-                    createInitialSubscription(businessId, cpf)
+                    Log.d("CreateBusinessData", "Dados do negócio salvos com sucesso: $businessData")
+                    Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT).show()
 
                     // Redireciona para a tela de registro de mais dados
                     val intent = Intent(this, RegisterBusinessActivity::class.java)
@@ -193,8 +209,7 @@ class SignupBusinessActivity : AppCompatActivity() {
                 }
                 .addOnFailureListener { e ->
                     Log.e("CreateBusinessData", "Erro ao salvar dados do negócio: ${e.message}")
-                    Toast.makeText(this, "Falha ao salvar dados do negócio.", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(this, "Falha ao salvar dados do negócio.", Toast.LENGTH_SHORT).show()
                 }
         } else {
             Toast.makeText(this, "Erro: UID do usuário não encontrado.", Toast.LENGTH_SHORT).show()

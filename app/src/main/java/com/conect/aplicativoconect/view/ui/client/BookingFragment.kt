@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
@@ -105,7 +104,11 @@ class BookingFragment : Fragment() {
             .addSnapshotListener { querySnapshot, error ->
                 if (error != null) {
                     if (isAdded) { // Verifique se o fragmento ainda está anexado antes de usar o contexto
-                        Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Erro ao buscar agendamentos.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     return@addSnapshotListener
                 }
@@ -153,7 +156,7 @@ class BookingFragment : Fragment() {
 
         // Verificar se `date` e `hour` estão presentes e processá-los
         val bookingDateParts = booking.date?.split("/")?.map { it.toIntOrNull() }
-        val bookingHourParts = booking.hour?.split(":")?.map { it.toIntOrNull() }
+        val bookingHourParts = booking.hour.split(":")?.map { it.toIntOrNull() }
 
         // Verificar se todos os elementos de data foram extraídos corretamente e se `hour` é válido
         if (bookingDateParts != null && bookingDateParts.size == 3 && bookingHourParts != null && bookingHourParts.size >= 1) {
@@ -305,7 +308,8 @@ class BookingFragment : Fragment() {
         val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
         val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
-        val commentEditText = dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
+        val commentEditText =
+            dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
         val dialog = AlertDialog.Builder(requireContext())
@@ -327,7 +331,13 @@ class BookingFragment : Fragment() {
     }
 
 
-    private fun saveRatings(bookingId: String?, quality: Int, punctuality: Int, service: Int, comment: String?) {
+    private fun saveRatings(
+        bookingId: String?,
+        quality: Int,
+        punctuality: Int,
+        service: Int,
+        comment: String?
+    ) {
         if (bookingId == null) return
 
         // Inclui o comentário no mapa de dados, mesmo que esteja vazio
@@ -342,7 +352,10 @@ class BookingFragment : Fragment() {
         firestore.collection("bookings").document(bookingId)
             .update("rating", ratingData)
             .addOnSuccessListener {
-                Log.d("saveRatings", "Avaliação e comentário salvos com sucesso para bookingId: $bookingId")
+                Log.d(
+                    "saveRatings",
+                    "Avaliação e comentário salvos com sucesso para bookingId: $bookingId"
+                )
 
                 firestore.collection("bookings").document(bookingId).get()
                     .addOnSuccessListener { bookingSnapshot ->
@@ -353,13 +366,17 @@ class BookingFragment : Fragment() {
                             val averageRating = (quality + punctuality + service) / 3.0
                             updateBusinessRating(companyId, averageRating)
                         } else {
-                            Log.e("saveRatings", "companyId não encontrado para bookingId: $bookingId")
+                            Log.e(
+                                "saveRatings",
+                                "companyId não encontrado para bookingId: $bookingId"
+                            )
                         }
                     }
             }
             .addOnFailureListener { e ->
                 Log.e("saveRatings", "Erro ao salvar avaliação: ${e.message}")
-                Toast.makeText(requireContext(), "Erro ao salvar avaliação", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Erro ao salvar avaliação", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -374,12 +391,16 @@ class BookingFragment : Fragment() {
 
             // Calcule a nova média corretamente
             val updatedRatingCount = ratingCount + 1
-            val updatedAverageRating = ((currentRating * ratingCount) + newRating) / updatedRatingCount
+            val updatedAverageRating =
+                ((currentRating * ratingCount) + newRating) / updatedRatingCount
 
             transaction.update(businessRef, "averageRating", updatedAverageRating)
             transaction.update(businessRef, "ratingCount", updatedRatingCount)
         }.addOnSuccessListener {
-            Log.d("updateBusinessRating", "Média de avaliação atualizada com sucesso para companyId: $companyId")
+            Log.d(
+                "updateBusinessRating",
+                "Média de avaliação atualizada com sucesso para companyId: $companyId"
+            )
         }.addOnFailureListener { e ->
             Log.e("updateBusinessRating", "Erro ao atualizar média de avaliação: ${e.message}")
         }

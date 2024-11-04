@@ -46,7 +46,8 @@ class BusinessAdapter(
             .placeholder(R.drawable.foto_perfil_generica)
             .into(holder.businessImage)
 
-        holder.ratingTextView.text = business.averageRating?.let { String.format("%.1f", it) } ?: "N/A"
+        holder.ratingTextView.text =
+            business.averageRating.let { String.format("%.1f", it) }
 
         holder.bookButton.setOnClickListener {
             onBusinessClick(business)

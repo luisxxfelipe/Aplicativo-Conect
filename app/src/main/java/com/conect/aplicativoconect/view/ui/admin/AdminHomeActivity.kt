@@ -62,20 +62,39 @@ class AdminHomeActivity : AppCompatActivity() {
                         Log.d("SubscriptionCheck", "isActive: $isActive, endDate: $endDate")
 
                         if (endDate == null) {
-                            Log.d("SubscriptionCheck", "End date is missing for subscription ID: $companyId")
-                            Toast.makeText(this, "Data de término da assinatura ausente. Verifique no Firebase.", Toast.LENGTH_SHORT).show()
+                            Log.d(
+                                "SubscriptionCheck",
+                                "End date is missing for subscription ID: $companyId"
+                            )
+                            Toast.makeText(
+                                this,
+                                "Data de término da assinatura ausente. Verifique no Firebase.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             return@addOnSuccessListener
                         }
 
                         if (daysUntil(endDate) <= 2) {
-                            Log.d("SubscriptionCheck", "Conditions met for subscription expiry alert.")
+                            Log.d(
+                                "SubscriptionCheck",
+                                "Conditions met for subscription expiry alert."
+                            )
                             showSubscriptionExpiryAlert(endDate)
                         } else {
-                            Log.d("SubscriptionCheck", "No alert needed: isActive=$isActive, daysUntilEndDate=${daysUntil(endDate)}")
+                            Log.d(
+                                "SubscriptionCheck",
+                                "No alert needed: isActive=$isActive, daysUntilEndDate=${
+                                    daysUntil(endDate)
+                                }"
+                            )
                         }
 
                     } else {
-                        Toast.makeText(this, "Assinatura não encontrada para este usuário.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Assinatura não encontrada para este usuário.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
                 .addOnFailureListener {
@@ -104,11 +123,13 @@ class AdminHomeActivity : AppCompatActivity() {
         val dailyAlertCount = sharedPreferences.getInt("dailyAlertCount", 0)
 
         if (lastAlertDay != today) {
-            sharedPreferences.edit().putInt("dailyAlertCount", 0).putInt("lastAlertDay", today).apply()
+            sharedPreferences.edit().putInt("dailyAlertCount", 0).putInt("lastAlertDay", today)
+                .apply()
         }
 
         if (dailyAlertCount < MAX_DAILY_ALERTS) {
-            val endDateFormatted = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate.toDate())
+            val endDateFormatted =
+                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate.toDate())
             AlertDialog.Builder(this)
                 .setTitle("Sua assinatura está quase vencendo!")
                 .setMessage("Sua assinatura vencerá em breve em $endDateFormatted. Garanta sua renovação para continuar aproveitando os serviços.")
@@ -131,22 +152,27 @@ class AdminHomeActivity : AppCompatActivity() {
                     loadFragment(AdminHomeFragment())
                     true
                 }
+
                 R.id.navigation_appointments -> {
                     loadFragment(AdminBookingsFragment())
                     true
                 }
+
                 R.id.navigation_profile -> {
                     loadFragment(AdminProfileFragment())
                     true
                 }
+
                 R.id.navigation_add_service -> {
                     showAddServiceDialog()
                     true
                 }
+
                 R.id.navigation_logout -> {
                     showLogoutConfirmationDialog()
                     true
                 }
+
                 else -> false
             }
         }
@@ -160,7 +186,8 @@ class AdminHomeActivity : AppCompatActivity() {
     }
 
     private fun loadFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment).commit()
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment)
+            .commit()
     }
 
     private fun showLogoutConfirmationDialog() {

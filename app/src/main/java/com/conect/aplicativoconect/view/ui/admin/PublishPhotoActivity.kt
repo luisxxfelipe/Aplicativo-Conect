@@ -63,8 +63,16 @@ class PublishPhotoActivity : AppCompatActivity() {
     }
 
     private fun checkStoragePermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), STORAGE_PERMISSION_CODE)
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                STORAGE_PERMISSION_CODE
+            )
         } else {
             selectPhoto()
         }
@@ -89,12 +97,20 @@ class PublishPhotoActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == STORAGE_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             selectPhoto()
         } else {
-            Toast.makeText(this, "Permissão de armazenamento é necessária para selecionar uma foto.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Permissão de armazenamento é necessária para selecionar uma foto.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -110,7 +126,8 @@ class PublishPhotoActivity : AppCompatActivity() {
         photosUploaded = 0 // Reinicia o contador
 
         selectedPhotoUris.forEach { photoUri ->
-            val ref = storage.reference.child("service_photos/$companyId/${photoUri.lastPathSegment}")
+            val ref =
+                storage.reference.child("service_photos/$companyId/${photoUri.lastPathSegment}")
             ref.putFile(photoUri)
                 .addOnSuccessListener {
                     ref.downloadUrl.addOnSuccessListener { downloadUrl ->
@@ -144,7 +161,8 @@ class PublishPhotoActivity : AppCompatActivity() {
             }
             .addOnFailureListener {
                 progressBar.visibility = View.GONE
-                Toast.makeText(this, "Erro ao salvar a foto no Firestore.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Erro ao salvar a foto no Firestore.", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 }

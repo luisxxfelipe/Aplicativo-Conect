@@ -78,7 +78,12 @@ class RoleSelectionActivity : AppCompatActivity() {
 
     private fun resetCardAppearance(card: LinearLayout, icon: ImageView, text: TextView) {
         card.setBackgroundResource(R.drawable.card_background_role)  // Volta para o fundo original
-        icon.setColorFilter(ContextCompat.getColor(this, R.color.colorPrimary)) // Cor original do ícone
+        icon.setColorFilter(
+            ContextCompat.getColor(
+                this,
+                R.color.colorPrimary
+            )
+        ) // Cor original do ícone
         text.setTextColor(ContextCompat.getColor(this, R.color.black)) // Cor original do texto
     }
 

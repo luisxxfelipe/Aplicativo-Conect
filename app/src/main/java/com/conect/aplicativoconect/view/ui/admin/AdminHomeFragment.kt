@@ -47,6 +47,7 @@ class AdminHomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         firestore = FirebaseFirestore.getInstance()
+        displayRandomTip()
         setupWeeklyDateRange()
         setupRecyclerView()
         loadBookingsInRealTime()
@@ -103,7 +104,8 @@ class AdminHomeFragment : Fragment() {
             .whereEqualTo("ownerId", currentUserUid)
             .get()
             .addOnSuccessListener { businessSnapshot ->
-                val businessId = businessSnapshot.documents.firstOrNull()?.id ?: return@addOnSuccessListener
+                val businessId =
+                    businessSnapshot.documents.firstOrNull()?.id ?: return@addOnSuccessListener
 
                 // Atribui o listener à variável `bookingListener` para podermos removê-lo depois
                 bookingListener = firestore.collection("bookings")
@@ -245,6 +247,19 @@ class AdminHomeFragment : Fragment() {
             Log.e("AdminHomeFragment", "Erro ao analisar a data/hora: ${e.message}")
             null
         }
+    }
+
+    private fun displayRandomTip() {
+        val tips = listOf(
+            "Mantenha os clientes por perto! Use nosso sistema de agendamento para garantir que eles sempre voltem.",
+            "Aproveite os dados ao seu alcance: veja quais serviços estão em alta e ofereça promoções que seus clientes vão amar!",
+            "Comunicação é chave! Use as notificações para lembrar clientes de horários e promoções exclusivas.",
+            "Crescimento começa com planejamento! Use o app para acompanhar lucros e identifique as melhores semanas para expandir seus serviços.",
+            "Ofereça avaliações e veja seu negócio crescer! Peça feedback e entenda o que seus clientes mais valorizam.",
+            "Gerencie seu negócio de qualquer lugar! Com nosso app, seus agendamentos e lucros estão sempre à sua mão."
+        )
+        val randomTip = tips.random()
+        binding.tipContent.text = randomTip
     }
 
     private fun showNoBookingsMessage(show: Boolean) {

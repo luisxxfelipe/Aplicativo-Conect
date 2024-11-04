@@ -10,7 +10,8 @@ import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.ServicePhoto
 
-class PhotosAdapter(private val photos: List<ServicePhoto>) : RecyclerView.Adapter<PhotosAdapter.PhotoViewHolder>() {
+class PhotosAdapter(private val photos: List<ServicePhoto>) :
+    RecyclerView.Adapter<PhotosAdapter.PhotoViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_photo, parent, false)

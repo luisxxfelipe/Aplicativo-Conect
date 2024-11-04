@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.google.firebase.FirebaseApp
 import com.conect.aplicativoconect.view.ui.UpcomingBookingWorker
+import com.google.firebase.FirebaseApp
 import java.util.concurrent.TimeUnit
 
 class ConectApplication : Application() {

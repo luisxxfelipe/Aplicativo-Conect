@@ -16,7 +16,6 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.TokenUtils
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.internal.Util.parseDateTime
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -86,8 +85,12 @@ class BookingAdapter(
         val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
         val statusColor = when (booking.status_adm) {
             "confirmed" -> getRandomColor(statusIndicator) // Cor de confirmados
-            "completed" -> ContextCompat.getColor(holder.itemView.context, R.color.green)
-            "cancelled", "not_completed" -> ContextCompat.getColor(holder.itemView.context, R.color.red)
+            "confirmed" -> ContextCompat.getColor(holder.itemView.context, R.color.green)
+            "cancelled", "not_completed" -> ContextCompat.getColor(
+                holder.itemView.context,
+                R.color.red
+            )
+
             else -> ContextCompat.getColor(holder.itemView.context, R.color.yellow)
         }
         statusIndicator.setBackgroundColor(statusColor)
@@ -97,16 +100,21 @@ class BookingAdapter(
 
         // Define a lógica de exibição dos botões
         val showConfirmationButtons = booking.status_adm == "pending" && !hasPassedTime
-        val showCompletionButtons = hasPassedTime && booking.status_cliente == "confirmed" && booking.status_adm == "confirmed"
+        val showCompletionButtons =
+            hasPassedTime && booking.status_cliente == "confirmed" && booking.status_adm == "confirmed"
 
         holder.confirmButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
         holder.completeButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
-        holder.notCompletedButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
+        holder.notCompletedButton.visibility =
+            if (showCompletionButtons) View.VISIBLE else View.GONE
 
         // Ação de confirmar agendamento
         holder.confirmButton.setOnClickListener {
-            showConfirmationDialog("Confirmar Agendamento", "Tem certeza que deseja confirmar este agendamento?") {
+            showConfirmationDialog(
+                "Confirmar Agendamento",
+                "Tem certeza que deseja confirmar este agendamento?"
+            ) {
                 onConfirmBooking(bookingId)
                 firestore.collection("bookings").document(bookingId)
                     .update("status_adm", "confirmed")
@@ -124,7 +132,10 @@ class BookingAdapter(
 
         // Ação de cancelar agendamento
         holder.cancelButton.setOnClickListener {
-            showConfirmationDialog("Cancelar Agendamento", "Tem certeza que deseja cancelar este agendamento?") {
+            showConfirmationDialog(
+                "Cancelar Agendamento",
+                "Tem certeza que deseja cancelar este agendamento?"
+            ) {
                 firestore.collection("bookings").document(bookingId)
                     .update("status_adm", "cancelled")
                     .addOnSuccessListener {
@@ -151,11 +162,14 @@ class BookingAdapter(
 
         // Ação de completar o serviço
         holder.completeButton.setOnClickListener {
-            showConfirmationDialog("Marcar como Completo", "Deseja marcar este agendamento como completo?") {
+            showConfirmationDialog(
+                "Marcar como Completo",
+                "Deseja marcar este agendamento como completo?"
+            ) {
                 firestore.collection("bookings").document(bookingId)
-                    .update("status_adm", "completed")
+                    .update("status_adm", "confirmed")
                     .addOnSuccessListener {
-                        booking.status_adm = "completed"
+                        booking.status_adm = "confirmed"
                         notifyItemChanged(position)
                         sendNotificationToUser(
                             bookingId,
@@ -168,7 +182,10 @@ class BookingAdapter(
 
         // Ação de marcar como não concluído
         holder.notCompletedButton.setOnClickListener {
-            showConfirmationDialog("Não Completo", "Deseja marcar este agendamento como não completo?") {
+            showConfirmationDialog(
+                "Não Completo",
+                "Deseja marcar este agendamento como não completo?"
+            ) {
                 firestore.collection("bookings").document(bookingId)
                     .update("status_adm", "not_completed")
                     .addOnSuccessListener {

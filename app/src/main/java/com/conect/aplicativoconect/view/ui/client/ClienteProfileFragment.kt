@@ -83,14 +83,16 @@ class ClienteProfileFragment : Fragment() {
                 FirebaseMessaging.getInstance().subscribeToTopic("all_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             } else {
                 FirebaseMessaging.getInstance().unsubscribeFromTopic("all_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             }
@@ -118,7 +120,8 @@ class ClienteProfileFragment : Fragment() {
                     deleteUserDocument(uid)
                 }
                 .addOnFailureListener {
-                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT)
+                        .show()
                 }
         }
     }
@@ -130,7 +133,8 @@ class ClienteProfileFragment : Fragment() {
                 deleteUserAccount()
             }
             .addOnFailureListener {
-                Toast.makeText(context, "Erro ao deletar dados do usuário", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Erro ao deletar dados do usuário", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -138,7 +142,11 @@ class ClienteProfileFragment : Fragment() {
         FirebaseAuth.getInstance().currentUser?.delete()
             ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(context, "Conta e dados excluídos com sucesso", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Conta e dados excluídos com sucesso",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     startActivity(Intent(requireContext(), LoginActivity::class.java))
                     activity?.finish()
                 } else {

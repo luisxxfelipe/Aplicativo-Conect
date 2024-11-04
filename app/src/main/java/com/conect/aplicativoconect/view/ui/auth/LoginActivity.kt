@@ -69,7 +69,11 @@ class LoginActivity : AppCompatActivity() {
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
                     verifyUserType(userId)
                 } else {
-                    Toast.makeText(this, "Falha na autenticação. Verifique suas credenciais.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Falha na autenticação. Verifique suas credenciais.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
     }
@@ -107,18 +111,24 @@ class LoginActivity : AppCompatActivity() {
                                     }
                                 }
                             } else {
-                                Toast.makeText(this, "Usuário não encontrado.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Usuário não encontrado.", Toast.LENGTH_SHORT)
+                                    .show()
                             }
                         }
                         .addOnFailureListener { e ->
                             Log.e("LoginActivity", "Erro ao buscar empresa: ", e)
-                            Toast.makeText(this, "Erro ao recuperar dados do negócio.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Erro ao recuperar dados do negócio.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                 }
             }
             .addOnFailureListener { e ->
                 Log.e("LoginActivity", "Erro ao buscar usuário: ", e)
-                Toast.makeText(this, "Erro ao recuperar dados do usuário.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Erro ao recuperar dados do usuário.", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -151,21 +161,38 @@ class LoginActivity : AppCompatActivity() {
                 payerEmail = auth.currentUser?.email ?: "",
                 onSuccess = {
                     renewSubscription(userId)
-                    Toast.makeText(this@LoginActivity, "Pagamento bem-sucedido", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@LoginActivity, "Pagamento bem-sucedido", Toast.LENGTH_SHORT)
+                        .show()
 
                     // Re-autenticar o usuário após o pagamento bem-sucedido
-                    auth.signInWithEmailAndPassword(emailEditText.text.toString().trim(), passwordEditText.text.toString().trim())
+                    auth.signInWithEmailAndPassword(
+                        emailEditText.text.toString().trim(),
+                        passwordEditText.text.toString().trim()
+                    )
                         .addOnCompleteListener { signInTask ->
                             if (signInTask.isSuccessful) {
-                                startActivity(Intent(this@LoginActivity, AdminHomeActivity::class.java))
+                                startActivity(
+                                    Intent(
+                                        this@LoginActivity,
+                                        AdminHomeActivity::class.java
+                                    )
+                                )
                                 finish()
                             } else {
-                                Toast.makeText(this@LoginActivity, "Erro ao re-autenticar após pagamento.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this@LoginActivity,
+                                    "Erro ao re-autenticar após pagamento.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                 },
                 onError = { errorMessage ->
-                    Toast.makeText(this@LoginActivity, "Erro no pagamento: $errorMessage", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@LoginActivity,
+                        "Erro no pagamento: $errorMessage",
+                        Toast.LENGTH_LONG
+                    ).show()
                     startActivity(Intent(this@LoginActivity, LoginActivity::class.java))
                 }
             )
@@ -209,7 +236,8 @@ class LoginActivity : AppCompatActivity() {
                     val isTrialActive = document.getBoolean("isTrialActive") ?: true
                     val isActive = document.getBoolean("isActive") ?: false
 
-                    val isSubscriptionValid = (isTrialActive && endDate?.after(Date()) == true) || isActive
+                    val isSubscriptionValid =
+                        (isTrialActive && endDate?.after(Date()) == true) || isActive
 
                     if (isTrialActive && endDate?.before(Date()) == true) {
                         db.collection("subscriptions").document(userId)

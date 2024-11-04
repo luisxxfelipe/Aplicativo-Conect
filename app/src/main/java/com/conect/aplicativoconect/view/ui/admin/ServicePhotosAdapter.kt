@@ -17,7 +17,8 @@ class ServicePhotosAdapter(
 ) : PagerAdapter() {
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        val view = LayoutInflater.from(context).inflate(R.layout.item_service_photo, container, false)
+        val view =
+            LayoutInflater.from(context).inflate(R.layout.item_service_photo, container, false)
         val imageView = view.findViewById<ImageView>(R.id.imageViewPhoto)
         val captionView = view.findViewById<TextView>(R.id.textViewCaption)
 

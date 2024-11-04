@@ -242,8 +242,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
                 val fcmToken = task.result
 
                 // Definir o caminho para salvar a imagem no Firebase Storage
-                val storageRef =
-                    storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
+                val storageRef = storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
 
                 // Fazer o upload da imagem para o Firebase Storage
                 val uploadTask = storageRef.putFile(imageUri)
@@ -257,8 +256,8 @@ class RegisterBusinessActivity : AppCompatActivity(),
                     if (uploadTask.isSuccessful) {
                         val downloadUri = uploadTask.result
 
-                        // Cria ou atualiza o documento da empresa com o token FCM
-                        val business = mapOf(
+                        // Dados para atualizar
+                        val businessUpdates = mapOf(
                             "name" to businessName,
                             "description" to businessDescription,
                             "serviceType" to serviceType,
@@ -267,14 +266,12 @@ class RegisterBusinessActivity : AppCompatActivity(),
                             "operatingHours" to operatingHours,
                             "imageUrl" to downloadUri.toString(),
                             "email" to email,
-                            "isActive" to true,
-                            "ownerId" to userId,
                             "fcmToken" to fcmToken
                         )
 
-                        // Usa `set` para garantir que o documento seja atualizado ou criado
+                        // Usa `update` para preservar campos existentes
                         firestore.collection("business").document(userId)
-                            .set(business)
+                            .update(businessUpdates)
                             .addOnSuccessListener {
                                 Toast.makeText(
                                     this,
@@ -302,6 +299,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
             }
         }
     }
+
 
     private fun openGallery() {
         val intent = Intent(Intent.ACTION_PICK)

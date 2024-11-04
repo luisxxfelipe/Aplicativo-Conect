@@ -12,8 +12,9 @@ import java.util.concurrent.TimeUnit
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            val workRequest = PeriodicWorkRequestBuilder<UpcomingBookingWorker>(30, TimeUnit.MINUTES)
-                .build()
+            val workRequest =
+                PeriodicWorkRequestBuilder<UpcomingBookingWorker>(30, TimeUnit.MINUTES)
+                    .build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 "UpcomingBookingWork",
                 ExistingPeriodicWorkPolicy.KEEP,

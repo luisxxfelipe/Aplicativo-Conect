@@ -99,7 +99,8 @@ class SignupClientActivity : AppCompatActivity() {
 
                 // Valida o CPF antes de continuar
                 if (!isValidCPF(cpf)) {
-                    Toast.makeText(this, "CPF inválido. Digite um CPF correto.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "CPF inválido. Digite um CPF correto.", Toast.LENGTH_SHORT)
+                        .show()
                     return@setOnClickListener
                 }
 
@@ -110,7 +111,8 @@ class SignupClientActivity : AppCompatActivity() {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 

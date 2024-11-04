@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Service
-import com.conect.aplicativoconect.view.ui.client.SelecionarHorarioActivity
 import java.io.Serializable
 
 class ServicesAdapter(
@@ -20,7 +19,8 @@ class ServicesAdapter(
 ) : RecyclerView.Adapter<ServicesAdapter.ServiceViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ServiceViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_service_about_company, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_service_about_company, parent, false)
         return ServiceViewHolder(view)
     }
 
@@ -43,7 +43,10 @@ class ServicesAdapter(
             // Configura o clique do botão Agendar
             bookButton.setOnClickListener {
                 val intent = Intent(context, SelecionarHorarioActivity::class.java).apply {
-                    putExtra("selectedService", service as Serializable) // Passa o serviço selecionado
+                    putExtra(
+                        "selectedService",
+                        service as Serializable
+                    ) // Passa o serviço selecionado
                     putExtra("companyId", companyId) // Passa o ID da empresa
                 }
                 context.startActivity(intent)

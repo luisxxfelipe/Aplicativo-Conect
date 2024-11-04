@@ -16,7 +16,11 @@ class PhotosFragment : Fragment() {
     private lateinit var companyId: String
     private lateinit var firestore: FirebaseFirestore
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val view = inflater.inflate(R.layout.fragment_photos, container, false)
         companyId = arguments?.getString("companyId") ?: ""
         firestore = FirebaseFirestore.getInstance()

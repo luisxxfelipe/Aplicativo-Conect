@@ -63,7 +63,11 @@ class AddServiceDialogFragment : DialogFragment() {
                 }
                 startActivity(intent)
             } else {
-                Toast.makeText(requireContext(), "ID da empresa não encontrado.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "ID da empresa não encontrado.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             dismiss()
         }

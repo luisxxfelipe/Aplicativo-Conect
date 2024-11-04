@@ -22,13 +22,20 @@ class ReviewsFragment : Fragment() {
         super.onCreate(savedInstanceState)
         arguments?.let {
             companyId = it.getString("companyId") ?: ""
-            Log.d("ReviewsFragment", "companyId recebido: $companyId")  // Log para verificar o companyId
+            Log.d(
+                "ReviewsFragment",
+                "companyId recebido: $companyId"
+            )  // Log para verificar o companyId
         }
         firestore = FirebaseFirestore.getInstance()
     }
 
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_reviews, container, false)
     }
 

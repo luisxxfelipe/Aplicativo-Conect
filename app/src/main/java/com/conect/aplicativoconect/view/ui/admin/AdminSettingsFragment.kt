@@ -45,14 +45,16 @@ class AdminSettingsFragment : Fragment() {
                 FirebaseMessaging.getInstance().subscribeToTopic("admin_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             } else {
                 FirebaseMessaging.getInstance().unsubscribeFromTopic("admin_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             }
@@ -68,13 +70,18 @@ class AdminSettingsFragment : Fragment() {
                         val endDate = document.getTimestamp("endDate")?.toDate()
                         val amount = document.getDouble("amount") ?: 25.0
 
-                        binding.subscriptionStatus.text = "Assinatura: ${if (isActive) "Ativa" else "Inativa"}"
+                        binding.subscriptionStatus.text =
+                            "Assinatura: ${if (isActive) "Ativa" else "Inativa"}"
                         binding.subscriptionEndDate.text = "Válida até: $endDate"
                         binding.subscriptionAmount.text = "Valor: R$ %.2f".format(amount)
                     }
                 }
                 .addOnFailureListener {
-                    Toast.makeText(requireContext(), "Erro ao carregar assinatura", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Erro ao carregar assinatura",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         }
     }
@@ -100,7 +107,8 @@ class AdminSettingsFragment : Fragment() {
                     deleteBusinessData(uid)
                 }
                 .addOnFailureListener {
-                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT)
+                        .show()
                 }
         }
     }
@@ -109,10 +117,15 @@ class AdminSettingsFragment : Fragment() {
         firestore.collection("business").document(uid)
             .delete()
             .addOnSuccessListener {
-                Toast.makeText(context, "Dados excluídos com sucesso. Assinatura mantida.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "Dados excluídos com sucesso. Assinatura mantida.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             .addOnFailureListener {
-                Toast.makeText(context, "Erro ao deletar dados do negócio", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Erro ao deletar dados do negócio", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 

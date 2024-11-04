@@ -51,19 +51,31 @@ class UpcomingBookingWorker(
                     val bookingDateMillis = parseDateTimeToMillis(bookingDateStr, bookingHourStr)
 
                     if (bookingDateMillis != null && bookingDateMillis in currentTimeMillis until timeWindow) {
-                        Log.d("UpcomingBookingWorker", "Preparando para enviar notificação para o agendamento $bookingId.")
-                        val notificationMessage = "Seu agendamento para $serviceName é em breve, às ${bookingHourStr}h!"
+                        Log.d(
+                            "UpcomingBookingWorker",
+                            "Preparando para enviar notificação para o agendamento $bookingId."
+                        )
+                        val notificationMessage =
+                            "Seu agendamento para $serviceName é em breve, às ${bookingHourStr}h!"
 
                         // Notificação para o usuário
-                        sendNotificationToUser(userId, "Lembrete de Agendamento", notificationMessage)
+                        sendNotificationToUser(
+                            userId,
+                            "Lembrete de Agendamento",
+                            notificationMessage
+                        )
 
                         // Notificação para o administrador
-                        val adminMessage = "Agendamento para $serviceName está próximo, às ${bookingHourStr}h!"
+                        val adminMessage =
+                            "Agendamento para $serviceName está próximo, às ${bookingHourStr}h!"
                         sendNotificationToAdmin(bookingId, "Lembrete de Agendamento", adminMessage)
 
                         markBookingAsNotified(bookingId) // Marca o agendamento como notificado
                     } else {
-                        Log.d("UpcomingBookingWorker", "Agendamento $bookingId fora do intervalo para notificação.")
+                        Log.d(
+                            "UpcomingBookingWorker",
+                            "Agendamento $bookingId fora do intervalo para notificação."
+                        )
                     }
                 }
             }
@@ -88,7 +100,10 @@ class UpcomingBookingWorker(
     private fun sendNotificationToUser(userId: String, title: String, message: String) {
         fetchUserToken(userId) { token ->
             if (token != null) {
-                Log.d("UpcomingBookingWorker", "Enviando notificação para o usuário com token: $token")
+                Log.d(
+                    "UpcomingBookingWorker",
+                    "Enviando notificação para o usuário com token: $token"
+                )
                 sendFCMNotification(token, title, message)
             } else {
                 Log.e("UpcomingBookingWorker", "Token de usuário para $userId não encontrado.")
@@ -103,10 +118,16 @@ class UpcomingBookingWorker(
                 val ownerId = document.getString("ownerId") ?: return@addOnSuccessListener
                 fetchUserToken(ownerId) { token ->
                     if (token != null) {
-                        Log.d("UpcomingBookingWorker", "Enviando notificação para o administrador com token: $token")
+                        Log.d(
+                            "UpcomingBookingWorker",
+                            "Enviando notificação para o administrador com token: $token"
+                        )
                         sendFCMNotification(token, title, message)
                     } else {
-                        Log.e("UpcomingBookingWorker", "Token do administrador para $ownerId não encontrado.")
+                        Log.e(
+                            "UpcomingBookingWorker",
+                            "Token do administrador para $ownerId não encontrado."
+                        )
                     }
                 }
             }
@@ -184,7 +205,10 @@ class UpcomingBookingWorker(
                 Log.d("UpcomingBookingWorker", "Agendamento $bookingId marcado como notificado.")
             }
             .addOnFailureListener { e ->
-                Log.e("UpcomingBookingWorker", "Erro ao marcar o agendamento como notificado: ${e.message}")
+                Log.e(
+                    "UpcomingBookingWorker",
+                    "Erro ao marcar o agendamento como notificado: ${e.message}"
+                )
             }
     }
 }

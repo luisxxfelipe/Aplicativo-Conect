@@ -105,7 +105,7 @@ class ClienteHomeFragment : Fragment() {
         if (dateParts.size != 3) return false
 
         // Converte `hour` para partes de hora e minuto
-        val timeParts = booking.hour?.split(":")?.mapNotNull { it.toIntOrNull() } ?: listOf(0, 0)
+        val timeParts = booking.hour.split(":")?.mapNotNull { it.toIntOrNull() } ?: listOf(0, 0)
         if (timeParts.size < 1) return false
 
         // Configura a data e hora do agendamento usando ano, mês, dia, hora e minuto
@@ -114,7 +114,9 @@ class ClienteHomeFragment : Fragment() {
             set(Calendar.MONTH, dateParts[1] - 1) // Meses são indexados a partir de 0 no Calendar
             set(Calendar.DAY_OF_MONTH, dateParts[0])
             set(Calendar.HOUR_OF_DAY, timeParts[0])  // Usa a primeira parte do horário como horas
-            set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })  // Usa a segunda parte como minutos, ou 0
+            set(
+                Calendar.MINUTE,
+                timeParts.getOrElse(1) { 0 })  // Usa a segunda parte como minutos, ou 0
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }.time
@@ -124,12 +126,13 @@ class ClienteHomeFragment : Fragment() {
     }
 
     private fun fetchUserBookings(userId: String) {
-        if (_binding == null) return  // Verifica se o binding ainda está disponível
+        if (_binding == null || !isAdded) return
 
-        firestore.collection("bookings")
+        bookingsListener = firestore.collection("bookings")
             .whereEqualTo("userId", userId)
             .addSnapshotListener { querySnapshot, error ->
-                // Garantir que a UI seja atualizada apenas após a conclusão da busca
+                if (_binding == null || !isAdded) return@addSnapshotListener  // Verifica novamente
+
                 if (error != null) {
                     Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
                     binding.progressBar.visibility = View.GONE
@@ -137,17 +140,15 @@ class ClienteHomeFragment : Fragment() {
                     return@addSnapshotListener
                 }
 
-                // Obter e filtrar os agendamentos futuros e garantir que os dados estejam prontos para exibição
                 val bookings = querySnapshot?.documents?.mapNotNull { document ->
                     document.toObject(Booking::class.java)?.apply { id = document.id }
                 }.orEmpty()
-                    .filter { isFutureBooking(it) }  // Filtra apenas agendamentos futuros
-                    .sortedBy { parseDateTime(it.date ?: "", it.hour ?: "") }
+                    .filter { isFutureBooking(it) }
+                    .sortedBy { parseDateTime(it.date ?: "", it.hour) }
                     .take(2)
 
-                // Atualiza a UI com os dados obtidos
                 if (_binding != null && isAdded) {
-                    binding.progressBar.visibility = View.GONE  // Esconde o ProgressBar
+                    binding.progressBar.visibility = View.GONE
 
                     if (bookings.isEmpty()) {
                         showNoBookingsMessage(true)
@@ -174,7 +175,6 @@ class ClienteHomeFragment : Fragment() {
                 set(Calendar.MILLISECOND, 0)
             }.time
         } catch (e: Exception) {
-            Log.e("ClienteHomeFragment", "Erro ao analisar a data/hora: ${e.message}")
             null
         }
     }
@@ -240,8 +240,8 @@ class ClienteHomeFragment : Fragment() {
                     }
             }
             .addOnFailureListener { e ->
-                Log.e("ClienteHomeFragment", "Erro ao salvar avaliação: ${e.message}")
-                Toast.makeText(requireContext(), "Erro ao salvar avaliação", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Erro ao salvar avaliação", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -254,14 +254,13 @@ class ClienteHomeFragment : Fragment() {
 
             // Cálculo da nova média
             val updatedRatingCount = ratingCount + 1
-            val updatedAverageRating = (currentRating * ratingCount + newRating) / updatedRatingCount
+            val updatedAverageRating =
+                (currentRating * ratingCount + newRating) / updatedRatingCount
 
             transaction.update(businessRef, "averageRating", updatedAverageRating)
             transaction.update(businessRef, "ratingCount", updatedRatingCount)
         }.addOnSuccessListener {
-            Log.d("ClienteHomeFragment", "Média de avaliação atualizada com sucesso.")
         }.addOnFailureListener { e ->
-            Log.e("ClienteHomeFragment", "Erro ao atualizar média de avaliação: ${e.message}")
         }
     }
 
@@ -275,11 +274,6 @@ class ClienteHomeFragment : Fragment() {
                         businessList.addAll(querySnapshot.toObjects(Business::class.java))
                         updateBusinessAdapter(businessList)
                     } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Nenhum estabelecimento encontrado.",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         fetchUserBookings(
                             FirebaseAuth.getInstance().currentUser?.uid ?: ""
                         )  // Atualiza a lista
@@ -287,13 +281,6 @@ class ClienteHomeFragment : Fragment() {
                 }
             }
             .addOnFailureListener { e ->
-                if (isAdded) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Erro ao buscar estabelecimentos.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
             }
     }
 
@@ -394,7 +381,10 @@ class ClienteHomeFragment : Fragment() {
 
         // Verifica se o fragmento ainda está anexado ao contexto antes de acessar o `requireContext()`
         if (!isAdded) {
-            Log.w("BookingFragment", "Fragment não está mais anexado ao contexto. Notificação não enviada.")
+            Log.w(
+                "BookingFragment",
+                "Fragment não está mais anexado ao contexto. Notificação não enviada."
+            )
             return
         }
 
@@ -425,8 +415,6 @@ class ClienteHomeFragment : Fragment() {
         withContext(Dispatchers.Main) {
             if (isAdded) {  // Verifica novamente antes de adicionar a requisição à fila
                 Volley.newRequestQueue(requireContext()).add(request)
-            } else {
-                Log.w("BookingFragment", "Fragment não está mais anexado ao contexto. Requisição FCM não adicionada.")
             }
         }
     }
@@ -464,13 +452,6 @@ class ClienteHomeFragment : Fragment() {
 
     private fun filterBusinessesByCategory(category: String) {
         val filteredBusinesses = businessList.filter { it.serviceType == category }
-        if (filteredBusinesses.isEmpty()) {
-            Toast.makeText(
-                requireContext(),
-                "Nenhum estabelecimento encontrado.",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
         updateBusinessAdapter(filteredBusinesses)
     }
 
@@ -561,17 +542,16 @@ class ClienteHomeFragment : Fragment() {
 
     // Ajuste na função showNoBookingsMessage para exibir o ProgressBar e manter um controle claro de visibilidade
     private fun showNoBookingsMessage(show: Boolean) {
-        _binding?.apply {
-            noBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
-            noBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
-            todayBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
-        }
+        if (_binding == null || !isAdded) return
+
+        binding.noBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
+        binding.noBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
+        binding.todayBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Avoid memory leaks
-        bookingsListener?.remove() // Remove listener when fragment view is destroyed
-        bookingsListener = null
+        _binding = null  // Evita memory leaks
+        bookingsListener?.remove()  // Remove o listener do Firebase
     }
 }
