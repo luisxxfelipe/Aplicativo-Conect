@@ -131,13 +131,16 @@ class AdminHomeFragment : Fragment() {
     }
 
     private fun setupWeeklyDateRange() {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        val calendar = Calendar.getInstance().apply {
+            firstDayOfWeek = Calendar.SUNDAY  // Define domingo como primeiro dia da semana
+            set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY) // Define o início da semana
+        }
         startOfWeek = calendar.time
 
-        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        calendar.add(Calendar.DAY_OF_WEEK, 6) // Move para o último dia da semana (sábado)
         endOfWeek = calendar.time
     }
+
 
     private fun processBookings(bookings: List<Booking>) {
         val confirmedBookings = bookings.filter {
@@ -174,6 +177,8 @@ class AdminHomeFragment : Fragment() {
 
     private fun filterBookingsByDate(bookings: List<Booking>): Pair<List<Booking>, List<Booking>> {
         val calendar = Calendar.getInstance()
+
+        // Configura o primeiro e último dia do mês
         calendar.set(Calendar.DAY_OF_MONTH, 1)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
@@ -186,12 +191,13 @@ class AdminHomeFragment : Fragment() {
         calendar.add(Calendar.MILLISECOND, -1)
         val endOfMonth = calendar.time
 
+        // Filtra agendamentos para a semana atual, independente do status_adm
         val weeklyBookings = bookings.filter { booking ->
             val bookingDate = booking.date?.let { parseDateTime(it, booking.hour) }
-            bookingDate != null && bookingDate in (startOfWeek ?: Date())..(endOfWeek ?: Date()) && booking.status_adm == "confirmed"
+            bookingDate != null && bookingDate in (startOfWeek ?: Date())..(endOfWeek ?: Date())
         }
 
-        // Ajuste para incluir todos os agendamentos confirmados pelo cliente para o mês, independentemente do status_adm
+        // Filtra agendamentos do mês que são confirmados pelo cliente
         val monthBookings = bookings.filter { booking ->
             val bookingDate = booking.date?.let { parseDateTime(it, booking.hour) }
             bookingDate != null && bookingDate in startOfMonth..endOfMonth && booking.status_cliente == "confirmed"
@@ -200,15 +206,19 @@ class AdminHomeFragment : Fragment() {
         return Pair(weeklyBookings, monthBookings)
     }
 
+
     private fun setupNearestBookingsAdapter(nearestBookings: List<Booking>) {
         binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
         binding.todayBookingsRecyclerView.adapter = ClientBookingAdapter(
-            nearestBookings,
-            onConfirmClick = { bookingId -> confirmBooking(bookingId.toString()) },
-            onCancelClick = { bookingId -> cancelBooking(bookingId.toString()) },
-            onEmptyList = { showNoBookingsMessage(true) } // Callback para lista vazia
+            context = requireContext(), // Passa o contexto necessário
+            bookings = nearestBookings,
+            onConfirmClick = { booking -> confirmBooking(booking.id ?: "") },
+            onCancelClick = { booking -> cancelBooking(booking.id ?: "") },
+            onRateClick = { booking -> /* Implementar lógica para avaliar se necessário */ },
+            onEmptyList = { showNoBookingsMessage(true) }
         )
     }
+
 
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance().time

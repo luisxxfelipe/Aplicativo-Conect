@@ -16,11 +16,16 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.TokenUtils
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.internal.Util.parseDateTime
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Calendar
+import java.util.Date
 
 class BookingAdapter(
     private var bookings: List<Booking>,
@@ -48,6 +53,8 @@ class BookingAdapter(
         val serviceType: TextView = view.findViewById(R.id.bookingServiceType)
         val bookingTime: TextView = view.findViewById(R.id.bookingTime)
         val confirmButton: Button = view.findViewById(R.id.confirmButton)
+        val completeButton: Button = view.findViewById(R.id.completeButton)
+        val notCompletedButton: Button = view.findViewById(R.id.notCompletedButton)
         val cancelButton: Button = view.findViewById(R.id.cancelButton)
         val userImageView: CircleImageView = view.findViewById(R.id.userImageView)
     }
@@ -75,59 +82,139 @@ class BookingAdapter(
 
         val bookingId = booking.id ?: return
 
-        // Acessa o CardView diretamente para aplicar cor e elevação
-        val cardView = holder.itemView as androidx.cardview.widget.CardView
-
-        // Define a barra lateral de cor para indicar o status
+        // Configura a barra de status com base no status atual do agendamento
         val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
-        val statusColor = if (booking.status_cliente == "confirmed" && booking.status_adm == "pending") {
-            ContextCompat.getColor(holder.itemView.context, R.color.yellow)  // Cor amarela para pendente
-        } else if (booking.status_adm == "confirmed") {
-            getRandomColor(statusIndicator)  // Cor aleatória para confirmado
-        } else {
-            ContextCompat.getColor(holder.itemView.context, R.color.white)  // Cor padrão
+        val statusColor = when (booking.status_adm) {
+            "confirmed" -> getRandomColor(statusIndicator) // Cor de confirmados
+            "completed" -> ContextCompat.getColor(holder.itemView.context, R.color.green)
+            "cancelled", "not_completed" -> ContextCompat.getColor(holder.itemView.context, R.color.red)
+            else -> ContextCompat.getColor(holder.itemView.context, R.color.yellow)
         }
         statusIndicator.setBackgroundColor(statusColor)
 
-        // Ajusta a visibilidade dos botões com base no `status_adm`
-        val showButtons = booking.status_adm != "confirmed" // Botões visíveis se não estiver confirmado
-        holder.confirmButton.visibility = if (showButtons) View.VISIBLE else View.GONE
-        holder.cancelButton.visibility = if (showButtons) View.VISIBLE else View.GONE
+        // Verifica se a data e hora do agendamento já passou
+        val hasPassedTime = hasBookingTimePassed(booking.date, booking.hour)
 
-        // Configura cliques nos botões de confirmação e cancelamento
+        // Define a lógica de exibição dos botões
+        val showConfirmationButtons = booking.status_adm == "pending" && !hasPassedTime
+        val showCompletionButtons = hasPassedTime && booking.status_cliente == "confirmed" && booking.status_adm == "confirmed"
+
+        holder.confirmButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
+        holder.cancelButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
+        holder.completeButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
+        holder.notCompletedButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
+
+        // Ação de confirmar agendamento
         holder.confirmButton.setOnClickListener {
-            showConfirmationDialog(
-                "Confirmar Agendamento",
-                "Tem certeza que deseja confirmar este agendamento?"
-            ) {
+            showConfirmationDialog("Confirmar Agendamento", "Tem certeza que deseja confirmar este agendamento?") {
                 onConfirmBooking(bookingId)
-                sendNotificationToUser(
-                    bookingId,
-                    "Agendamento Confirmado",
-                    "O agendamento de ${booking.name} foi confirmado!"
-                )
-                booking.status_adm = "confirmed"  // Atualiza o status localmente
-                notifyItemChanged(position)  // Atualiza a interface
+                firestore.collection("bookings").document(bookingId)
+                    .update("status_adm", "confirmed")
+                    .addOnSuccessListener {
+                        booking.status_adm = "confirmed"
+                        notifyItemChanged(position)
+                        sendNotificationToUser(
+                            bookingId,
+                            "Agendamento Confirmado",
+                            "O agendamento de ${booking.name} foi confirmado!"
+                        )
+                    }
             }
         }
 
+        // Ação de cancelar agendamento
         holder.cancelButton.setOnClickListener {
-            showConfirmationDialog(
-                "Cancelar Agendamento",
-                "Tem certeza que deseja cancelar este agendamento?"
-            ) {
-                onCancelBooking(bookingId)
-                sendNotificationToUser(
-                    bookingId,
-                    "Agendamento Cancelado",
-                    "Olá ${booking.name}, seu agendamento foi cancelado."
-                )
-                booking.status_adm = "cancelled"  // Atualiza o status localmente
-                notifyItemChanged(position)  // Atualiza a interface
+            showConfirmationDialog("Cancelar Agendamento", "Tem certeza que deseja cancelar este agendamento?") {
+                firestore.collection("bookings").document(bookingId)
+                    .update("status_adm", "cancelled")
+                    .addOnSuccessListener {
+                        sendNotificationToUser(
+                            bookingId,
+                            "Agendamento Cancelado",
+                            "Olá ${booking.name}, seu agendamento foi cancelado."
+                        )
+                        GlobalScope.launch {
+                            delay(2000L)
+                            firestore.collection("bookings").document(bookingId)
+                                .delete()
+                                .addOnSuccessListener {
+                                    val updatedBookings = bookings.toMutableList().apply {
+                                        remove(booking)
+                                    }
+                                    updateData(updatedBookings)
+                                    onCancelBooking(bookingId)
+                                }
+                        }
+                    }
+            }
+        }
+
+        // Ação de completar o serviço
+        holder.completeButton.setOnClickListener {
+            showConfirmationDialog("Marcar como Completo", "Deseja marcar este agendamento como completo?") {
+                firestore.collection("bookings").document(bookingId)
+                    .update("status_adm", "completed")
+                    .addOnSuccessListener {
+                        booking.status_adm = "completed"
+                        notifyItemChanged(position)
+                        sendNotificationToUser(
+                            bookingId,
+                            "Serviço Completo",
+                            "O serviço para ${booking.serviceName} foi concluído! Agora você pode avaliá-lo."
+                        )
+                    }
+            }
+        }
+
+        // Ação de marcar como não concluído
+        holder.notCompletedButton.setOnClickListener {
+            showConfirmationDialog("Não Completo", "Deseja marcar este agendamento como não completo?") {
+                firestore.collection("bookings").document(bookingId)
+                    .update("status_adm", "not_completed")
+                    .addOnSuccessListener {
+                        GlobalScope.launch {
+                            delay(2000L)
+                            firestore.collection("bookings").document(bookingId)
+                                .delete()
+                                .addOnSuccessListener {
+                                    val updatedBookings = bookings.toMutableList().apply {
+                                        remove(booking)
+                                    }
+                                    updateData(updatedBookings)
+                                    onCancelBooking(bookingId)
+                                }
+                        }
+                    }
             }
         }
     }
 
+    // Função para verificar se o horário do agendamento já passou
+    private fun hasBookingTimePassed(date: String?, hour: String?): Boolean {
+        if (date == null || hour == null) return false
+        val bookingDateTime = parseDateTime(date, hour) ?: return false
+        val currentDateTime = Calendar.getInstance().time
+        return bookingDateTime.before(currentDateTime)
+    }
+
+    // Função auxiliar para análise de data/hora
+    private fun parseDateTime(date: String, hour: String): Date? {
+        return try {
+            val dateParts = date.split("/").map { it.toInt() }
+            val timeParts = hour.split(":").map { it.toIntOrNull() ?: 0 }
+            Calendar.getInstance().apply {
+                set(Calendar.YEAR, dateParts[2])
+                set(Calendar.MONTH, dateParts[1] - 1)
+                set(Calendar.DAY_OF_MONTH, dateParts[0])
+                set(Calendar.HOUR_OF_DAY, timeParts[0])
+                set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.time
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     fun updateData(newBookings: List<Booking>) {
         bookings = newBookings

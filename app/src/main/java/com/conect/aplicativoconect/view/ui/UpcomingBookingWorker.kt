@@ -53,9 +53,14 @@ class UpcomingBookingWorker(
                     if (bookingDateMillis != null && bookingDateMillis in currentTimeMillis until timeWindow) {
                         Log.d("UpcomingBookingWorker", "Preparando para enviar notificação para o agendamento $bookingId.")
                         val notificationMessage = "Seu agendamento para $serviceName é em breve, às ${bookingHourStr}h!"
-                        sendNotificationToUser(
-                            userId, "Lembrete de Agendamento", notificationMessage
-                        )
+
+                        // Notificação para o usuário
+                        sendNotificationToUser(userId, "Lembrete de Agendamento", notificationMessage)
+
+                        // Notificação para o administrador
+                        val adminMessage = "Agendamento para $serviceName está próximo, às ${bookingHourStr}h!"
+                        sendNotificationToAdmin(bookingId, "Lembrete de Agendamento", adminMessage)
+
                         markBookingAsNotified(bookingId) // Marca o agendamento como notificado
                     } else {
                         Log.d("UpcomingBookingWorker", "Agendamento $bookingId fora do intervalo para notificação.")

@@ -209,13 +209,13 @@ class AdminBookingsFragment : Fragment() {
     // Função para cancelar o agendamento
     private fun cancelBooking(bookingId: String) {
         firestore.collection("bookings").document(bookingId)
-            .delete()
+            .update("status_adm", "cancelled") // Apenas atualiza o status para 'cancelled'
             .addOnSuccessListener {
-                Log.d("AdminBookingsFragment", "Agendamento cancelado com sucesso!")
-                loadBookings() // Recarrega os agendamentos após o cancelamento
+                Log.d("AdminBookingsFragment", "Status do agendamento atualizado para 'cancelled'.")
+                loadBookings() // Atualiza a lista de agendamentos para refletir o novo status
             }
             .addOnFailureListener { e ->
-                Log.w("AdminBookingsFragment", "Erro ao cancelar agendamento", e)
+                Log.w("AdminBookingsFragment", "Erro ao atualizar status para 'cancelled': ", e)
             }
     }
 }

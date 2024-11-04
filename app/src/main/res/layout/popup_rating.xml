@@ -1,0 +1,90 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Pergunta de Avaliação -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="De 1 a 5, como você avalia o serviço feito?"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Avaliação de Qualidade -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Qualidade do serviço"
+        android:textSize="15dp"/>
+    <RatingBar
+        android:id="@+id/ratingQuality"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:numStars="5"
+        android:stepSize="1.0"
+        android:isIndicator="false"
+        android:layout_marginTop="10dp"
+        style="@style/Widget.AppCompat.RatingBar.Small" />
+
+    <!-- Avaliação de Pontualidade -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pontualidade"
+        android:textSize="15dp"
+        android:layout_marginTop="10dp"/>
+    <RatingBar
+        android:id="@+id/ratingPunctuality"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:numStars="5"
+        android:layout_marginTop="10dp"
+        android:stepSize="1.0"
+        android:isIndicator="false"
+        style="@style/Widget.AppCompat.RatingBar.Small" />
+
+    <!-- Avaliação de Atendimento -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Atendimento"
+        android:textSize="15dp"
+        android:layout_marginTop="10dp"/>
+    <RatingBar
+        android:id="@+id/ratingService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:numStars="5"
+        android:stepSize="1.0"
+        android:isIndicator="false"
+        android:layout_marginTop="10dp"
+        style="@style/Widget.AppCompat.RatingBar.Small" />
+
+    <!-- Campo de Comentário -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Comentário (opcional)"
+        android:textSize="15dp"
+        android:layout_marginTop="15dp"/>
+    <EditText
+        android:id="@+id/commentEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"/>
+
+    <!-- Botão de Salvar -->
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Salvar"
+        android:backgroundTint="?attr/colorPrimary"
+        android:textColor="@android:color/white" />
+</LinearLayout>

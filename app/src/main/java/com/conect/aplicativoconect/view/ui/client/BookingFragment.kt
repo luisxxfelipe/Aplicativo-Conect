@@ -5,9 +5,14 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,8 +35,7 @@ class BookingFragment : Fragment() {
     private lateinit var oldBookingsRecyclerView: RecyclerView
     private lateinit var newBookingAdapter: ClientBookingAdapter
     private lateinit var oldBookingAdapter: ClientBookingAdapter
-    private lateinit var emptyBookingsMessage: TextView
-    private lateinit var emptyBookingsImage: ImageView
+    private lateinit var emptyBookingsLayout: LinearLayout
     private lateinit var newBookingsTitle: TextView
     private lateinit var oldBookingsTitle: TextView
     private var firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -44,8 +48,7 @@ class BookingFragment : Fragment() {
 
         newBookingsRecyclerView = view.findViewById(R.id.recyclerViewNewBookings)
         oldBookingsRecyclerView = view.findViewById(R.id.recyclerViewOldBookings)
-        emptyBookingsMessage = view.findViewById(R.id.emptyBookingsMessage)
-        emptyBookingsImage = view.findViewById(R.id.emptyBookingsImage)
+        emptyBookingsLayout = view.findViewById(R.id.emptyBookingsLayout)
         newBookingsTitle = view.findViewById(R.id.newBookingsTitle)
         oldBookingsTitle = view.findViewById(R.id.oldBookingsTitle)
 
@@ -73,19 +76,22 @@ class BookingFragment : Fragment() {
         oldBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
 
         newBookingAdapter = ClientBookingAdapter(
+            context = requireContext(),
             bookings = listOf(),
             onConfirmClick = { booking -> confirmBooking(booking) },
             onCancelClick = { booking -> cancelBooking(booking) },
-            onEmptyList = { showEmptyBookingsMessage(true) } // Callback para lista vazia
+            onRateClick = { booking -> showRatingPopup(booking) },
+            onEmptyList = { showEmptyBookingsMessage(true) }
         )
 
         oldBookingAdapter = ClientBookingAdapter(
+            context = requireContext(),
             bookings = listOf(),
             onConfirmClick = { booking -> confirmBooking(booking) },
             onCancelClick = { booking -> cancelBooking(booking) },
-            onEmptyList = { showEmptyBookingsMessage(true) } // Callback para lista vazia
+            onRateClick = { booking -> showRatingPopup(booking) },
+            onEmptyList = { showEmptyBookingsMessage(true) }
         )
-
 
         newBookingsRecyclerView.adapter = newBookingAdapter
         oldBookingsRecyclerView.adapter = oldBookingAdapter
@@ -138,8 +144,7 @@ class BookingFragment : Fragment() {
     }
 
     private fun showEmptyBookingsMessage(show: Boolean) {
-        emptyBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
-        emptyBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
+        emptyBookingsLayout.visibility = if (show) View.VISIBLE else View.GONE
     }
 
 
@@ -294,4 +299,90 @@ class BookingFragment : Fragment() {
             context?.let { Volley.newRequestQueue(it).add(request) }
         }
     }
+
+    private fun showRatingPopup(booking: Booking) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.popup_rating, null)
+        val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
+        val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
+        val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
+        val commentEditText = dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
+        val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        saveButton.setOnClickListener {
+            val qualityRating = ratingQuality.rating.toInt()
+            val punctualityRating = ratingPunctuality.rating.toInt()
+            val serviceRating = ratingService.rating.toInt()
+            val comment = commentEditText.text.toString().takeIf { it.isNotBlank() }
+
+            saveRatings(booking.id, qualityRating, punctualityRating, serviceRating, comment)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+
+    private fun saveRatings(bookingId: String?, quality: Int, punctuality: Int, service: Int, comment: String?) {
+        if (bookingId == null) return
+
+        // Inclui o comentário no mapa de dados, mesmo que esteja vazio
+        val ratingData = mutableMapOf<String, Any>(
+            "quality" to quality,
+            "punctuality" to punctuality,
+            "service" to service,
+            "timestamp" to System.currentTimeMillis(),
+            "comment" to (comment ?: "")  // Garante que "comment" seja uma string, mesmo que vazia
+        )
+
+        firestore.collection("bookings").document(bookingId)
+            .update("rating", ratingData)
+            .addOnSuccessListener {
+                Log.d("saveRatings", "Avaliação e comentário salvos com sucesso para bookingId: $bookingId")
+
+                firestore.collection("bookings").document(bookingId).get()
+                    .addOnSuccessListener { bookingSnapshot ->
+                        val companyId = bookingSnapshot.getString("companyId")
+                        Log.d("saveRatings", "companyId encontrado: $companyId")
+
+                        if (!companyId.isNullOrEmpty()) {
+                            val averageRating = (quality + punctuality + service) / 3.0
+                            updateBusinessRating(companyId, averageRating)
+                        } else {
+                            Log.e("saveRatings", "companyId não encontrado para bookingId: $bookingId")
+                        }
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("saveRatings", "Erro ao salvar avaliação: ${e.message}")
+                Toast.makeText(requireContext(), "Erro ao salvar avaliação", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateBusinessRating(companyId: String, newRating: Double) {
+        val businessRef = firestore.collection("business").document(companyId)
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(businessRef)
+
+            // Use as funções de conversão adequadas
+            val currentRating = snapshot.getDouble("averageRating") ?: 0.0
+            val ratingCount = (snapshot.getLong("ratingCount") ?: 0).toInt()
+
+            // Calcule a nova média corretamente
+            val updatedRatingCount = ratingCount + 1
+            val updatedAverageRating = ((currentRating * ratingCount) + newRating) / updatedRatingCount
+
+            transaction.update(businessRef, "averageRating", updatedAverageRating)
+            transaction.update(businessRef, "ratingCount", updatedRatingCount)
+        }.addOnSuccessListener {
+            Log.d("updateBusinessRating", "Média de avaliação atualizada com sucesso para companyId: $companyId")
+        }.addOnFailureListener { e ->
+            Log.e("updateBusinessRating", "Erro ao atualizar média de avaliação: ${e.message}")
+        }
+    }
+
 }

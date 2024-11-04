@@ -1,60 +1,18 @@
+<!-- fragment_reviews.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="?android:attr/windowBackground">
+    android:padding="16dp">
 
-    <!-- Header de Avaliações -->
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingBottom="16dp"
-        android:background="?android:attr/colorPrimary"
-        android:padding="12dp"
-        android:elevation="4dp"
-        android:layout_marginBottom="16dp">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/textViewAverageRating"
-            android:layout_width="wrap_content"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/reviewsRecyclerView"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="4.5"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:paddingEnd="8dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Média de Avaliações"
-            android:textSize="18sp"
-            android:textColor="@android:color/white"/>
-    </LinearLayout>
-
-    <!-- Botão para adicionar nova avaliação -->
-    <Button
-        android:id="@+id/buttonAddReview"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Adicionar Avaliação"
-        android:backgroundTint="?android:attr/colorAccent"
-        android:textColor="@android:color/white"
-        android:drawableStart="@drawable/ic_adicionar"
-        android:layout_marginBottom="16dp"
-        android:padding="12dp"
-        android:elevation="4dp"/>
-
-    <!-- RecyclerView para lista de avaliações -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/reviewsRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clipToPadding="false"
-        android:paddingBottom="8dp"
-        android:overScrollMode="never"/>
-
+            android:nestedScrollingEnabled="true" />
+    </ScrollView>
 </LinearLayout>

@@ -21,10 +21,10 @@ class BusinessAdapter(
 
     inner class BusinessViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val businessName: TextView = itemView.findViewById(R.id.businessName)
-        val businessCategory: TextView =
-            itemView.findViewById(R.id.businessAddress) // Reaproveitando o campo
+        val businessCategory: TextView = itemView.findViewById(R.id.businessAddress)
         val operatingHours: TextView = itemView.findViewById(R.id.businessOperatingHours)
         val businessImage: ImageView = itemView.findViewById(R.id.businessImage)
+        val ratingTextView: TextView = itemView.findViewById(R.id.businessAverageRating)
         val bookButton: Button = itemView.findViewById(R.id.bookButton)
     }
 
@@ -37,7 +37,6 @@ class BusinessAdapter(
 
     override fun onBindViewHolder(holder: BusinessViewHolder, position: Int) {
         val business = businessList[position]
-
         holder.businessName.text = business.name
         holder.businessCategory.text = business.serviceType
         holder.operatingHours.text = formatOperatingHours(business.operatingHours)
@@ -47,11 +46,11 @@ class BusinessAdapter(
             .placeholder(R.drawable.foto_perfil_generica)
             .into(holder.businessImage)
 
+        holder.ratingTextView.text = business.averageRating?.let { String.format("%.1f", it) } ?: "N/A"
+
         holder.bookButton.setOnClickListener {
             onBusinessClick(business)
         }
-
-
     }
 
     // Função ajustada para trabalhar com a data class OperatingHours

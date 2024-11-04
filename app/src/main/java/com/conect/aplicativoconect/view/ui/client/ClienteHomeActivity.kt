@@ -65,22 +65,12 @@ class ClienteHomeActivity : AppCompatActivity() {
 
         // Carregue o fragmento inicial
         loadFragment(ClienteHomeFragment())
-        setupUpcomingBookingWorker()
         fetchUserName() // Chama o método para buscar o nome do usuário
 
         // Observe as mudanças na lista de agendamentos
         clientViewModel.todayBookings.observe(this) { bookings ->
             updateBookingsView(bookings)
         }
-    }
-
-    private fun setupUpcomingBookingWorker() {
-        val workRequest = PeriodicWorkRequestBuilder<UpcomingBookingWorker>(1, TimeUnit.HOURS).build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "UpcomingBookingWork",
-            ExistingPeriodicWorkPolicy.KEEP,
-            workRequest
-        )
     }
 
     private fun loadFragment(fragment: Fragment, userName: String? = null) {

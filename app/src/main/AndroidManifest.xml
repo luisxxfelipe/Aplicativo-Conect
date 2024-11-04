@@ -50,6 +50,16 @@
             </intent-filter>
         </receiver>
 
+        <!-- BootReceiver para iniciar o WorkManager após o boot -->
+        <receiver
+            android:name=".view.data.BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
         <!-- Atividades do aplicativo -->
         <activity
             android:name=".view.ui.SplashActivity"

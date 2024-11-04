@@ -171,7 +171,9 @@ class SignupBusinessActivity : AppCompatActivity() {
                 "ownerName" to nameUser,
                 "isActive" to true,
                 "type" to "business",
-                "ownerId" to businessId
+                "ownerId" to businessId,
+                "averageRating" to 0.0,
+                "ratingCount" to 0
             )
 
             saveFCMToken(businessId)

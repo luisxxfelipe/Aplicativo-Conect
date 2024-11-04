@@ -7,7 +7,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.RatingBar
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -52,21 +55,23 @@ class ClienteHomeFragment : Fragment() {
         return _binding!!.root
     }
 
+    // No método onViewCreated, inicie o carregamento imediato dos dados
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         firestore = FirebaseFirestore.getInstance()
 
         setupAdapters()
-        fetchBusinesses()  // Busca os estabelecimentos
+        fetchBusinesses()
         setupSearchView()
 
-        // Mostra categorias e agendamentos ao iniciar
-        showDefaultView()
+        // Mostra o loading até carregar os agendamentos
+        binding.progressBar.visibility = View.VISIBLE
 
+        // Obtém o ID do usuário e inicia o carregamento dos agendamentos e dados do usuário
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         userId?.let {
-            fetchUserBookings(it)
+            fetchUserBookings(it)   // Ajuste aqui para iniciar o carregamento imediato
             clientViewModel.loadUserData(it)
         }
 
@@ -91,6 +96,7 @@ class ClienteHomeFragment : Fragment() {
         _binding?.establishmentsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
         _binding?.establishmentsRecyclerView?.adapter = businessAdapter
     }
+
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance().time  // Data e hora atual como Date
 
@@ -120,37 +126,35 @@ class ClienteHomeFragment : Fragment() {
     private fun fetchUserBookings(userId: String) {
         if (_binding == null) return  // Verifica se o binding ainda está disponível
 
-        binding.progressBar.visibility = View.VISIBLE  // Exibe o ProgressBar
-
         firestore.collection("bookings")
             .whereEqualTo("userId", userId)
             .addSnapshotListener { querySnapshot, error ->
+                // Garantir que a UI seja atualizada apenas após a conclusão da busca
                 if (error != null) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Erro ao buscar agendamentos.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.progressBar.visibility = View.GONE  // Esconde o ProgressBar
+                    Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
+                    binding.progressBar.visibility = View.GONE
+                    showNoBookingsMessage(true)
                     return@addSnapshotListener
                 }
 
-                // Obtém todos os agendamentos, ordena e seleciona os dois mais próximos
+                // Obter e filtrar os agendamentos futuros e garantir que os dados estejam prontos para exibição
                 val bookings = querySnapshot?.documents?.mapNotNull { document ->
                     document.toObject(Booking::class.java)?.apply { id = document.id }
                 }.orEmpty()
-                    .filter { isFutureBooking(it) }  // Filtra apenas os agendamentos futuros
-                    .sortedBy { parseDateTime(it.date ?: "", it.hour ?: "") }  // Ordena por data e hora
-                    .take(2)  // Seleciona os dois primeiros
+                    .filter { isFutureBooking(it) }  // Filtra apenas agendamentos futuros
+                    .sortedBy { parseDateTime(it.date ?: "", it.hour ?: "") }
+                    .take(2)
 
+                // Atualiza a UI com os dados obtidos
                 if (_binding != null && isAdded) {
+                    binding.progressBar.visibility = View.GONE  // Esconde o ProgressBar
+
                     if (bookings.isEmpty()) {
                         showNoBookingsMessage(true)
                     } else {
                         showNoBookingsMessage(false)
                         setupClientBookingAdapter(bookings)
                     }
-                    binding.progressBar.visibility = View.GONE
                 }
             }
     }
@@ -177,15 +181,89 @@ class ClienteHomeFragment : Fragment() {
 
     private fun setupClientBookingAdapter(bookings: List<Booking>) {
         clientBookingAdapter = ClientBookingAdapter(
+            context = requireContext(),
             bookings = bookings,
             onConfirmClick = { booking -> confirmBooking(booking) },
             onCancelClick = { booking -> cancelBooking(booking) },
+            onRateClick = { booking -> showRatingPopup(booking) },
             onEmptyList = { showNoBookingsMessage(true) }  // Callback para lista vazia
         )
+
         _binding?.todayBookingsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
         _binding?.todayBookingsRecyclerView?.adapter = clientBookingAdapter
     }
 
+
+    private fun showRatingPopup(booking: Booking) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.popup_rating, null)
+        val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
+        val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
+        val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
+        val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        saveButton.setOnClickListener {
+            val qualityRating = ratingQuality.rating.toInt()
+            val punctualityRating = ratingPunctuality.rating.toInt()
+            val serviceRating = ratingService.rating.toInt()
+
+            saveRatings(booking.id, qualityRating, punctualityRating, serviceRating)
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
+    private fun saveRatings(bookingId: String?, quality: Int, punctuality: Int, service: Int) {
+        if (bookingId == null) return
+
+        val ratingData = hashMapOf(
+            "quality" to quality,
+            "punctuality" to punctuality,
+            "service" to service,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        firestore.collection("bookings").document(bookingId)
+            .update("rating", ratingData)
+            .addOnSuccessListener {
+                // Busca a empresa pelo ID associado ao booking
+                firestore.collection("bookings").document(bookingId).get()
+                    .addOnSuccessListener { bookingSnapshot ->
+                        val companyId = bookingSnapshot.getString("companyId")
+                        if (!companyId.isNullOrEmpty()) {
+                            updateBusinessRating(companyId, (quality + punctuality + service) / 3.0)
+                        }
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("ClienteHomeFragment", "Erro ao salvar avaliação: ${e.message}")
+                Toast.makeText(requireContext(), "Erro ao salvar avaliação", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateBusinessRating(companyId: String, newRating: Double) {
+        val businessRef = firestore.collection("business").document(companyId)
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(businessRef)
+            val currentRating = snapshot.getDouble("averageRating") ?: 0.0
+            val ratingCount = snapshot.getLong("ratingCount")?.toInt() ?: 0
+
+            // Cálculo da nova média
+            val updatedRatingCount = ratingCount + 1
+            val updatedAverageRating = (currentRating * ratingCount + newRating) / updatedRatingCount
+
+            transaction.update(businessRef, "averageRating", updatedAverageRating)
+            transaction.update(businessRef, "ratingCount", updatedRatingCount)
+        }.addOnSuccessListener {
+            Log.d("ClienteHomeFragment", "Média de avaliação atualizada com sucesso.")
+        }.addOnFailureListener { e ->
+            Log.e("ClienteHomeFragment", "Erro ao atualizar média de avaliação: ${e.message}")
+        }
+    }
 
     private fun fetchBusinesses() {
         firestore.collection("business")
@@ -354,10 +432,13 @@ class ClienteHomeFragment : Fragment() {
     }
 
 
+    // Método que monitora quando a UI deve ser atualizada conforme os dados do ViewModel mudam
     private fun observeUserData() {
         clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
-            if (_binding != null) binding.userName.text = userName ?: "Nome do Usuário"
-            updateGreeting()  // Atualiza a saudação com base no horário do dia
+            _binding?.apply {
+                binding.userName.text = userName ?: "Nome do Usuário"
+                updateGreeting()
+            }
         }
 
         clientViewModel.userImage.observe(viewLifecycleOwner) { imageUrl ->
@@ -366,7 +447,17 @@ class ClienteHomeFragment : Fragment() {
                     .load(imageUrl)
                     .placeholder(R.drawable.foto_perfil_generica)
                     .error(R.drawable.foto_perfil_generica)
-                    .into(binding.userImage)  // Define a imagem do usuário
+                    .into(binding.userImage)
+            }
+        }
+
+        clientViewModel.todayBookings.observe(viewLifecycleOwner) { bookings ->
+            // Atualiza a lista de agendamentos, garantindo que a UI seja atualizada após o carregamento dos dados
+            if (bookings.isNotEmpty()) {
+                setupClientBookingAdapter(bookings)
+                showNoBookingsMessage(false)
+            } else {
+                showNoBookingsMessage(true)
             }
         }
     }
@@ -468,19 +559,12 @@ class ClienteHomeFragment : Fragment() {
         binding.greetingTextView.text = greeting
     }
 
+    // Ajuste na função showNoBookingsMessage para exibir o ProgressBar e manter um controle claro de visibilidade
     private fun showNoBookingsMessage(show: Boolean) {
         _binding?.apply {
             noBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
             noBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
             todayBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
-        userId?.let {
-            fetchUserBookings(it)
         }
     }
 

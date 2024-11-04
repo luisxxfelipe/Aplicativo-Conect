@@ -108,6 +108,30 @@
                     android:text="Cancelar"
                     android:textColor="@android:color/white"
                     app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/completeButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/green"
+                    android:text="Concluir"
+                    android:textColor="@android:color/white"
+                    app:cornerRadius="8dp"
+                    android:visibility="gone"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/notCompletedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/red"
+                    android:text="Não Concluído"
+                    android:textColor="@android:color/white"
+                    app:cornerRadius="8dp"
+                    android:visibility="gone"/>
+
             </LinearLayout>
 
         </LinearLayout>

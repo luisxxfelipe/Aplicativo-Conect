@@ -20,9 +20,11 @@ data class Business(
     val ownerId: String = "",
     val email: String = "",
     val isActive: Boolean = true,
-    val services: List<Service> = listOf()
+    val services: List<Service> = listOf(),
+    var averageRating: Double = 0.0,   // Adicionado: média de avaliações
+    var ratingCount: Int = 0           // Adicionado: total de avaliações
 ) {
-    // Construtor padrão necessário para o Firestore
+    // Construtor padrão para o Firestore
     constructor() : this(
         "",
         "",
@@ -35,6 +37,9 @@ data class Business(
         "",
         "",
         "",
-        true
-    ) // Definindo isActive como true por padrão
+        true,
+        listOf(),
+        0.0,
+        0
+    )
 }

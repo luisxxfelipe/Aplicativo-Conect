@@ -45,7 +45,8 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
             tab.text = when (position) {
                 0 -> "Serviços"
                 1 -> "Fotos"
-                else -> "Avaliação"
+                2 -> "Avaliação"  // Certifique-se de que "Avaliação" corresponda ao índice correto
+                else -> null
             }
         }.attach()
     }

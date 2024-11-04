@@ -86,6 +86,17 @@
                     android:text="Cancelar"
                     android:textColor="@android:color/white"
                     app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/rateButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:text="Avaliar Serviço"
+                    android:textColor="@android:color/white"
+                    app:cornerRadius="8dp"
+                    android:visibility="gone" />
+
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
