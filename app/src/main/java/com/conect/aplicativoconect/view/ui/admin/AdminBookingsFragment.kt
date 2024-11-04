@@ -1,6 +1,5 @@
 package com.conect.aplicativoconect.view.ui.admin
 
-import BookingAdapter
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -137,6 +136,7 @@ class AdminBookingsFragment : Fragment() {
             null
         }
     }
+
 
     private fun updateUI(newBookings: List<Booking>, oldBookings: List<Booking>) {
         if (newBookings.isEmpty() && oldBookings.isEmpty()) {

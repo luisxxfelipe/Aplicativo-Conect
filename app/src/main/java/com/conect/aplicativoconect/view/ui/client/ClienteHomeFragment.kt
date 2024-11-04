@@ -15,25 +15,19 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentClienteHomeBinding
-import com.conect.aplicativoconect.view.TokenUtils
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.Calendar
-import java.util.Date
 
 class ClienteHomeFragment : Fragment() {
 
@@ -44,8 +38,6 @@ class ClienteHomeFragment : Fragment() {
     private lateinit var clientBookingAdapter: ClientBookingAdapter
     private val businessList = mutableListOf<Business>()
     private val clientViewModel: ClientViewModel by activityViewModels()
-
-    private var bookingsListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,8 +63,8 @@ class ClienteHomeFragment : Fragment() {
         // Obtém o ID do usuário e inicia o carregamento dos agendamentos e dados do usuário
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         userId?.let {
-            fetchUserBookings(it)   // Ajuste aqui para iniciar o carregamento imediato
             clientViewModel.loadUserData(it)
+            clientViewModel.fetchUserBookings(it)  // Carrega agendamentos via ViewModel
         }
 
         observeUserData()
@@ -97,102 +89,46 @@ class ClienteHomeFragment : Fragment() {
         _binding?.establishmentsRecyclerView?.adapter = businessAdapter
     }
 
-    private fun isFutureBooking(booking: Booking): Boolean {
-        val currentDateTime = Calendar.getInstance().time  // Data e hora atual como Date
-
-        // Separa a data e converte para inteiros, retornando `false` caso a data seja inválida
-        val dateParts = booking.date?.split("/")?.mapNotNull { it.toIntOrNull() } ?: return false
-        if (dateParts.size != 3) return false
-
-        // Converte `hour` para partes de hora e minuto
-        val timeParts = booking.hour.split(":")?.mapNotNull { it.toIntOrNull() } ?: listOf(0, 0)
-        if (timeParts.size < 1) return false
-
-        // Configura a data e hora do agendamento usando ano, mês, dia, hora e minuto
-        val bookingDate = Calendar.getInstance().apply {
-            set(Calendar.YEAR, dateParts[2])
-            set(Calendar.MONTH, dateParts[1] - 1) // Meses são indexados a partir de 0 no Calendar
-            set(Calendar.DAY_OF_MONTH, dateParts[0])
-            set(Calendar.HOUR_OF_DAY, timeParts[0])  // Usa a primeira parte do horário como horas
-            set(
-                Calendar.MINUTE,
-                timeParts.getOrElse(1) { 0 })  // Usa a segunda parte como minutos, ou 0
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time
-
-        // Retorna `true` se a data e hora do agendamento estiverem no futuro
-        return bookingDate.after(currentDateTime)
-    }
-
-    private fun fetchUserBookings(userId: String) {
-        if (_binding == null || !isAdded) return
-
-        bookingsListener = firestore.collection("bookings")
-            .whereEqualTo("userId", userId)
-            .addSnapshotListener { querySnapshot, error ->
-                if (_binding == null || !isAdded) return@addSnapshotListener  // Verifica novamente
-
-                if (error != null) {
-                    Toast.makeText(requireContext(), "Erro ao buscar agendamentos.", Toast.LENGTH_SHORT).show()
-                    binding.progressBar.visibility = View.GONE
-                    showNoBookingsMessage(true)
-                    return@addSnapshotListener
-                }
-
-                val bookings = querySnapshot?.documents?.mapNotNull { document ->
-                    document.toObject(Booking::class.java)?.apply { id = document.id }
-                }.orEmpty()
-                    .filter { isFutureBooking(it) }
-                    .sortedBy { parseDateTime(it.date ?: "", it.hour) }
-                    .take(2)
-
-                if (_binding != null && isAdded) {
-                    binding.progressBar.visibility = View.GONE
-
-                    if (bookings.isEmpty()) {
-                        showNoBookingsMessage(true)
-                    } else {
-                        showNoBookingsMessage(false)
-                        setupClientBookingAdapter(bookings)
+    private fun fetchBusinesses() {
+        firestore.collection("business")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (isAdded && _binding != null) {
+                    if (!querySnapshot.isEmpty) {
+                        businessList.clear()
+                        businessList.addAll(querySnapshot.toObjects(Business::class.java))
+                        updateBusinessAdapter(businessList)
                     }
                 }
             }
-    }
-
-    private fun parseDateTime(date: String, hour: String): Date? {
-        return try {
-            val dateParts = date.split("/").map { it.toInt() }
-            val timeParts = hour.split(":").map { it.toIntOrNull() ?: 0 }
-
-            Calendar.getInstance().apply {
-                set(Calendar.YEAR, dateParts[2])
-                set(Calendar.MONTH, dateParts[1] - 1)
-                set(Calendar.DAY_OF_MONTH, dateParts[0])
-                set(Calendar.HOUR_OF_DAY, timeParts[0])
-                set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.time
-        } catch (e: Exception) {
-            null
-        }
+            .addOnFailureListener { e ->
+                Log.e("ClienteHomeFragment", "Erro ao buscar estabelecimentos: ${e.message}")
+            }
     }
 
     private fun setupClientBookingAdapter(bookings: List<Booking>) {
         clientBookingAdapter = ClientBookingAdapter(
             context = requireContext(),
             bookings = bookings,
-            onConfirmClick = { booking -> confirmBooking(booking) },
-            onCancelClick = { booking -> cancelBooking(booking) },
+            onConfirmClick = { booking -> clientViewModel.confirmBooking(requireContext(), booking) },
+            onCancelClick = { booking -> clientViewModel.cancelBooking(requireContext(), booking) },
             onRateClick = { booking -> showRatingPopup(booking) },
-            onEmptyList = { showNoBookingsMessage(true) }  // Callback para lista vazia
+            onEmptyList = { showNoBookingsMessage(true) }  // Exibe mensagem de lista vazia
         )
 
-        _binding?.todayBookingsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
-        _binding?.todayBookingsRecyclerView?.adapter = clientBookingAdapter
+        binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.todayBookingsRecyclerView.adapter = clientBookingAdapter
     }
 
+
+    private fun showDefaultView() {
+        binding.apply {
+            todayAgendaCardView.visibility = View.VISIBLE  // Mostra agendamentos
+            categoriesRecyclerView.visibility = View.VISIBLE  // Mostra categorias
+            establishmentsRecyclerView.visibility = View.VISIBLE  // Mostra estabelecimentos
+            categoriesTitle.visibility = View.VISIBLE  // Mostra o título "Categorias"
+        }
+    }
 
     private fun showRatingPopup(booking: Booking) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.popup_rating, null)
@@ -210,217 +146,12 @@ class ClienteHomeFragment : Fragment() {
             val qualityRating = ratingQuality.rating.toInt()
             val punctualityRating = ratingPunctuality.rating.toInt()
             val serviceRating = ratingService.rating.toInt()
-
-            saveRatings(booking.id, qualityRating, punctualityRating, serviceRating)
+            clientViewModel.saveRatings(requireContext(), booking.id, qualityRating, punctualityRating, serviceRating)
             dialog.dismiss()
         }
         dialog.show()
     }
 
-    private fun saveRatings(bookingId: String?, quality: Int, punctuality: Int, service: Int) {
-        if (bookingId == null) return
-
-        val ratingData = hashMapOf(
-            "quality" to quality,
-            "punctuality" to punctuality,
-            "service" to service,
-            "timestamp" to System.currentTimeMillis()
-        )
-
-        firestore.collection("bookings").document(bookingId)
-            .update("rating", ratingData)
-            .addOnSuccessListener {
-                // Busca a empresa pelo ID associado ao booking
-                firestore.collection("bookings").document(bookingId).get()
-                    .addOnSuccessListener { bookingSnapshot ->
-                        val companyId = bookingSnapshot.getString("companyId")
-                        if (!companyId.isNullOrEmpty()) {
-                            updateBusinessRating(companyId, (quality + punctuality + service) / 3.0)
-                        }
-                    }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Erro ao salvar avaliação", Toast.LENGTH_SHORT)
-                    .show()
-            }
-    }
-
-    private fun updateBusinessRating(companyId: String, newRating: Double) {
-        val businessRef = firestore.collection("business").document(companyId)
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(businessRef)
-            val currentRating = snapshot.getDouble("averageRating") ?: 0.0
-            val ratingCount = snapshot.getLong("ratingCount")?.toInt() ?: 0
-
-            // Cálculo da nova média
-            val updatedRatingCount = ratingCount + 1
-            val updatedAverageRating =
-                (currentRating * ratingCount + newRating) / updatedRatingCount
-
-            transaction.update(businessRef, "averageRating", updatedAverageRating)
-            transaction.update(businessRef, "ratingCount", updatedRatingCount)
-        }.addOnSuccessListener {
-        }.addOnFailureListener { e ->
-        }
-    }
-
-    private fun fetchBusinesses() {
-        firestore.collection("business")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (isAdded && _binding != null) {  // Verifica se o fragmento ainda está anexado
-                    if (!querySnapshot.isEmpty) {
-                        businessList.clear()
-                        businessList.addAll(querySnapshot.toObjects(Business::class.java))
-                        updateBusinessAdapter(businessList)
-                    } else {
-                        fetchUserBookings(
-                            FirebaseAuth.getInstance().currentUser?.uid ?: ""
-                        )  // Atualiza a lista
-                    }
-                }
-            }
-            .addOnFailureListener { e ->
-            }
-    }
-
-    private fun confirmBooking(booking: Booking) {
-        firestore.collection("bookings").document(booking.id!!)
-            .update("status_cliente", "confirmed")
-            .addOnSuccessListener {
-                sendNotificationToBusiness(
-                    booking,
-                    "Agendamento Confirmado",
-                    "O agendamento de ${booking.name} foi confirmado!"
-                )
-                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT)
-                    .show()
-                fetchUserBookings(
-                    FirebaseAuth.getInstance().currentUser?.uid ?: ""
-                )  // Atualiza a lista
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(
-                    requireContext(),
-                    "Erro ao confirmar agendamento.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-    }
-
-
-    private fun cancelBooking(booking: Booking) {
-        firestore.collection("bookings").document(booking.id!!)
-            .delete()
-            .addOnSuccessListener {
-                sendNotificationToBusiness(
-                    booking,
-                    "Agendamento Cancelado",
-                    "O agendamento de ${booking.name} foi cancelado."
-                )
-                Toast.makeText(
-                    requireContext(),
-                    "Agendamento cancelado e excluído.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(
-                    requireContext(),
-                    "Erro ao cancelar agendamento.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-    }
-
-
-    private fun sendNotificationToBusiness(booking: Booking, title: String, message: String) {
-        val companyId = booking.companyId ?: return
-
-        firestore.collection("business").document(companyId)
-            .get()
-            .addOnSuccessListener { document ->
-                val fcmToken = document.getString("fcmToken")
-
-                if (!fcmToken.isNullOrEmpty()) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        sendFCMNotification(fcmToken, title, message)
-                    }
-                }
-            }
-            .addOnFailureListener { e ->
-            }
-    }
-
-    // Exibe a visão padrão: categorias, agendamentos e estabelecimentos
-    private fun showDefaultView() {
-        _binding?.apply {
-            todayAgendaCardView.visibility = View.VISIBLE  // Mostra agendamentos
-            categoriesRecyclerView.visibility = View.VISIBLE  // Mostra categorias
-            establishmentsRecyclerView.visibility = View.VISIBLE  // Mostra estabelecimentos
-            categoriesTitle.visibility = View.VISIBLE  // Mostra o título "Categorias"
-        }
-    }
-
-    private suspend fun sendFCMNotification(token: String, title: String, message: String) {
-        val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
-        val payload = """
-        {
-          "message": {
-            "token": "$token",
-            "notification": {
-              "title": "$title",
-              "body": "$message"
-            },
-            "android": {
-              "priority": "high"
-            }
-          }
-        }
-    """.trimIndent()
-
-        // Verifica se o fragmento ainda está anexado ao contexto antes de acessar o `requireContext()`
-        if (!isAdded) {
-            Log.w(
-                "BookingFragment",
-                "Fragment não está mais anexado ao contexto. Notificação não enviada."
-            )
-            return
-        }
-
-        val accessToken = withContext(Dispatchers.IO) {
-            TokenUtils.getAccessTokenFromServiceAccount(requireContext())
-        }
-
-        if (accessToken == null) {
-            Log.e("FCM", "Erro ao obter token de acesso.")
-            return
-        }
-
-        val request = object : StringRequest(
-            Method.POST, url,
-            { response -> Log.d("FCM", "Notificação enviada: $response") },
-            { error -> Log.e("FCM", "Erro ao enviar notificação: ${error.message}") }
-        ) {
-            override fun getHeaders(): Map<String, String> {
-                return mapOf(
-                    "Authorization" to "Bearer $accessToken",
-                    "Content-Type" to "application/json"
-                )
-            }
-
-            override fun getBody(): ByteArray = payload.toByteArray(Charsets.UTF_8)
-        }
-
-        withContext(Dispatchers.Main) {
-            if (isAdded) {  // Verifica novamente antes de adicionar a requisição à fila
-                Volley.newRequestQueue(requireContext()).add(request)
-            }
-        }
-    }
-
-
-    // Método que monitora quando a UI deve ser atualizada conforme os dados do ViewModel mudam
     private fun observeUserData() {
         clientViewModel.userName.observe(viewLifecycleOwner) { userName ->
             _binding?.apply {
@@ -440,7 +171,7 @@ class ClienteHomeFragment : Fragment() {
         }
 
         clientViewModel.todayBookings.observe(viewLifecycleOwner) { bookings ->
-            // Atualiza a lista de agendamentos, garantindo que a UI seja atualizada após o carregamento dos dados
+            binding.progressBar.visibility = View.GONE  // Esconde o loading quando dados são carregados
             if (bookings.isNotEmpty()) {
                 setupClientBookingAdapter(bookings)
                 showNoBookingsMessage(false)
@@ -455,7 +186,6 @@ class ClienteHomeFragment : Fragment() {
         updateBusinessAdapter(filteredBusinesses)
     }
 
-    // Configura a pesquisa e ajusta as visões dinamicamente
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -469,17 +199,15 @@ class ClienteHomeFragment : Fragment() {
             }
         })
 
-        // Restaura a visão original quando a pesquisa é limpa
         binding.searchView.setOnCloseListener {
             showDefaultView()
             false
         }
     }
 
-    // Filtra os estabelecimentos e ajusta as visões
     private fun filterBusinesses(query: String?) {
         val filteredList = if (query.isNullOrEmpty()) {
-            businessList  // Exibe todos os estabelecimentos se não houver pesquisa
+            businessList
         } else {
             businessList.filter { it.name.contains(query, ignoreCase = true) }
         }
@@ -487,23 +215,21 @@ class ClienteHomeFragment : Fragment() {
         updateBusinessAdapter(filteredList)
 
         if (query.isNullOrEmpty()) {
-            showDefaultView()  // Restaura a visão padrão se a pesquisa for limpa
+            showDefaultView()
         } else {
-            showOnlyBusinesses()  // Mostra apenas estabelecimentos durante a pesquisa
+            showOnlyBusinesses()
         }
     }
 
-    // Exibe apenas os estabelecimentos durante a pesquisa
     private fun showOnlyBusinesses() {
         _binding?.apply {
-            todayAgendaCardView.visibility = View.GONE  // Esconde agendamentos
-            categoriesRecyclerView.visibility = View.GONE  // Esconde categorias
-            categoriesTitle.visibility = View.GONE  // Esconde o título "Categorias"
-            establishmentsRecyclerView.visibility = View.VISIBLE  // Mostra estabelecimentos
+            todayAgendaCardView.visibility = View.GONE
+            categoriesRecyclerView.visibility = View.GONE
+            categoriesTitle.visibility = View.GONE
+            establishmentsRecyclerView.visibility = View.VISIBLE
         }
     }
 
-    // Atualiza o adaptador de estabelecimentos
     private fun updateBusinessAdapter(filteredBusinesses: List<Business>) {
         if (isAdded && _binding != null) {
             businessAdapter = BusinessAdapter(requireContext(), filteredBusinesses) { business ->
@@ -540,7 +266,6 @@ class ClienteHomeFragment : Fragment() {
         binding.greetingTextView.text = greeting
     }
 
-    // Ajuste na função showNoBookingsMessage para exibir o ProgressBar e manter um controle claro de visibilidade
     private fun showNoBookingsMessage(show: Boolean) {
         if (_binding == null || !isAdded) return
 
@@ -552,6 +277,5 @@ class ClienteHomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null  // Evita memory leaks
-        bookingsListener?.remove()  // Remove o listener do Firebase
     }
 }

@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.view.ui.admin
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -40,21 +41,27 @@ class AdminSettingsFragment : Fragment() {
     }
 
     private fun configureNotificationSwitch() {
+        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val isNotificationsEnabled = sharedPreferences.getBoolean("admin_notifications_enabled", false)
+        binding.notificationsSwitch.isChecked = isNotificationsEnabled
+
         binding.notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val editor = sharedPreferences.edit()
+            editor.putBoolean("admin_notifications_enabled", isChecked)
+            editor.apply()
+
             if (isChecked) {
                 FirebaseMessaging.getInstance().subscribeToTopic("admin_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT).show()
                         }
                     }
             } else {
                 FirebaseMessaging.getInstance().unsubscribeFromTopic("admin_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT).show()
                         }
                     }
             }

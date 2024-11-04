@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.view.ui.client
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -40,6 +41,10 @@ class ClienteProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val isNotificationsEnabled = sharedPreferences.getBoolean("notifications_enabled", false)
+        binding.notificationsSwitch.isChecked = isNotificationsEnabled
+
         userId?.let {
             clientViewModel.loadUserData(it)
         }
@@ -79,20 +84,22 @@ class ClienteProfileFragment : Fragment() {
         }
 
         binding.notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val editor = sharedPreferences.edit()
+            editor.putBoolean("notifications_enabled", isChecked)
+            editor.apply()
+
             if (isChecked) {
                 FirebaseMessaging.getInstance().subscribeToTopic("all_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT).show()
                         }
                     }
             } else {
                 FirebaseMessaging.getInstance().unsubscribeFromTopic("all_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT).show()
                         }
                     }
             }
@@ -120,8 +127,7 @@ class ClienteProfileFragment : Fragment() {
                     deleteUserDocument(uid)
                 }
                 .addOnFailureListener {
-                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT).show()
                 }
         }
     }
@@ -133,8 +139,7 @@ class ClienteProfileFragment : Fragment() {
                 deleteUserAccount()
             }
             .addOnFailureListener {
-                Toast.makeText(context, "Erro ao deletar dados do usuário", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(context, "Erro ao deletar dados do usuário", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -142,11 +147,7 @@ class ClienteProfileFragment : Fragment() {
         FirebaseAuth.getInstance().currentUser?.delete()
             ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(
-                        context,
-                        "Conta e dados excluídos com sucesso",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(context, "Conta e dados excluídos com sucesso", Toast.LENGTH_SHORT).show()
                     startActivity(Intent(requireContext(), LoginActivity::class.java))
                     activity?.finish()
                 } else {

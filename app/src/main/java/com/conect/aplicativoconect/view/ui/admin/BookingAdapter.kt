@@ -1,3 +1,5 @@
+package com.conect.aplicativoconect.view.ui.admin
+
 import android.app.AlertDialog
 import android.content.Context
 import android.util.Log
@@ -19,7 +21,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,16 +33,6 @@ class BookingAdapter(
     private val onConfirmBooking: (String) -> Unit,
     private val onCancelBooking: (String) -> Unit
 ) : RecyclerView.Adapter<BookingAdapter.BookingViewHolder>() {
-
-    // Lista de cores disponíveis
-    private val colorList = listOf(
-        R.color.colorCategory1,
-        R.color.colorCategory2,
-        R.color.colorCategory3,
-        R.color.colorCategory4
-    )
-
-    private var lastColorIndex: Int? = null  // Para evitar repetição consecutiva
 
     private val firestore = FirebaseFirestore.getInstance()
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
@@ -84,13 +75,8 @@ class BookingAdapter(
         // Configura a barra de status com base no status atual do agendamento
         val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
         val statusColor = when (booking.status_adm) {
-            "confirmed" -> getRandomColor(statusIndicator) // Cor de confirmados
-            "confirmed" -> ContextCompat.getColor(holder.itemView.context, R.color.green)
-            "cancelled", "not_completed" -> ContextCompat.getColor(
-                holder.itemView.context,
-                R.color.red
-            )
-
+            "completed" -> ContextCompat.getColor(holder.itemView.context, R.color.green)
+            "cancelled", "not_completed" -> ContextCompat.getColor(holder.itemView.context, R.color.red)
             else -> ContextCompat.getColor(holder.itemView.context, R.color.yellow)
         }
         statusIndicator.setBackgroundColor(statusColor)
@@ -98,16 +84,17 @@ class BookingAdapter(
         // Verifica se a data e hora do agendamento já passou
         val hasPassedTime = hasBookingTimePassed(booking.date, booking.hour)
 
+        // Verificar se o agendamento está completo
+        val isCompleted = booking.status_adm == "completed" && booking.status_cliente == "completed"
+
         // Define a lógica de exibição dos botões
         val showConfirmationButtons = booking.status_adm == "pending" && !hasPassedTime
-        val showCompletionButtons =
-            hasPassedTime && booking.status_cliente == "confirmed" && booking.status_adm == "confirmed"
+        val showCompletionButtons = hasPassedTime && booking.status_cliente == "confirmed" && booking.status_adm == "confirmed"
 
         holder.confirmButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
-        holder.completeButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
-        holder.notCompletedButton.visibility =
-            if (showCompletionButtons) View.VISIBLE else View.GONE
+        holder.completeButton.visibility = if (showCompletionButtons && !isCompleted) View.VISIBLE else View.GONE
+        holder.notCompletedButton.visibility = if (showCompletionButtons && !isCompleted) View.VISIBLE else View.GONE
 
         // Ação de confirmar agendamento
         holder.confirmButton.setOnClickListener {
@@ -144,7 +131,7 @@ class BookingAdapter(
                             "Agendamento Cancelado",
                             "Olá ${booking.name}, seu agendamento foi cancelado."
                         )
-                        GlobalScope.launch {
+                        coroutineScope.launch {
                             delay(2000L)
                             firestore.collection("bookings").document(bookingId)
                                 .delete()
@@ -154,6 +141,7 @@ class BookingAdapter(
                                     }
                                     updateData(updatedBookings)
                                     onCancelBooking(bookingId)
+                                    notifyItemRemoved(position)
                                 }
                         }
                     }
@@ -167,9 +155,10 @@ class BookingAdapter(
                 "Deseja marcar este agendamento como completo?"
             ) {
                 firestore.collection("bookings").document(bookingId)
-                    .update("status_adm", "confirmed")
+                    .update(mapOf("status_adm" to "completed", "status_cliente" to "completed"))
                     .addOnSuccessListener {
-                        booking.status_adm = "confirmed"
+                        booking.status_adm = "completed"
+                        booking.status_cliente = "completed"
                         notifyItemChanged(position)
                         sendNotificationToUser(
                             bookingId,
@@ -189,7 +178,7 @@ class BookingAdapter(
                 firestore.collection("bookings").document(bookingId)
                     .update("status_adm", "not_completed")
                     .addOnSuccessListener {
-                        GlobalScope.launch {
+                        coroutineScope.launch {
                             delay(2000L)
                             firestore.collection("bookings").document(bookingId)
                                 .delete()
@@ -199,6 +188,7 @@ class BookingAdapter(
                                     }
                                     updateData(updatedBookings)
                                     onCancelBooking(bookingId)
+                                    notifyItemRemoved(position)
                                 }
                         }
                     }
@@ -239,17 +229,6 @@ class BookingAdapter(
     }
 
     override fun getItemCount(): Int = bookings.size
-
-    // Função para selecionar uma cor aleatória, evitando repetição consecutiva
-    private fun getRandomColor(view: View): Int {
-        var newColorIndex: Int
-        do {
-            newColorIndex = (colorList.indices).random()  // Gera um índice aleatório
-        } while (newColorIndex == lastColorIndex)  // Evita repetir a cor consecutivamente
-
-        lastColorIndex = newColorIndex  // Armazena o índice atual para evitar repetições
-        return ContextCompat.getColor(view.context, colorList[newColorIndex])  // Retorna a cor
-    }
 
     private fun showConfirmationDialog(
         title: String,

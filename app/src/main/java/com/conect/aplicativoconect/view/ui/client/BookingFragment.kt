@@ -156,10 +156,10 @@ class BookingFragment : Fragment() {
 
         // Verificar se `date` e `hour` estão presentes e processá-los
         val bookingDateParts = booking.date?.split("/")?.map { it.toIntOrNull() }
-        val bookingHourParts = booking.hour.split(":")?.map { it.toIntOrNull() }
+        val bookingHourParts = booking.hour.split(":").map { it.toIntOrNull() }
 
         // Verificar se todos os elementos de data foram extraídos corretamente e se `hour` é válido
-        if (bookingDateParts != null && bookingDateParts.size == 3 && bookingHourParts != null && bookingHourParts.size >= 1) {
+        if (bookingDateParts != null && bookingDateParts.size == 3 && bookingHourParts.isNotEmpty()) {
             // Criar o calendário do agendamento com data e hora
             val bookingCalendar = Calendar.getInstance().apply {
                 set(Calendar.YEAR, bookingDateParts[2]!!)
