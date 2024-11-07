@@ -77,7 +77,7 @@ class AddServiceDialogFragment : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        dialog?.window?.setLayout(dpToPx(330), dpToPx(250))
+        dialog?.window?.setLayout(dpToPx(330), dpToPx(320))
     }
 
     private fun dpToPx(dp: Int): Int {

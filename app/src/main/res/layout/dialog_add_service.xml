@@ -1,63 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/rounded_corners"
-    android:padding="24dp"
-    android:gravity="center">
+    android:background="@color/white"
+    android:padding="24dp">
 
-    <!-- Título -->
     <TextView
         android:id="@+id/titulo_popup"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Ações"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/cinza_escuro"
+        android:textColor="@color/text_primary"
         android:gravity="center"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Botão Adicionar Serviços -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_adicionar_servicos"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:text="Adicionar Serviços"
-        android:layout_marginBottom="4dp"
-        android:backgroundTint="@color/colorPrimary"
+        android:textSize="16sp"
         android:textColor="@android:color/white"
-        android:elevation="2dp"
-        android:drawableLeft="@drawable/ic_service"
-        android:drawablePadding="8dp"
-        android:textSize="15sp" />
+        app:icon="@drawable/ic_service"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        android:padding="12dp"
+        app:backgroundTint="@color/roxo"
+        android:layout_marginTop="19dp"
+        app:cornerRadius="8dp"
+        app:iconTint="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/titulo_popup"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Botão Ajustar Horário -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_ajustar_horario"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:text="Ajustar Horário"
-        android:layout_marginBottom="4dp"
-        android:backgroundTint="@color/roxo"
         android:textColor="@android:color/white"
-        android:elevation="2dp"
-        android:drawableLeft="@drawable/ic_clock"
-        android:drawablePadding="8dp"
-        android:textSize="15sp" />
+        android:textSize="16sp"
+        app:icon="@drawable/ic_clock"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        android:padding="12dp"
+        app:iconTint="@color/white"
+        android:layout_marginTop="12dp"
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/roxo"
+        app:layout_constraintTop_toBottomOf="@id/btn_adicionar_servicos"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_publicar_fotos"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:text="Publicar Fotos"
-        android:layout_marginBottom="4dp"
-        android:backgroundTint="@color/roxo"
         android:textColor="@android:color/white"
-        android:elevation="2dp"
-        android:drawableLeft="@drawable/ic_photo"
-        android:drawablePadding="8dp"
-        android:textSize="15sp" />
+        android:textSize="16sp"
+        app:icon="@drawable/ic_photo"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        android:padding="12dp"
+        android:layout_marginTop="12dp"
+        app:iconTint="@color/white"
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/roxo"
+        app:layout_constraintTop_toBottomOf="@id/btn_ajustar_horario"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

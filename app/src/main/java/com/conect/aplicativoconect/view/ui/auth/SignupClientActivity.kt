@@ -24,6 +24,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
+import android.provider.Settings.Secure
 
 class SignupClientActivity : AppCompatActivity() {
 
@@ -199,8 +200,15 @@ class SignupClientActivity : AppCompatActivity() {
     private fun createUser(email: String, password: String, name: String, cpf: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
+
+                // Fechar o progress dialog após o término da operação
+                progressDialog.dismiss()
+
                 if (task.isSuccessful) {
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+
+                    // Obter o Android ID
+                    val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
 
                     // Criação do HashMap com dados do usuário
                     val userData: HashMap<String, Any> = hashMapOf(
@@ -209,25 +217,51 @@ class SignupClientActivity : AppCompatActivity() {
                         "name" to name,
                         "cpf" to cpf,
                         "isActive" to true,
-                        "type" to "client"
+                        "type" to "client",
+                        "androidId" to androidId // Adiciona o Android ID aqui
                     )
 
-                    // Fazer upload da imagem de perfil se houver
-                    imageUri?.let {
-                        uploadProfileImage(it, userId, userData)
-                    } ?: run {
-                        // Salva o usuário diretamente no Firestore e, após, o token
-                        saveUserToFirestore(userId, userData) {
-                            saveFCMToken(userId) // Salva o token após salvar o usuário
+                    // Verifica se o Android ID já está registrado
+                    checkIfAndroidIdExists(androidId) { exists ->
+                        if (exists) {
+                            Toast.makeText(this, "Este dispositivo já está registrado.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            // Fazer upload da imagem de perfil se houver
+                            imageUri?.let {
+                                uploadProfileImage(it, userId, userData)
+                            } ?: run {
+                                // Salva o usuário diretamente no Firestore e, após, o token
+                                saveUserToFirestore(userId, userData) {
+                                    saveFCMToken(userId) // Salva o token após salvar o usuário
+                                }
+                            }
                         }
                     }
                 } else {
-                    progressDialog.dismiss()
+                    // Caso ocorra algum erro, exibe uma mensagem de erro
                     Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT)
                         .show()
                 }
             }
     }
+
+    private fun checkIfAndroidIdExists(androidId: String, callback: (Boolean) -> Unit) {
+        db.collection("users")
+            .whereEqualTo("androidId", androidId)
+            .get()
+            .addOnSuccessListener { result ->
+                if (!result.isEmpty) {
+                    callback(true) // Android ID já existe
+                } else {
+                    callback(false) // Android ID não encontrado, pode registrar
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firebase", "Erro ao verificar Android ID: ${e.message}")
+                callback(false)
+            }
+    }
+
 
     // Função para obter e salvar o token FCM
     private fun saveFCMToken(userId: String) {
@@ -310,10 +344,9 @@ class SignupClientActivity : AppCompatActivity() {
                     startActivity(Intent(this, ClienteHomeActivity::class.java))
                     finish()
                 }
-                .addOnFailureListener {
-                    progressDialog.dismiss()
-                    Toast.makeText(this, "Falha ao salvar dados do usuário.", Toast.LENGTH_SHORT)
-                        .show()
+                .addOnFailureListener { e ->
+                    Log.e("Firestore", "Erro ao salvar o usuário: ${e.message}")
+                    Toast.makeText(this, "Falha ao salvar usuário. Tente novamente.", Toast.LENGTH_SHORT).show()
                 }
         }
     }

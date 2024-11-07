@@ -47,7 +47,7 @@
             android:layout_weight="1"
             android:layout_marginStart="16dp"
             android:text="Cliente"
-            android:textColor="@color/black"
+            android:textColor="@color/cinza_escuro"
             android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -77,8 +77,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="16dp"
-            android:text="Empresa"
-            android:textColor="@color/black"
+            android:text="Prestador de Serviços"
+            android:textColor="@color/cinza_escuro"
             android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>

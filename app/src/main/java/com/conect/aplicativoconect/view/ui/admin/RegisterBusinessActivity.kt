@@ -41,6 +41,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
     private val storagePermissionCode = 101
     private lateinit var email: String
     private lateinit var storage: FirebaseStorage
+    private lateinit var selectedOperatingHours: OperatingHours
     private lateinit var progressDialog: AlertDialog
 
     // ActivityResultLauncher para o resultado da galeria
@@ -146,22 +147,25 @@ class RegisterBusinessActivity : AppCompatActivity(),
                 val finalImageUri =
                     imageUri ?: Uri.parse("android.resource://${packageName}/drawable/default_img")
 
-                // Criar uma instância de OperatingHours
-                val operatingHours = OperatingHours(
-                    opening = "08:00",  // Horário de abertura padrão
-                    closing = "18:00",  // Horário de fechamento padrão
-                    days = listOf()      // Aqui você pode passar a lista de dias selecionados
-                )
+                // Verifique se selectedOperatingHours foi inicializado corretamente
+                if (!this::selectedOperatingHours.isInitialized) {
+                    Toast.makeText(
+                        this,
+                        "Por favor, selecione o horário de funcionamento.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnClickListener
+                }
 
                 progressDialog.show() // Mostrar o diálogo de progresso
 
-                // Registrar o negócio
+                // Registrar o negócio com os horários selecionados
                 registerBusiness(
                     businessName,
                     businessDescription,
                     selectedServiceType,
                     address,
-                    operatingHours,
+                    selectedOperatingHours, // Usar o horário selecionado pelo usuário
                     phone,
                     finalImageUri,
                     email // Passando o email aqui
@@ -322,9 +326,14 @@ class RegisterBusinessActivity : AppCompatActivity(),
         )
     }
 
-    // Callback para selecionar horários
     override fun onHoursSelected(openingTime: String, closingTime: String) {
+        selectedOperatingHours = OperatingHours(
+            opening = openingTime,
+            closing = closingTime,
+            days = listOf() // Atualize esta lista com os dias de funcionamento selecionados, se houver
+        )
         val operatingHoursText = "$openingTime - $closingTime"
         operatingHoursInput.setText(operatingHoursText)
     }
+
 }

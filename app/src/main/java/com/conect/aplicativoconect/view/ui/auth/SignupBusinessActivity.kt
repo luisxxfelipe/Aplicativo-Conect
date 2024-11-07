@@ -119,31 +119,6 @@ class SignupBusinessActivity : AppCompatActivity() {
             }
     }
 
-    private fun checkCpfAndCreateBusiness(email: String, nameUser: String, cpf: String) {
-        val userId = auth.currentUser?.uid ?: return
-
-        // Verifica se já existe uma assinatura para o usuário atual usando seu `userId` como o documento
-        db.collection("subscriptions")
-            .document(userId)  // Diretamente pelo ID do usuário
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    // O usuário já possui uma assinatura
-                    Toast.makeText(
-                        this,
-                        "Este CPF já foi utilizado para uma assinatura.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    // O CPF/usuário não tem assinatura ativa, pode criar o negócio
-                    createBusinessData(email, nameUser, cpf)
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("SubscriptionCheck", "Erro ao verificar assinatura: ${e.message}")
-            }
-    }
-
     private fun createBusinessAndSubscription(email: String, nameUser: String, cpf: String) {
         val userId = auth.currentUser?.uid ?: return
 
