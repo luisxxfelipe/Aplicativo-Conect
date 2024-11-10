@@ -17,6 +17,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.Calendar
+import android.provider.Settings.Secure
+import com.conect.aplicativoconect.view.data.LoadingActivity
+
 
 class SignupBusinessActivity : AppCompatActivity() {
 
@@ -56,13 +59,20 @@ class SignupBusinessActivity : AppCompatActivity() {
 
             if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && nameUser.isNotEmpty() && cpf.isNotEmpty()) {
                 if (password == confirmPassword) {
-                    createBusinessUser(email, password, nameUser, cpf)
+                    // Verificar o Android ID antes de criar o usuário
+                    val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
+                    checkIfAndroidIdExists(androidId) { exists ->
+                        if (exists) {
+                            Toast.makeText(this, "Este dispositivo já está registrado.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            createBusinessUser(email, password, nameUser, cpf, androidId)
+                        }
+                    }
                 } else {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -105,28 +115,39 @@ class SignupBusinessActivity : AppCompatActivity() {
     }
 
     // Função para criar o usuário de negócio no Firebase Authentication
-    private fun createBusinessUser(email: String, password: String, nameUser: String, cpf: String) {
+    private fun createBusinessUser(email: String, password: String, nameUser: String, cpf: String, androidId: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     // Se o usuário foi criado, ele agora está autenticado
-                    createBusinessAndSubscription(email, nameUser, cpf)
+                    createBusinessAndSubscription(email, nameUser, cpf, androidId)
                 } else {
-                    Log.e("CreateBusinessUser", "Erro ao criar usuário: ${task.exception?.message}")
-                    Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT)
-                        .show()
+                    // Captura o erro específico e verifica se é uma senha fraca
+                    val exception = task.exception
+                    if (exception != null) {
+                        val errorMessage = when {
+                            exception.message?.contains("WEAK_PASSWORD") == true -> {
+                                "A senha é muito fraca. Por favor, escolha uma senha mais forte."
+                            }
+                            else -> "Falha ao cadastrar. Tente novamente."
+                        }
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
     }
 
-    private fun createBusinessAndSubscription(email: String, nameUser: String, cpf: String) {
+
+    private fun createBusinessAndSubscription(email: String, nameUser: String, cpf: String, androidId: String) {
         val userId = auth.currentUser?.uid ?: return
 
         // Criar assinatura inicial sem verificação prévia
         createInitialSubscription(userId, cpf)
 
-        // Criar dados do negócio
-        createBusinessData(email, nameUser, cpf)
+        // Criar dados do negócio com o Android ID
+        createBusinessData(email, nameUser, cpf, androidId)
     }
 
 
@@ -150,7 +171,7 @@ class SignupBusinessActivity : AppCompatActivity() {
     }
 
     // Cria o documento inicial do negócio e assinatura
-    private fun createBusinessData(email: String, nameUser: String, cpf: String) {
+    private fun createBusinessData(email: String, nameUser: String, cpf: String, androidId: String) {
         val businessId = auth.currentUser?.uid
 
         if (businessId != null) {
@@ -162,10 +183,10 @@ class SignupBusinessActivity : AppCompatActivity() {
                 "type" to "business",
                 "ownerId" to businessId,
                 "averageRating" to 0.0,
-                "ratingCount" to 0
+                "ratingCount" to 0,
+                "androidId" to androidId // Adiciona o Android ID aqui
             )
 
-            // Log para verificar os dados antes de salvar
             Log.d("BusinessData", "Dados do negócio: $businessData")
 
             saveFCMToken(businessId)
@@ -176,11 +197,10 @@ class SignupBusinessActivity : AppCompatActivity() {
                     Log.d("CreateBusinessData", "Dados do negócio salvos com sucesso: $businessData")
                     Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT).show()
 
-                    // Redireciona para a tela de registro de mais dados
-                    val intent = Intent(this, RegisterBusinessActivity::class.java)
-                    intent.putExtra("EMAIL_KEY", email)
+                    // Redireciona para a tela de carregamento
+                    val intent = Intent(this, LoadingActivity::class.java)
                     startActivity(intent)
-                    finish()
+                    finish() // Finaliza a atividade atual
                 }
                 .addOnFailureListener { e ->
                     Log.e("CreateBusinessData", "Erro ao salvar dados do negócio: ${e.message}")
@@ -217,6 +237,23 @@ class SignupBusinessActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 Log.e("Subscription", "Erro ao criar assinatura: ${e.message}")
+            }
+    }
+
+    private fun checkIfAndroidIdExists(androidId: String, callback: (Boolean) -> Unit) {
+        db.collection("business")
+            .whereEqualTo("androidId", androidId)
+            .get()
+            .addOnSuccessListener { result ->
+                if (!result.isEmpty) {
+                    callback(true) // Android ID já existe
+                } else {
+                    callback(false) // Android ID não encontrado, pode registrar
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firebase", "Erro ao verificar Android ID: ${e.message}")
+                callback(false)
             }
     }
 }

@@ -79,11 +79,22 @@ class SelecionarHorarioActivity : AppCompatActivity() {
 
     private fun openDatePicker() {
         val calendar = Calendar.getInstance()
+
+        // Calcula a data máxima permitida (3 semanas a partir da data atual)
+        val maxDateCalendar = Calendar.getInstance()
+        maxDateCalendar.add(Calendar.WEEK_OF_YEAR, 3) // Adiciona 3 semanas
+
         val datePickerDialog = DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
                 val selectedCalendar = Calendar.getInstance()
                 selectedCalendar.set(year, month, dayOfMonth)
+
+                // Verifica se a data selecionada está dentro do limite de 3 semanas
+                if (selectedCalendar.after(maxDateCalendar)) {
+                    Toast.makeText(this, "Não é possível agendar com mais de 3 semanas de antecedência.", Toast.LENGTH_SHORT).show()
+                    return@DatePickerDialog
+                }
 
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 selectedDate = dateFormat.format(selectedCalendar.time)
@@ -94,9 +105,15 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
+
+        // Configura a data mínima para hoje
         datePickerDialog.datePicker.minDate = calendar.timeInMillis
+        // Configura a data máxima para 3 semanas a partir de hoje
+        datePickerDialog.datePicker.maxDate = maxDateCalendar.timeInMillis
+
         datePickerDialog.show()
     }
+
 
     private fun fetchOperatingHours() {
         firestore.collection("business").document(companyId).get()

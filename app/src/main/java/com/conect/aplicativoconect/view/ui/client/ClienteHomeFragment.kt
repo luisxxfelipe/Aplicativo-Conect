@@ -72,7 +72,7 @@ class ClienteHomeFragment : Fragment() {
 
     private fun setupAdapters() {
         val categories =
-            listOf("Manicure", "Barbearia", "Cabeleireiro", "Massagista", "Maquiagens", "Estética")
+            listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem")
         _binding?.categoriesRecyclerView?.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 

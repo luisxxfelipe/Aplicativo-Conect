@@ -145,11 +145,11 @@ class AdminHomeFragment : Fragment() {
 
 
     private fun processBookings(bookings: List<Booking>) {
-        val confirmedBookings = bookings.filter {
-            it.status_cliente == "confirmed" && it.status_adm == "confirmed"
-        }
+        // Remova o filtro que exige que o status_adm seja "confirmed"
+        val futureBookings = bookings.filter { isFutureBooking(it) }
 
-        val (weeklyBookings, monthBookings) = filterBookingsByDate(confirmedBookings)
+        // Filtra agendamentos para a semana e o mês atual
+        val (weeklyBookings, monthBookings) = filterBookingsByDate(futureBookings)
         val monthlyProfit = calculateProfit(monthBookings)
         val weeklyProfit = calculateProfit(weeklyBookings)
 
@@ -160,10 +160,10 @@ class AdminHomeFragment : Fragment() {
         adminViewModel.setMonthProfit(monthlyProfit)
         adminViewModel.setTodayProfit(weeklyProfit)
 
-        val nearestBookings = weeklyBookings
-            .filter { isFutureBooking(it) }
+        // Ajuste a lógica para mostrar todos os próximos agendamentos, não apenas os confirmados
+        val nearestBookings = futureBookings
             .sortedBy { it.date?.let { date -> parseDateTime(date, it.hour) } }
-            .take(2)
+            .take(2) // Exibe os 2 próximos agendamentos
 
         if (nearestBookings.isEmpty()) {
             showNoBookingsMessage(true)
@@ -172,6 +172,7 @@ class AdminHomeFragment : Fragment() {
             setupNearestBookingsAdapter(nearestBookings)
         }
     }
+
 
     private fun calculateProfit(bookings: List<Booking>): Double {
         return bookings.sumOf { it.price }

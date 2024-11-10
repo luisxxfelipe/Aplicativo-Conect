@@ -108,11 +108,10 @@ class BookingAdapter(
                     .addOnSuccessListener {
                         booking.status_adm = "confirmed"
                         notifyItemChanged(position)
-                        sendNotificationToUser(
-                            bookingId,
-                            "Agendamento Confirmado",
-                            "O agendamento de ${booking.name} foi confirmado!"
-                        )
+                        // Notificar o cliente
+                        sendNotification(bookingId, "Agendamento Confirmado", "O seu agendamento foi confirmado!", false)
+                        // Notificar o administrador
+                        sendNotification(bookingId, "Novo Agendamento Confirmado", "O agendamento foi confirmado.", true)
                     }
             }
         }
@@ -126,11 +125,8 @@ class BookingAdapter(
                 firestore.collection("bookings").document(bookingId)
                     .update("status_adm", "cancelled")
                     .addOnSuccessListener {
-                        sendNotificationToUser(
-                            bookingId,
-                            "Agendamento Cancelado",
-                            "Olá ${booking.name}, seu agendamento foi cancelado."
-                        )
+                        // Notificar o cliente
+                        sendNotification(bookingId, "Agendamento Cancelado", "Olá ${booking.name}, seu agendamento foi cancelado.", false)
                         coroutineScope.launch {
                             delay(2000L)
                             firestore.collection("bookings").document(bookingId)
@@ -160,11 +156,8 @@ class BookingAdapter(
                         booking.status_adm = "completed"
                         booking.status_cliente = "completed"
                         notifyItemChanged(position)
-                        sendNotificationToUser(
-                            bookingId,
-                            "Serviço Completo",
-                            "O serviço para ${booking.serviceName} foi concluído! Agora você pode avaliá-lo."
-                        )
+                        // Notificar o cliente
+                        sendNotification(bookingId, "Serviço Completo", "O serviço para ${booking.serviceName} foi concluído! Agora você pode avaliá-lo.", false)
                     }
             }
         }
@@ -243,31 +236,67 @@ class BookingAdapter(
             .show()
     }
 
-    private fun sendNotificationToUser(bookingId: String, title: String, message: String) {
-        firestore.collection("bookings").document(bookingId)
-            .get()
-            .addOnSuccessListener { document ->
-                val userId = document.getString("userId") ?: return@addOnSuccessListener
-                fetchUserToken(userId) { token ->
-                    if (token != null) {
-                        sendFCMNotification(token, title, message)
-                    } else {
-                        Log.e("FCM", "Token do usuário não encontrado para o ID: $userId")
+    // Função para enviar notificações, com a opção de notificar o cliente ou o administrador
+    private fun sendNotification(bookingId: String, title: String, message: String, notifyAdmin: Boolean) {
+        if (notifyAdmin) {
+            // Buscar o token do administrador
+            firestore.collection("bookings").document(bookingId)
+                .get()
+                .addOnSuccessListener { bookingDocument ->
+                    val companyId = bookingDocument.getString("companyId") ?: return@addOnSuccessListener
+                    fetchBusinessToken(companyId) { adminToken ->
+                        if (adminToken != null) {
+                            sendFCMNotification(adminToken, title, message)
+                        } else {
+                            Log.e("FCM", "Token do administrador não encontrado para a empresa ID: $companyId")
+                        }
                     }
                 }
+                .addOnFailureListener { e ->
+                    Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
+                }
+        } else {
+            // Buscar o token do usuário (cliente)
+            firestore.collection("bookings").document(bookingId)
+                .get()
+                .addOnSuccessListener { bookingDocument ->
+                    val userId = bookingDocument.getString("userId") ?: return@addOnSuccessListener
+                    fetchUserToken(userId) { userToken ->
+                        if (userToken != null) {
+                            sendFCMNotification(userToken, title, message)
+                        } else {
+                            Log.e("FCM", "Token do usuário não encontrado para o ID: $userId")
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
+                }
+        }
+    }
+
+    // Função para buscar o token do administrador
+    private fun fetchBusinessToken(companyId: String, callback: (String?) -> Unit) {
+        firestore.collection("business").document(companyId)
+            .get()
+            .addOnSuccessListener { document ->
+                val token = document.getString("fcmToken")
+                Log.d("FCM", "Token do administrador: $token")
+                callback(token)
             }
             .addOnFailureListener { e ->
-                Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
+                Log.e("FCM", "Erro ao buscar token do administrador: ${e.message}")
+                callback(null)
             }
     }
 
-
+    // Função para buscar o token do usuário (cliente)
     private fun fetchUserToken(userId: String, callback: (String?) -> Unit) {
         firestore.collection("users").document(userId)
             .get()
             .addOnSuccessListener { document ->
                 val token = document.getString("fcmToken")
-                Log.d("FCM", "Token atual: $token")
+                Log.d("FCM", "Token do usuário: $token")
                 callback(token)
             }
             .addOnFailureListener { e ->
@@ -276,6 +305,7 @@ class BookingAdapter(
             }
     }
 
+    // Função para enviar a notificação FCM
     private fun sendFCMNotification(token: String, title: String, message: String) {
         val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
         val payload = """
@@ -327,5 +357,4 @@ class BookingAdapter(
             }
         }
     }
-
 }

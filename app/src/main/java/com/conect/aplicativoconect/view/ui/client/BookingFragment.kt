@@ -190,7 +190,7 @@ class BookingFragment : Fragment() {
                 sendNotificationToBusiness(
                     booking,
                     "Agendamento Confirmado",
-                    "Olá ${booking.name}, seu agendamento foi confirmado!"
+                    "Olá, o agendamento de ${booking.name} foi confirmado!"
                 )
                 Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT)
                     .show()
@@ -213,7 +213,7 @@ class BookingFragment : Fragment() {
                 sendNotificationToBusiness(
                     booking,
                     "Agendamento Cancelado",
-                    "O agendamento de ${booking.name} foi cancelado."
+                    "Olá, o agendamento de ${booking.name} foi cancelado!"
                 )
                 Toast.makeText(
                     requireContext(),
