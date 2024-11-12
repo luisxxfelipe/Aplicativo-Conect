@@ -30,9 +30,9 @@ class PhotosFragment : Fragment() {
 
     private fun setupRecyclerView(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.photosRecyclerView)
-        recyclerView.layoutManager = GridLayoutManager(context, 1) // 2 columns
+        recyclerView.layoutManager = GridLayoutManager(context, 1) // 1 column
         fetchPhotos { photos ->
-            recyclerView.adapter = PhotosAdapter(photos)
+            recyclerView.adapter = PhotosAdapter(photos, requireContext()) // Passando o contexto
         }
     }
 

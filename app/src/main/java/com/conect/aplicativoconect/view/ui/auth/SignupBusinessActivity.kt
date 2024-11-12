@@ -18,7 +18,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.Calendar
 import android.provider.Settings.Secure
-import com.conect.aplicativoconect.view.data.LoadingActivity
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 
 
 class SignupBusinessActivity : AppCompatActivity() {
@@ -119,26 +119,19 @@ class SignupBusinessActivity : AppCompatActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Se o usuário foi criado, ele agora está autenticado
                     createBusinessAndSubscription(email, nameUser, cpf, androidId)
                 } else {
-                    // Captura o erro específico e verifica se é uma senha fraca
                     val exception = task.exception
-                    if (exception != null) {
-                        val errorMessage = when {
-                            exception.message?.contains("WEAK_PASSWORD") == true -> {
-                                "A senha é muito fraca. Por favor, escolha uma senha mais forte."
-                            }
-                            else -> "Falha ao cadastrar. Tente novamente."
-                        }
-                        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+                    if (exception is FirebaseAuthWeakPasswordException) {
+                        // Mensagem específica para senha fraca
+                        Toast.makeText(this, "A senha é muito fraca. Por favor, escolha uma senha mais forte.", Toast.LENGTH_SHORT).show()
                     } else {
+                        // Mensagem genérica para outros erros
                         Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
     }
-
 
     private fun createBusinessAndSubscription(email: String, nameUser: String, cpf: String, androidId: String) {
         val userId = auth.currentUser?.uid ?: return
@@ -198,7 +191,8 @@ class SignupBusinessActivity : AppCompatActivity() {
                     Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT).show()
 
                     // Redireciona para a tela de carregamento
-                    val intent = Intent(this, LoadingActivity::class.java)
+                    val intent = Intent(this, RegisterBusinessActivity::class.java)
+                    intent.putExtra("EMAIL_KEY", email) // Passando o email para a próxima Activity
                     startActivity(intent)
                     finish() // Finaliza a atividade atual
                 }

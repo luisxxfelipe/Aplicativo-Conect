@@ -1,11 +1,14 @@
 package com.conect.aplicativoconect.view.ui.client
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -39,6 +42,8 @@ class ClientBookingAdapter(
         val confirmButton: Button = itemView.findViewById(R.id.confirmButton)
         val cancelButton: Button = itemView.findViewById(R.id.cancelButton)
         val rateButton: Button = itemView.findViewById(R.id.rateButton)
+        val whatsappIcon: ImageView = itemView.findViewById(R.id.whatsappIcon) // Novo ícone do WhatsApp
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClientBookingViewHolder {
@@ -53,6 +58,28 @@ class ClientBookingAdapter(
         holder.bookingServiceType.text = booking.serviceName
         holder.bookingDate.text = booking.date
         holder.bookingTime.text = "${booking.hour}h"
+
+        // Configuração do ícone do WhatsApp
+        holder.whatsappIcon.setOnClickListener {
+            var businessPhoneNumber = booking.businessPhone // Adicione o número de telefone do Business na classe Booking
+
+            // Limpar o número de telefone, removendo espaços, parênteses, e hífens
+            if (businessPhoneNumber != null) {
+                businessPhoneNumber = businessPhoneNumber.replace("[^\\d]".toRegex(), "")
+            }
+
+            // Adicionar o código do país, se necessário (por exemplo, Brasil é 55)
+            if (businessPhoneNumber != null) {
+                if (!businessPhoneNumber.startsWith("55")) {
+                    businessPhoneNumber = "55$businessPhoneNumber"
+                }
+            }
+
+            val message = "Olá, meu nome é ${booking.name}. Queria tirar dúvidas sobre meu agendamento de ${booking.serviceName} no dia ${booking.date} às ${booking.hour}."
+
+            openWhatsApp(businessPhoneNumber, message)
+        }
+
 
         val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
         val statusColor = if (booking.status_cliente == "confirmed") {
@@ -78,6 +105,23 @@ class ClientBookingAdapter(
             removeBookingAtPosition(holder.adapterPosition)
         }
         holder.rateButton.setOnClickListener { onRateClick(booking) }
+    }
+
+    // Função para abrir o WhatsApp
+    private fun openWhatsApp(phoneNumber: String?, message: String) {
+        if (phoneNumber != null && phoneNumber.isNotEmpty()) {
+            val uri = Uri.parse("https://wa.me/$phoneNumber?text=${Uri.encode(message)}")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            intent.setPackage("com.whatsapp")
+
+            try {
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("WhatsApp", "Erro ao abrir o WhatsApp: ${e.message}")
+            }
+        } else {
+            Log.e("WhatsApp", "Número de telefone do Business não está disponível.")
+        }
     }
 
     private fun hasServiceTimePassed(booking: Booking): Boolean {

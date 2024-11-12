@@ -143,13 +143,15 @@ class ClientViewModel : ViewModel() {
         message: String
     ) {
         val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
+        val iconName = "ic_notification_icon"
         val payload = """
         {
           "message": {
             "token": "$token",
             "notification": {
               "title": "$title",
-              "body": "$message"
+              "body": "$message",
+              "icon": "$iconName"
             },
             "android": {
               "priority": "high"

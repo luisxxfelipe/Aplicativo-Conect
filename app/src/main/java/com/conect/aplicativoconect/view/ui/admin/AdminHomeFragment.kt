@@ -212,16 +212,13 @@ class AdminHomeFragment : Fragment() {
 
     private fun setupNearestBookingsAdapter(nearestBookings: List<Booking>) {
         binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
-        binding.todayBookingsRecyclerView.adapter = ClientBookingAdapter(
-            context = requireContext(), // Passa o contexto necessário
+        binding.todayBookingsRecyclerView.adapter = BookingAdapter(
             bookings = nearestBookings,
-            onConfirmClick = { booking -> confirmBooking(booking.id ?: "") },
-            onCancelClick = { booking -> cancelBooking(booking.id ?: "") },
-            onRateClick = { booking -> /* Implementar lógica para avaliar se necessário */ },
-            onEmptyList = { showNoBookingsMessage(true) }
+            context = requireContext(),
+            onConfirmBooking = { bookingId -> confirmBooking(bookingId) },
+            onCancelBooking = { bookingId -> cancelBooking(bookingId) }
         )
     }
-
 
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance().time

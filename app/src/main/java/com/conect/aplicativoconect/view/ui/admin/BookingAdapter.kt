@@ -85,16 +85,18 @@ class BookingAdapter(
         val hasPassedTime = hasBookingTimePassed(booking.date, booking.hour)
 
         // Verificar se o agendamento está completo
-        val isCompleted = booking.status_adm == "completed" && booking.status_cliente == "completed"
+        val isCompleted = booking.status_adm == "completed" || booking.status_adm == "cancelled"
 
         // Define a lógica de exibição dos botões
-        val showConfirmationButtons = booking.status_adm == "pending" && !hasPassedTime
-        val showCompletionButtons = hasPassedTime && booking.status_cliente == "confirmed" && booking.status_adm == "confirmed"
+        val showConfirmationButtons = booking.status_adm == "pending" && !isCompleted
+        val showCompletionButtons = hasPassedTime && !isCompleted && booking.status_adm == "confirmed"
 
         holder.confirmButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
-        holder.completeButton.visibility = if (showCompletionButtons && !isCompleted) View.VISIBLE else View.GONE
-        holder.notCompletedButton.visibility = if (showCompletionButtons && !isCompleted) View.VISIBLE else View.GONE
+        holder.completeButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
+        holder.notCompletedButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
+
+
 
         // Ação de confirmar agendamento
         holder.confirmButton.setOnClickListener {
@@ -109,7 +111,7 @@ class BookingAdapter(
                         booking.status_adm = "confirmed"
                         notifyItemChanged(position)
                         // Notificar o cliente
-                        sendNotification(bookingId, "Agendamento Confirmado", "O seu agendamento foi confirmado!", false)
+                        sendNotification(bookingId, "Agendamento Confirmado", "Olá ${booking.name}, seu agendamento foi cancelado.", false)
                         // Notificar o administrador
                         sendNotification(bookingId, "Novo Agendamento Confirmado", "O agendamento foi confirmado.", true)
                     }

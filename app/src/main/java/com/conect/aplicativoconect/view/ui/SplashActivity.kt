@@ -37,18 +37,18 @@ class SplashActivity : AppCompatActivity() {
                             startActivity(Intent(this, AdminHomeActivity::class.java))
                             finish()
                         } else {
-                            // Se não é um negócio, verificar se é um usuário comum
+                            // Caso não seja "Business", verificar se é um Cliente
                             firestore.collection("users").document(currentUser.uid)
                                 .get()
                                 .addOnSuccessListener { userDocument ->
                                     if (userDocument.exists()) {
-                                        // Usuário é um cliente
+                                        // Usuário é um Cliente
                                         startActivity(Intent(this, ClienteHomeActivity::class.java))
                                     } else {
-                                        // Se o documento não existir, redirecionar para a tela de boas-vindas
+                                        // Documento do usuário não encontrado, redirecionar para a tela de boas-vindas
                                         startActivity(Intent(this, WelcomeActivity::class.java))
                                     }
-                                    finish() // Finaliza a SplashActivity
+                                    finish()
                                 }
                                 .addOnFailureListener {
                                     // Em caso de erro, redirecionar para a tela de boas-vindas

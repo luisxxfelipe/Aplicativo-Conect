@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings.Secure
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -21,11 +22,10 @@ import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
-import android.provider.Settings.Secure
-import com.conect.aplicativoconect.view.data.LoadingActivity
 
 class SignupClientActivity : AppCompatActivity() {
 
@@ -239,16 +239,9 @@ class SignupClientActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    // Captura o erro específico e verifica se é uma senha fraca
                     val exception = task.exception
-                    if (exception != null) {
-                        val errorMessage = when {
-                            exception.message?.contains("WEAK_PASSWORD") == true -> {
-                                "A senha é muito fraca. Por favor, escolha uma senha mais forte."
-                            }
-                            else -> "Falha ao cadastrar. Tente novamente."
-                        }
-                        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+                    if (exception is FirebaseAuthWeakPasswordException) {
+                        Toast.makeText(this, "A senha é muito fraca. Por favor, escolha uma senha mais forte.", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
                     }
@@ -352,11 +345,10 @@ class SignupClientActivity : AppCompatActivity() {
                 .addOnSuccessListener {
                     Toast.makeText(this, "Cadastro bem-sucedido!", Toast.LENGTH_SHORT).show()
                     onSuccess() // Chama o callback após o sucesso
-
-                    // Redireciona para a tela de carregamento
-                    val intent = Intent(this, LoadingActivity::class.java)
+                    val intent = Intent(this, ClienteHomeActivity::class.java)
+                    intent.putExtra("FROM_SIGNUP", true) // Adicione o extra
                     startActivity(intent)
-                    finish() // Finaliza a atividade atual
+                    finish()
                 }
                 .addOnFailureListener { e ->
                     Log.e("Firestore", "Erro ao salvar o usuário: ${e.message}")
@@ -364,4 +356,5 @@ class SignupClientActivity : AppCompatActivity() {
                 }
         }
     }
+
 }

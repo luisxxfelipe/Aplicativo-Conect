@@ -283,6 +283,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 val intent = Intent(this, AdminHomeActivity::class.java)
+                                intent.putExtra("FROM_REGISTER", true) // Passando a informação de que veio do cadastro
                                 startActivity(intent)
                                 finish()
                             }

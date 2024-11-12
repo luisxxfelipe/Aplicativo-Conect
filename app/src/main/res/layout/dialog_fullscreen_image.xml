@@ -1,0 +1,28 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Fundo escurecido -->
+    <View
+        android:id="@+id/backgroundOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000" /> <!-- Fundo preto com 50% de opacidade -->
+
+    <!-- Imagem em tela cheia -->
+    <ImageView
+        android:id="@+id/fullScreenImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter" /> <!-- Ajuste conforme necessário -->
+
+    <!-- Botão de voltar -->
+    <ImageView
+        android:id="@+id/closeButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:contentDescription="Fechar"
+        android:src="@drawable/ic_close" />
+</FrameLayout>

@@ -84,7 +84,6 @@
         <activity android:name=".view.ui.admin.AddBookingActivity" android:exported="true" />
         <activity android:name=".view.ui.admin.AdminSettingsFragment" android:exported="true" />
         <activity android:name=".view.ui.admin.PublishPhotoActivity" android:exported="true" />
-        <activity android:name=".view.data.LoadingActivity" android:exported="true" />
 
 
         <!-- EditProfileActivity e EditBusinessProfileActivity -->

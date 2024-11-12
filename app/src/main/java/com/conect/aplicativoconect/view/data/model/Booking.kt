@@ -13,5 +13,6 @@ data class Booking(
     var price: Double = 0.0,
     val userImageUrl: String? = null,
     var status_cliente: String? = null,
-    var status_adm: String? = null
+    var status_adm: String? = null,
+    var businessPhone: String? = null
 )

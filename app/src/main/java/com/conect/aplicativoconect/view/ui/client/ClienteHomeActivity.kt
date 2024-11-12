@@ -1,9 +1,14 @@
 package com.conect.aplicativoconect.view.ui.client
 
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.RatingBar
@@ -27,6 +32,8 @@ class ClienteHomeActivity : AppCompatActivity() {
     private lateinit var firestore: FirebaseFirestore
     private val clientViewModel: ClientViewModel by viewModels()
     private lateinit var clientBookingAdapter: ClientBookingAdapter
+    private var loadingDialog: Dialog? = null
+    private var isFromSignup: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +41,24 @@ class ClienteHomeActivity : AppCompatActivity() {
 
         firestore = FirebaseFirestore.getInstance()
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
+
+        // Verificação de autenticação
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            redirectToLogin() // Redireciona para tela de login se o usuário não estiver autenticado
+            return
+        }
+
+        // Check if the user came from the signup screen
+        isFromSignup = intent.getBooleanExtra("FROM_SIGNUP", false)
+
+        // Setup the loading dialog
+        setupLoadingDialog()
+
+        // Show the loading dialog only if coming from signup
+        if (isFromSignup) {
+            showLoadingDialogWithDelay()
+        }
 
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -63,6 +88,39 @@ class ClienteHomeActivity : AppCompatActivity() {
         clientViewModel.todayBookings.observe(this) { bookings ->
             updateBookingsView(bookings)
         }
+    }
+
+    private fun redirectToLogin() {
+        startActivity(Intent(this, WelcomeActivity::class.java))
+        finish()
+    }
+
+    private fun setupLoadingDialog() {
+        loadingDialog = Dialog(this)
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_loading, null)
+        loadingDialog?.setContentView(view)
+        loadingDialog?.setCancelable(false)
+        loadingDialog?.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        loadingDialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
+
+    private fun showLoadingDialogWithDelay() {
+        showLoadingDialog()
+        // Keep the dialog open for 3 seconds (3000 milliseconds)
+        Handler(Looper.getMainLooper()).postDelayed({
+            hideLoadingDialog()
+        }, 3000)
+    }
+
+    private fun showLoadingDialog() {
+        loadingDialog?.show()
+    }
+
+    private fun hideLoadingDialog() {
+        loadingDialog?.dismiss()
     }
 
     private fun loadFragment(fragment: Fragment, userName: String? = null) {
@@ -102,12 +160,10 @@ class ClienteHomeActivity : AppCompatActivity() {
     }
 
     private fun updateBookingsView(bookings: List<Booking>) {
-        // Buscar as Views
         val noBookingsMessage = findViewById<TextView>(R.id.noBookingsMessage)
         val noBookingsImage = findViewById<ImageView>(R.id.noBookingsImage)
         val recyclerView = findViewById<RecyclerView>(R.id.todayBookingsRecyclerView)
 
-        // Verificar se as Views foram carregadas corretamente
         if (noBookingsMessage == null || noBookingsImage == null || recyclerView == null) {
             Log.e("ClienteHomeActivity", "Views de agendamentos não foram encontradas.")
             return

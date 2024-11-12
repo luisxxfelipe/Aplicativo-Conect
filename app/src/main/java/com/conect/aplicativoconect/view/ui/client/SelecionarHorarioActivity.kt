@@ -206,33 +206,47 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         val userId = auth.currentUser?.uid ?: return
         val userRef = firestore.collection("users").document(userId)
 
+        // Buscar o nome e a imagem do usuário
         userRef.get().addOnSuccessListener { userDoc ->
             val userName = userDoc.getString("name") ?: "Nome não encontrado"
             val userImageUrl = userDoc.getString("imageUrl")
 
-            val bookingData = mapOf(
-                "userId" to userId,
-                "companyId" to companyId,
-                "serviceName" to selectedService.name,
-                "price" to selectedService.price,
-                "hour" to selectedHour,
-                "date" to selectedDate,
-                "name" to userName,
-                "userImageUrl" to userImageUrl,
-                "status_cliente" to "pending",
-                "status_adm" to "pending",
-                "notified" to false
-            )
+            // Buscar o telefone do business
+            val businessRef = firestore.collection("business").document(companyId)
+            businessRef.get().addOnSuccessListener { businessDoc ->
+                val businessPhone = businessDoc.getString("phone") ?: "Número não disponível"
 
-            firestore.collection("bookings").add(bookingData)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Agendamento realizado com sucesso!", Toast.LENGTH_SHORT)
-                        .show()
-                    finish()
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(this, "Erro ao agendar: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+                // Criar os dados do agendamento
+                val bookingData = mapOf(
+                    "userId" to userId,
+                    "companyId" to companyId,
+                    "serviceName" to selectedService.name,
+                    "price" to selectedService.price,
+                    "hour" to selectedHour,
+                    "date" to selectedDate,
+                    "name" to userName,
+                    "userImageUrl" to userImageUrl,
+                    "businessPhone" to businessPhone,  // Adiciona o telefone do business
+                    "status_cliente" to "pending",
+                    "status_adm" to "pending",
+                    "notified" to false
+                )
+
+                // Salvar o agendamento no Firestore
+                firestore.collection("bookings").add(bookingData)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Agendamento realizado com sucesso!", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Erro ao agendar: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }.addOnFailureListener { e ->
+                Toast.makeText(this, "Erro ao buscar telefone do business: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }.addOnFailureListener { e ->
+            Toast.makeText(this, "Erro ao buscar dados do usuário: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
+
 }

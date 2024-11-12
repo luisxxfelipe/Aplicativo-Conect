@@ -13,7 +13,6 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-
         <View
             android:id="@+id/statusIndicator"
             android:layout_width="8dp"
@@ -43,14 +42,38 @@
                 android:textColor="@color/textSecondary"
                 android:textSize="14sp" />
 
-            <TextView
-                android:id="@+id/bookingTime"
-                android:layout_width="wrap_content"
+            <!-- Linha horizontal com ícone do WhatsApp e horário do agendamento -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical">
+
+                <!-- Ícone do WhatsApp -->
+                <ImageView
+                    android:id="@+id/whatsappIcon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:contentDescription="Converse com o responsável pelo agendamento"
+                    android:src="@drawable/ic_whatsapp" />
+
+                <!-- Espaçamento flexível para empurrar o horário para a direita -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Horário do agendamento -->
+                <TextView
+                    android:id="@+id/bookingTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
 
             <TextView
                 android:id="@+id/bookingDate"
@@ -96,7 +119,6 @@
                     android:textColor="@android:color/white"
                     app:cornerRadius="8dp"
                     android:visibility="gone" />
-
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

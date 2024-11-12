@@ -1,5 +1,7 @@
 package com.conect.aplicativoconect.view.ui.client
 
+import android.app.Dialog
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +12,7 @@ import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.ServicePhoto
 
-class PhotosAdapter(private val photos: List<ServicePhoto>) :
+class PhotosAdapter(private val photos: List<ServicePhoto>, private val context: Context) :
     RecyclerView.Adapter<PhotosAdapter.PhotoViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoViewHolder {
@@ -37,6 +39,31 @@ class PhotosAdapter(private val photos: List<ServicePhoto>) :
                 .into(imageView)
 
             captionTextView.text = photo.caption
+
+            // Configurar clique para exibir imagem em tela cheia
+            imageView.setOnClickListener {
+                showFullScreenImage(photo.url)
+            }
+        }
+
+        private fun showFullScreenImage(imageUrl: String) {
+            val dialog = Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+            dialog.setContentView(R.layout.dialog_fullscreen_image)
+
+            val fullScreenImageView: ImageView = dialog.findViewById(R.id.fullScreenImageView)
+            val closeButton: ImageView = dialog.findViewById(R.id.closeButton)
+
+            // Carregue a imagem com Glide
+            Glide.with(context)
+                .load(imageUrl)
+                .into(fullScreenImageView)
+
+            // Configure o clique no botão de voltar para fechar o dialog
+            closeButton.setOnClickListener {
+                dialog.dismiss()
+            }
+
+            dialog.show()
         }
     }
 }
