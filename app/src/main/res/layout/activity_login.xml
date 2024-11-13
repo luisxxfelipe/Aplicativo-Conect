@@ -84,7 +84,8 @@
                 android:hint="Email"
                 app:boxStrokeWidth="1dp"
                 app:boxBackgroundMode="outline"
-                app:boxStrokeColor="@color/colorPrimary">
+                app:boxStrokeColor="@color/roxo"
+                app:hintTextColor="@color/roxo">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/emailInput"
@@ -106,7 +107,8 @@
                 android:hint="Senha"
                 app:boxStrokeWidth="1dp"
                 app:boxBackgroundMode="outline"
-                app:boxStrokeColor="@color/colorPrimary">
+                app:boxStrokeColor="@color/roxo"
+                app:hintTextColor="@color/roxo">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordInput"

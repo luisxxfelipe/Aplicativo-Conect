@@ -111,7 +111,7 @@ class BookingAdapter(
                         booking.status_adm = "confirmed"
                         notifyItemChanged(position)
                         // Notificar o cliente
-                        sendNotification(bookingId, "Agendamento Confirmado", "Olá ${booking.name}, seu agendamento foi cancelado.", false)
+                        sendNotification(bookingId, "Agendamento Confirmado", "Olá ${booking.name}, seu agendamento foi confirmado.", false)
                         // Notificar o administrador
                         sendNotification(bookingId, "Novo Agendamento Confirmado", "O agendamento foi confirmado.", true)
                     }

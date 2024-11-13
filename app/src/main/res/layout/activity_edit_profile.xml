@@ -26,8 +26,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="Nome"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
-        app:boxStrokeColor="@color/colorPrimary"
         app:boxStrokeWidth="1dp">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -45,9 +46,10 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="Email"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
         android:backgroundTint="@android:color/transparent"
-        app:boxStrokeColor="@color/colorPrimary"
         app:boxStrokeWidth="1dp">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -65,8 +67,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="CPF"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
-        app:boxStrokeColor="@color/colorPrimary"
         app:boxStrokeWidth="1dp">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -85,7 +88,8 @@
         android:layout_marginBottom="16dp"
         android:hint="Telefone"
         app:boxBackgroundMode="outline"
-        app:boxStrokeColor="@color/colorPrimary"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxStrokeWidth="1dp">
 
         <com.google.android.material.textfield.TextInputEditText

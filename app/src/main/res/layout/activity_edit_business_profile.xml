@@ -27,6 +27,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Nome do Proprietário"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
         android:layout_marginBottom="16dp">
 
@@ -42,6 +44,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Nome da Empresa"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
         android:layout_marginBottom="16dp">
 
@@ -57,6 +61,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="E-mail"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
         android:layout_marginBottom="16dp">
 
@@ -72,6 +78,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Endereço"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
         android:layout_marginBottom="16dp">
 
@@ -89,8 +97,9 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:hint="CPF"
-            app:boxBackgroundMode="outline"
-            app:boxStrokeColor="@color/colorPrimary">
+            app:boxStrokeColor="@color/roxo"
+            app:hintTextColor="@color/roxo"
+            app:boxBackgroundMode="outline">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editBusinessCpf"
@@ -108,8 +117,9 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:hint="Telefone"
-            app:boxBackgroundMode="outline"
-            app:boxStrokeColor="@color/colorPrimary">
+            app:boxStrokeColor="@color/roxo"
+            app:hintTextColor="@color/roxo"
+            app:boxBackgroundMode="outline">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editBusinessPhone"
@@ -125,6 +135,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Descrição"
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
         android:layout_marginBottom="24dp">
 

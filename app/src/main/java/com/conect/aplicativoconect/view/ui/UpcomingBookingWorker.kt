@@ -112,26 +112,42 @@ class UpcomingBookingWorker(
     }
 
     private fun sendNotificationToAdmin(bookingId: String, title: String, message: String) {
-        firestore.collection("business").document(bookingId)
+        firestore.collection("bookings").document(bookingId)
             .get()
-            .addOnSuccessListener { document ->
-                val ownerId = document.getString("ownerId") ?: return@addOnSuccessListener
-                fetchUserToken(ownerId) { token ->
-                    if (token != null) {
-                        Log.d(
-                            "UpcomingBookingWorker",
-                            "Enviando notificação para o administrador com token: $token"
-                        )
-                        sendFCMNotification(token, title, message)
-                    } else {
+            .addOnSuccessListener { bookingDocument ->
+                val companyId = bookingDocument.getString("companyId") ?: return@addOnSuccessListener
+                // Agora, use o companyId para buscar os detalhes do negócio
+                firestore.collection("business").document(companyId)
+                    .get()
+                    .addOnSuccessListener { businessDocument ->
+                        val ownerId = businessDocument.getString("ownerId") ?: return@addOnSuccessListener
+                        val adminToken = businessDocument.getString("fcmToken")
+
+                        if (adminToken != null) {
+                            Log.d(
+                                "UpcomingBookingWorker",
+                                "Enviando notificação para o administrador com token: $adminToken"
+                            )
+                            sendFCMNotification(adminToken, title, message)
+                        } else {
+                            Log.e(
+                                "UpcomingBookingWorker",
+                                "Token do administrador para $ownerId não encontrado."
+                            )
+                        }
+                    }
+                    .addOnFailureListener { e ->
                         Log.e(
                             "UpcomingBookingWorker",
-                            "Token do administrador para $ownerId não encontrado."
+                            "Erro ao buscar dados do negócio: ${e.message}"
                         )
                     }
-                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("UpcomingBookingWorker", "Erro ao buscar agendamento: ${e.message}")
             }
     }
+
 
     private fun fetchUserToken(userId: String, callback: (String?) -> Unit) {
         firestore.collection("users").document(userId)

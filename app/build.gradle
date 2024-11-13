@@ -116,7 +116,7 @@ dependencies {
     // Lifecycle
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.7'
-    implementation 'com.google.android.libraries.places:places:4.0.0'
+    implementation 'com.google.android.libraries.places:places:4.1.0'
 
     // Testes
     testImplementation 'junit:junit:4.13.2'

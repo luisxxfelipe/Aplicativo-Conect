@@ -25,7 +25,8 @@
         android:hint="Nome completo"
         app:boxBackgroundMode="outline"
         app:boxStrokeWidth="1dp"
-        app:boxStrokeColor="@color/colorPrimary">
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/nameUser"
@@ -45,7 +46,8 @@
         android:hint="Email"
         app:boxBackgroundMode="outline"
         app:boxStrokeWidth="1dp"
-        app:boxStrokeColor="@color/colorPrimary">
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/emailInput"
@@ -65,7 +67,8 @@
         android:hint="CPF"
         app:boxBackgroundMode="outline"
         app:boxStrokeWidth="1dp"
-        app:boxStrokeColor="@color/colorPrimary">
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/cpfInput"
@@ -84,7 +87,8 @@
         android:hint="Senha"
         app:boxBackgroundMode="outline"
         app:boxStrokeWidth="1dp"
-        app:boxStrokeColor="@color/colorPrimary">
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/passwordInput"
@@ -104,7 +108,8 @@
         android:hint="Confirmar Senha"
         app:boxBackgroundMode="outline"
         app:boxStrokeWidth="1dp"
-        app:boxStrokeColor="@color/colorPrimary">
+        app:boxStrokeColor="@color/roxo"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/confirmPasswordInput"

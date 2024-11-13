@@ -2,6 +2,8 @@ package com.conect.aplicativoconect.view.ui.admin
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -9,12 +11,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentAdminHomeBinding
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.data.model.Business
-import com.conect.aplicativoconect.view.ui.client.ClientBookingAdapter
 import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,7 +33,10 @@ class AdminHomeFragment : Fragment() {
     private lateinit var firestore: FirebaseFirestore
     private var bookingListener: ListenerRegistration? = null
     private val adminViewModel: AdminViewModel by activityViewModels()
-
+    private lateinit var tipsAdapter: TipsAdapter
+    private lateinit var handler: Handler
+    private lateinit var runnable: Runnable
+    private var currentTipIndex = 0
     private var startOfWeek: Date? = null
     private var endOfWeek: Date? = null
 
@@ -47,11 +52,13 @@ class AdminHomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         firestore = FirebaseFirestore.getInstance()
-        displayRandomTip()
         setupWeeklyDateRange()
         setupRecyclerView()
         loadBookingsInRealTime()
         loadBusinessName()
+
+        setupTipsViewPager()
+        startTipRotation()
 
         // Configurando o clique do FAB
         binding.fabAddBooking.setOnClickListener {
@@ -247,7 +254,7 @@ class AdminHomeFragment : Fragment() {
         }
     }
 
-    private fun displayRandomTip() {
+    private fun setupTipsViewPager() {
         val tips = listOf(
             "Mantenha os clientes por perto! Use nosso sistema de agendamento para garantir que eles sempre voltem.",
             "Aproveite os dados ao seu alcance: veja quais serviços estão em alta e ofereça promoções que seus clientes vão amar!",
@@ -256,8 +263,25 @@ class AdminHomeFragment : Fragment() {
             "Ofereça avaliações e veja seu negócio crescer! Peça feedback e entenda o que seus clientes mais valorizam.",
             "Gerencie seu negócio de qualquer lugar! Com nosso app, seus agendamentos e lucros estão sempre à sua mão."
         )
-        val randomTip = tips.random()
-        binding.tipContent.text = randomTip
+        tipsAdapter = TipsAdapter(tips)
+        binding.tipsViewPager.adapter = tipsAdapter
+        binding.tipsViewPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+    }
+
+    private fun startTipRotation() {
+        handler = Handler(Looper.getMainLooper())
+        runnable = object : Runnable {
+            override fun run() {
+                if (currentTipIndex < tipsAdapter.itemCount - 1) {
+                    currentTipIndex++
+                } else {
+                    currentTipIndex = 0
+                }
+                binding.tipsViewPager.setCurrentItem(currentTipIndex, true)
+                handler.postDelayed(this, 10000) // 10 segundos
+            }
+        }
+        handler.postDelayed(runnable, 20000)
     }
 
     private fun showNoBookingsMessage(show: Boolean) {
@@ -340,5 +364,6 @@ class AdminHomeFragment : Fragment() {
         _binding = null
         // Remove o listener para evitar leaks e erros quando o fragmento for destruído
         bookingListener?.remove()
+        handler.removeCallbacks(runnable)
     }
 }
