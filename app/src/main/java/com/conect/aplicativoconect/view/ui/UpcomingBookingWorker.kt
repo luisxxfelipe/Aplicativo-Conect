@@ -46,36 +46,40 @@ class UpcomingBookingWorker(
                     val bookingHourStr = document.getString("hour") ?: return@forEach
                     val bookingId = document.id
                     val userId = document.getString("userId") ?: return@forEach
+                    val companyId = document.getString("companyId") ?: return@forEach
                     val serviceName = document.getString("serviceName") ?: "Serviço"
 
                     val bookingDateMillis = parseDateTimeToMillis(bookingDateStr, bookingHourStr)
 
                     if (bookingDateMillis != null && bookingDateMillis in currentTimeMillis until timeWindow) {
-                        Log.d(
-                            "UpcomingBookingWorker",
-                            "Preparando para enviar notificação para o agendamento $bookingId."
-                        )
-                        val notificationMessage =
+                        Log.d("UpcomingBookingWorker", "Preparando para enviar notificação para o agendamento $bookingId.")
+
+                        val userNotificationMessage =
                             "Seu agendamento para $serviceName é em breve, às ${bookingHourStr}h!"
 
-                        // Notificação para o usuário
+                        val adminNotificationMessage =
+                            "Agendamento para $serviceName está próximo, às ${bookingHourStr}h!"
+
+                        // Enviar notificação para o usuário
                         sendNotificationToUser(
                             userId,
                             "Lembrete de Agendamento",
-                            notificationMessage
+                            userNotificationMessage,
+                            bookingId // Pass the bookingId
                         )
 
-                        // Notificação para o administrador
-                        val adminMessage =
-                            "Agendamento para $serviceName está próximo, às ${bookingHourStr}h!"
-                        sendNotificationToAdmin(bookingId, "Lembrete de Agendamento", adminMessage)
+                        // Enviar notificação para o administrador
+                        sendNotificationToAdmin(
+                            companyId,
+                            "Lembrete de Agendamento",
+                            adminNotificationMessage,
+                            bookingId // Pass the bookingId
+                        )
 
-                        markBookingAsNotified(bookingId) // Marca o agendamento como notificado
+                        // Marca o agendamento como notificado
+                        markBookingAsNotified(bookingId)
                     } else {
-                        Log.d(
-                            "UpcomingBookingWorker",
-                            "Agendamento $bookingId fora do intervalo para notificação."
-                        )
+                        Log.d("UpcomingBookingWorker", "Agendamento $bookingId fora do intervalo para notificação.")
                     }
                 }
             }
@@ -83,6 +87,7 @@ class UpcomingBookingWorker(
                 Log.e("UpcomingBookingWorker", "Erro ao buscar agendamentos: ${e.message}")
             }
     }
+
 
     private fun parseDateTimeToMillis(dateStr: String, hourStr: String): Long? {
         return try {
@@ -97,57 +102,43 @@ class UpcomingBookingWorker(
         }
     }
 
-    private fun sendNotificationToUser(userId: String, title: String, message: String) {
+    private fun sendNotificationToUser(userId: String, title: String, message: String, bookingId: String) {
         fetchUserToken(userId) { token ->
             if (token != null) {
-                Log.d(
-                    "UpcomingBookingWorker",
-                    "Enviando notificação para o usuário com token: $token"
-                )
-                sendFCMNotification(token, title, message)
+                Log.d("UpcomingBookingWorker", "Enviando notificação para o usuário com token: $token")
+                sendFCMNotification(token, title, message) { success ->
+                    if (success) {
+                        // Atualizar o campo notified para true apenas se a notificação for enviada com sucesso
+                        markBookingAsNotified(bookingId)
+                    }
+                }
             } else {
                 Log.e("UpcomingBookingWorker", "Token de usuário para $userId não encontrado.")
             }
         }
     }
 
-    private fun sendNotificationToAdmin(bookingId: String, title: String, message: String) {
-        firestore.collection("bookings").document(bookingId)
+    private fun sendNotificationToAdmin(companyId: String, title: String, message: String, bookingId: String) {
+        firestore.collection("business").document(companyId)
             .get()
-            .addOnSuccessListener { bookingDocument ->
-                val companyId = bookingDocument.getString("companyId") ?: return@addOnSuccessListener
-                // Agora, use o companyId para buscar os detalhes do negócio
-                firestore.collection("business").document(companyId)
-                    .get()
-                    .addOnSuccessListener { businessDocument ->
-                        val ownerId = businessDocument.getString("ownerId") ?: return@addOnSuccessListener
-                        val adminToken = businessDocument.getString("fcmToken")
-
-                        if (adminToken != null) {
-                            Log.d(
-                                "UpcomingBookingWorker",
-                                "Enviando notificação para o administrador com token: $adminToken"
-                            )
-                            sendFCMNotification(adminToken, title, message)
-                        } else {
-                            Log.e(
-                                "UpcomingBookingWorker",
-                                "Token do administrador para $ownerId não encontrado."
-                            )
+            .addOnSuccessListener { businessDocument ->
+                val adminToken = businessDocument.getString("fcmToken")
+                if (adminToken != null) {
+                    Log.d("UpcomingBookingWorker", "Enviando notificação para o administrador com token: $adminToken")
+                    sendFCMNotification(adminToken, title, message) { success ->
+                        if (success) {
+                            // Atualizar o campo notified para true apenas se a notificação for enviada com sucesso
+                            markBookingAsNotified(bookingId)
                         }
                     }
-                    .addOnFailureListener { e ->
-                        Log.e(
-                            "UpcomingBookingWorker",
-                            "Erro ao buscar dados do negócio: ${e.message}"
-                        )
-                    }
+                } else {
+                    Log.e("UpcomingBookingWorker", "Token do administrador para $companyId não encontrado.")
+                }
             }
             .addOnFailureListener { e ->
-                Log.e("UpcomingBookingWorker", "Erro ao buscar agendamento: ${e.message}")
+                Log.e("UpcomingBookingWorker", "Erro ao buscar dados do negócio: ${e.message}")
             }
     }
-
 
     private fun fetchUserToken(userId: String, callback: (String?) -> Unit) {
         firestore.collection("users").document(userId)
@@ -163,22 +154,22 @@ class UpcomingBookingWorker(
             }
     }
 
-    private fun sendFCMNotification(token: String, title: String, message: String) {
+    private fun sendFCMNotification(token: String, title: String, message: String, callback: (Boolean) -> Unit) {
         val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
         val payload = """
-            {
-              "message": {
-                "token": "$token",
-                "notification": {
-                  "title": "$title",
-                  "body": "$message"
-                },
-                "android": {
-                  "priority": "high"
-                }
-              }
+        {
+          "message": {
+            "token": "$token",
+            "notification": {
+              "title": "$title",
+              "body": "$message"
+            },
+            "android": {
+              "priority": "high"
             }
-        """.trimIndent()
+          }
+        }
+    """.trimIndent()
 
         CoroutineScope(Dispatchers.IO).launch {
             val accessToken = withContext(Dispatchers.IO) {
@@ -187,6 +178,7 @@ class UpcomingBookingWorker(
 
             if (accessToken == null) {
                 Log.e("FCM", "Falha ao obter o token de acesso.")
+                callback(false)
                 return@launch
             }
 
@@ -194,9 +186,11 @@ class UpcomingBookingWorker(
                 Method.POST, url,
                 Response.Listener { response ->
                     Log.d("FCM", "Notificação enviada com sucesso: $response")
+                    callback(true) // Notify success
                 },
                 Response.ErrorListener { error ->
                     Log.e("FCM", "Erro ao enviar notificação: ${error.message}")
+                    callback(false) // Notify failure
                 }
             ) {
                 override fun getHeaders(): Map<String, String> {
@@ -213,7 +207,6 @@ class UpcomingBookingWorker(
         }
     }
 
-    // Marcar o booking como notificado após o envio
     private fun markBookingAsNotified(bookingId: String) {
         firestore.collection("bookings").document(bookingId)
             .update("notified", true)
@@ -221,10 +214,7 @@ class UpcomingBookingWorker(
                 Log.d("UpcomingBookingWorker", "Agendamento $bookingId marcado como notificado.")
             }
             .addOnFailureListener { e ->
-                Log.e(
-                    "UpcomingBookingWorker",
-                    "Erro ao marcar o agendamento como notificado: ${e.message}"
-                )
+                Log.e("UpcomingBookingWorker", "Erro ao marcar o agendamento como notificado: ${e.message}")
             }
     }
 }
