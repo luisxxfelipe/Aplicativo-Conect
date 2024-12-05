@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.LayoutAdminSettingsBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -94,7 +95,7 @@ class AdminSettingsFragment : Fragment() {
     }
 
     private fun showDeleteDataConfirmation() {
-        AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
             .setTitle("Excluir Dados")
             .setMessage("Tem certeza de que deseja excluir todos os dados associados à sua conta? A assinatura será mantida.")
             .setPositiveButton("Excluir") { _, _ -> deleteUserData() }

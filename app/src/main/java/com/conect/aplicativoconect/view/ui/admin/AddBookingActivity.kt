@@ -177,7 +177,7 @@ class AddBookingActivity : AppCompatActivity() {
             return
         }
 
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(this, R.style.CustomAlertDialog)
         builder.setTitle("Selecione um Horário Disponível")
             .setItems(availableTimes.toTypedArray()) { _, which ->
                 textViewSelectedTime.text = availableTimes[which] // Define o horário selecionado

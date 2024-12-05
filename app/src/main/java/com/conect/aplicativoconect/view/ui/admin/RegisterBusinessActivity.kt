@@ -175,7 +175,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
     }
 
     private fun setupProgressDialog() {
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(this, R.style.CustomAlertDialog)
         val inflater = LayoutInflater.from(this)
         val view =
             inflater.inflate(R.layout.dialog_progress, null) // Layout personalizado do diálogo
