@@ -106,7 +106,7 @@ class ClienteProfileFragment : Fragment() {
         }
 
         binding.deleteAccountButton.setOnClickListener {
-            AlertDialog.Builder(requireContext())
+            AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
                 .setTitle("Excluir Conta")
                 .setMessage("Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita.")
                 .setPositiveButton("Excluir") { _, _ -> deleteUserAccountAndData() }

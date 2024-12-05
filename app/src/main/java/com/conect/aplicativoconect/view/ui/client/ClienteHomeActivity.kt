@@ -208,7 +208,7 @@ class ClienteHomeActivity : AppCompatActivity() {
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
             .setView(dialogView)
             .setCancelable(true)
             .create()
@@ -224,7 +224,7 @@ class ClienteHomeActivity : AppCompatActivity() {
     }
 
     private fun showLogoutConfirmationDialog() {
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(this, R.style.CustomAlertDialog)
         builder.setTitle("Confirmar Logout")
             .setMessage("Você tem certeza que deseja sair?")
             .setPositiveButton("Sim") { _, _ -> logout() }

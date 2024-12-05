@@ -10,6 +10,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Service
 import com.google.firebase.auth.FirebaseAuth
@@ -100,6 +101,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 selectedDate = dateFormat.format(selectedCalendar.time)
                 buttonPickDate.text = "Ajustar Data"
                 fetchExistingBookings(selectedDate!!)
+
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -111,8 +113,22 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         // Configura a data máxima para 3 semanas a partir de hoje
         datePickerDialog.datePicker.maxDate = maxDateCalendar.timeInMillis
 
+        // Aqui, você personaliza os botões após a exibição do DatePickerDialog
+        datePickerDialog.setOnShowListener {
+            val buttonOk = datePickerDialog.getButton(DatePickerDialog.BUTTON_POSITIVE)
+            val buttonCancel = datePickerDialog.getButton(DatePickerDialog.BUTTON_NEGATIVE)
+
+            // Defina a cor do texto do botão "OK" para roxo
+            buttonOk.setTextColor(ContextCompat.getColor(this, R.color.roxo))
+
+            // Defina a cor do texto do botão "Cancelar" para branco ou outra cor, conforme necessário
+            buttonCancel.setTextColor(ContextCompat.getColor(this, android.R.color.white))
+        }
+
+        // Exibe o DatePickerDialog
         datePickerDialog.show()
     }
+
 
 
     private fun fetchOperatingHours() {
@@ -174,7 +190,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             return
         }
 
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(this, R.style.CustomAlertDialog)
         builder.setTitle("Selecione um horário")
         builder.setItems(availableHours.toTypedArray()) { _, which ->
             selectedHour = availableHours[which]

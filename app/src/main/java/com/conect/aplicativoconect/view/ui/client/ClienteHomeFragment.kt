@@ -137,7 +137,7 @@ class ClienteHomeFragment : Fragment() {
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
-        val dialog = AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
             .setView(dialogView)
             .setCancelable(true)
             .create()
