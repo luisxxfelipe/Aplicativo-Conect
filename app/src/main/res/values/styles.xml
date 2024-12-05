@@ -62,8 +62,17 @@
     </style>
 
     <style name="CustomAlertDialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
-        <!-- A cor do texto do botão será roxa no modo claro -->
-        <item name="android:textColorPrimary">@color/roxo</item>
+        <!-- Cor do título -->
+        <item name="android:textColorPrimary">@android:color/black</item>
+
+        <!-- Cor do texto da mensagem -->
+        <item name="android:textColorSecondary">@android:color/black</item>
+
+        <!-- Cor do texto do botão (em modo claro) -->
+        <item name="android:textColor">@android:color/white</item>
+
+        <!-- Cor do fundo do botão -->
+        <item name="android:backgroundTint">@color/roxo</item>
     </style>
 
 </resources>
