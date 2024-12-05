@@ -13,6 +13,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.conect.aplicativoconect.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -125,7 +126,9 @@ class AddBookingActivity : AppCompatActivity() {
 
     private fun selectDate() {
         val calendar = Calendar.getInstance()
-        DatePickerDialog(
+
+        // Cria o DatePickerDialog
+        val datePickerDialog = DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
                 val selectedDate = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
@@ -142,8 +145,24 @@ class AddBookingActivity : AppCompatActivity() {
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
+        )
+
+        // Aqui, você pode personalizar os botões após o diálogo ser mostrado
+        datePickerDialog.setOnShowListener {
+            val buttonOk = datePickerDialog.getButton(DatePickerDialog.BUTTON_POSITIVE)
+            val buttonCancel = datePickerDialog.getButton(DatePickerDialog.BUTTON_NEGATIVE)
+
+            // Defina a cor do texto do botão "OK" para roxo
+            buttonOk.setTextColor(ContextCompat.getColor(this, R.color.roxo))
+
+            // Defina a cor do texto do botão "Cancelar" (opcional)
+            buttonCancel.setTextColor(ContextCompat.getColor(this, R.color.red)) // Exemplo: vermelho
+        }
+
+        // Exibe o DatePickerDialog
+        datePickerDialog.show()
     }
+
 
     private fun fetchAvailableTimes(date: String) {
         companyId?.let { id ->
