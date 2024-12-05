@@ -71,6 +71,12 @@ class BookingAdapter(
             .into(holder.userImageView)
 
         val bookingId = booking.id ?: return
+        val roxoColor = ContextCompat.getColor(context, R.color.roxo)
+        // Alterando a cor dos botões
+        holder.confirmButton.setTextColor(roxoColor)
+        holder.cancelButton.setTextColor(roxoColor)
+        holder.completeButton.setTextColor(roxoColor)
+        holder.notCompletedButton.setTextColor(roxoColor)
 
         // Configura a barra de status com base no status atual do agendamento
         val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
@@ -230,12 +236,18 @@ class BookingAdapter(
         message: String,
         onConfirm: () -> Unit
     ) {
-        AlertDialog.Builder(context)
+        val dialog = AlertDialog.Builder(context)
             .setTitle(title)
             .setMessage(message)
             .setPositiveButton("Sim") { _, _ -> onConfirm() }
             .setNegativeButton("Não", null)
-            .show()
+            .create()
+
+        // Alterando a cor dos botões de confirmação e cancelamento para a cor roxa
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(context, R.color.roxo))
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(context, R.color.roxo))
+
+        dialog.show()
     }
 
     // Função para enviar notificações, com a opção de notificar o cliente ou o administrador

@@ -130,19 +130,21 @@ class AdminHomeActivity : AppCompatActivity() {
         if (dailyAlertCount < MAX_DAILY_ALERTS) {
             val endDateFormatted =
                 SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate.toDate())
-            AlertDialog.Builder(this)
+            val alertDialog = AlertDialog.Builder(this)
                 .setTitle("Sua assinatura está quase vencendo!")
                 .setMessage("Sua assinatura vencerá em breve em $endDateFormatted. Garanta sua renovação para continuar aproveitando os serviços.")
                 .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                 .create()
-                .show()
+
+            // Alterando a cor do texto do botão OK
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getColor(R.color.roxo))
+
+            alertDialog.show()
 
             sharedPreferences.edit().putInt("dailyAlertCount", dailyAlertCount + 1).apply()
-            Log.d("SubscriptionCheck", "Alert shown, count updated to: ${dailyAlertCount + 1}")
-        } else {
-            Log.d("SubscriptionCheck", "Alert not shown due to daily limit.")
         }
     }
+
 
     private fun setupBottomNavigation() {
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
