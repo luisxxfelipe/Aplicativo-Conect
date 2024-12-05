@@ -69,10 +69,10 @@
         <item name="android:textColorSecondary">@android:color/black</item>
 
         <!-- Cor do texto do botão (em modo claro) -->
-        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColor">@color/roxo</item>
 
         <!-- Cor do fundo do botão -->
-        <item name="android:backgroundTint">@color/roxo</item>
+        <item name="android:backgroundTint">@android:color/white</item>
     </style>
 
 </resources>
