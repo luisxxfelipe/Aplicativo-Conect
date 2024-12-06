@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings.Secure
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -14,11 +15,10 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.ui.admin.RegisterBusinessActivity
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.Calendar
-import android.provider.Settings.Secure
-import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 
 
 class SignupBusinessActivity : AppCompatActivity() {
@@ -63,7 +63,11 @@ class SignupBusinessActivity : AppCompatActivity() {
                     val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
                     checkIfAndroidIdExists(androidId) { exists ->
                         if (exists) {
-                            Toast.makeText(this, "Este dispositivo já está registrado.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Este dispositivo já está registrado.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else {
                             createBusinessUser(email, password, nameUser, cpf, androidId)
                         }
@@ -72,7 +76,8 @@ class SignupBusinessActivity : AppCompatActivity() {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 
@@ -115,7 +120,13 @@ class SignupBusinessActivity : AppCompatActivity() {
     }
 
     // Função para criar o usuário de negócio no Firebase Authentication
-    private fun createBusinessUser(email: String, password: String, nameUser: String, cpf: String, androidId: String) {
+    private fun createBusinessUser(
+        email: String,
+        password: String,
+        nameUser: String,
+        cpf: String,
+        androidId: String
+    ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
@@ -124,16 +135,29 @@ class SignupBusinessActivity : AppCompatActivity() {
                     val exception = task.exception
                     if (exception is FirebaseAuthWeakPasswordException) {
                         // Mensagem específica para senha fraca
-                        Toast.makeText(this, "A senha é muito fraca. Por favor, escolha uma senha mais forte.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "A senha é muito fraca. Por favor, escolha uma senha mais forte.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
                         // Mensagem genérica para outros erros
-                        Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Falha ao cadastrar. Tente novamente.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
     }
 
-    private fun createBusinessAndSubscription(email: String, nameUser: String, cpf: String, androidId: String) {
+    private fun createBusinessAndSubscription(
+        email: String,
+        nameUser: String,
+        cpf: String,
+        androidId: String
+    ) {
         val userId = auth.currentUser?.uid ?: return
 
         // Criar assinatura inicial sem verificação prévia
@@ -164,7 +188,12 @@ class SignupBusinessActivity : AppCompatActivity() {
     }
 
     // Cria o documento inicial do negócio e assinatura
-    private fun createBusinessData(email: String, nameUser: String, cpf: String, androidId: String) {
+    private fun createBusinessData(
+        email: String,
+        nameUser: String,
+        cpf: String,
+        androidId: String
+    ) {
         val businessId = auth.currentUser?.uid
 
         if (businessId != null) {
@@ -187,8 +216,12 @@ class SignupBusinessActivity : AppCompatActivity() {
             db.collection("business").document(businessId)
                 .set(businessData)
                 .addOnSuccessListener {
-                    Log.d("CreateBusinessData", "Dados do negócio salvos com sucesso: $businessData")
-                    Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT).show()
+                    Log.d(
+                        "CreateBusinessData",
+                        "Dados do negócio salvos com sucesso: $businessData"
+                    )
+                    Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT)
+                        .show()
 
                     // Redireciona para a tela de carregamento
                     val intent = Intent(this, RegisterBusinessActivity::class.java)
@@ -198,7 +231,8 @@ class SignupBusinessActivity : AppCompatActivity() {
                 }
                 .addOnFailureListener { e ->
                     Log.e("CreateBusinessData", "Erro ao salvar dados do negócio: ${e.message}")
-                    Toast.makeText(this, "Falha ao salvar dados do negócio.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Falha ao salvar dados do negócio.", Toast.LENGTH_SHORT)
+                        .show()
                 }
         } else {
             Toast.makeText(this, "Erro: UID do usuário não encontrado.", Toast.LENGTH_SHORT).show()

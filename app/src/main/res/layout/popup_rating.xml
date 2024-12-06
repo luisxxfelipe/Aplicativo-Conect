@@ -1,85 +1,89 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:gravity="center_horizontal"
+    android:orientation="vertical"
     android:padding="24dp">
 
     <!-- Título mais próximo do topo -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="De 1 a 5, como você avalia o serviço feito?"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="8dp"
-        android:textStyle="bold"
         android:layout_marginBottom="16dp"
-        android:textSize="20sp" />
+        android:text="De 1 a 5, como você avalia o serviço feito?"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
     <!-- Avaliação de Qualidade -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Qualidade do serviço"
         android:layout_gravity="center_horizontal"
+        android:text="Qualidade do serviço"
         android:textSize="16sp" />
+
     <RatingBar
         android:id="@+id/ratingQuality"
+        style="@style/Widget.AppCompat.RatingBar.Indicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:numStars="5"
-        android:stepSize="1.0"
-        android:isIndicator="false"
-        style="@style/Widget.AppCompat.RatingBar.Indicator"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:isIndicator="false"
+        android:numStars="5"
+        android:stepSize="1.0" />
 
     <!-- Avaliação de Pontualidade -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Pontualidade"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="12dp"
+        android:text="Pontualidade"
         android:textSize="16sp" />
+
     <RatingBar
         android:id="@+id/ratingPunctuality"
+        style="@style/Widget.AppCompat.RatingBar.Indicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:numStars="5"
-        style="@style/Widget.AppCompat.RatingBar.Indicator"
-        android:stepSize="1.0"
-        android:isIndicator="false"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:isIndicator="false"
+        android:numStars="5"
+        android:stepSize="1.0" />
 
     <!-- Avaliação de Atendimento -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Atendimento"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="12dp"
+        android:text="Atendimento"
         android:textSize="16sp" />
+
     <RatingBar
         android:id="@+id/ratingService"
+        style="@style/Widget.AppCompat.RatingBar.Indicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:numStars="5"
-        android:stepSize="1.0"
-        android:isIndicator="false"
-        style="@style/Widget.AppCompat.RatingBar.Indicator"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:isIndicator="false"
+        android:numStars="5"
+        android:stepSize="1.0" />
 
     <!-- Campo de Comentário -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Comentário (opcional)"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="16dp"
+        android:text="Comentário (opcional)"
         android:textSize="16sp" />
+
     <EditText
         android:id="@+id/commentEditText"
         android:layout_width="match_parent"
@@ -92,7 +96,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="Salvar"
         android:backgroundTint="?attr/colorPrimary"
+        android:text="Salvar"
         android:textColor="@android:color/white" />
 </LinearLayout>

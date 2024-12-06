@@ -52,7 +52,10 @@ class UpcomingBookingWorker(
                     val bookingDateMillis = parseDateTimeToMillis(bookingDateStr, bookingHourStr)
 
                     if (bookingDateMillis != null && bookingDateMillis in currentTimeMillis until timeWindow) {
-                        Log.d("UpcomingBookingWorker", "Preparando para enviar notificação para o agendamento $bookingId.")
+                        Log.d(
+                            "UpcomingBookingWorker",
+                            "Preparando para enviar notificação para o agendamento $bookingId."
+                        )
 
                         val userNotificationMessage =
                             "Seu agendamento para $serviceName é em breve, às ${bookingHourStr}h!"
@@ -79,7 +82,10 @@ class UpcomingBookingWorker(
                         // Marca o agendamento como notificado
                         markBookingAsNotified(bookingId)
                     } else {
-                        Log.d("UpcomingBookingWorker", "Agendamento $bookingId fora do intervalo para notificação.")
+                        Log.d(
+                            "UpcomingBookingWorker",
+                            "Agendamento $bookingId fora do intervalo para notificação."
+                        )
                     }
                 }
             }
@@ -102,10 +108,18 @@ class UpcomingBookingWorker(
         }
     }
 
-    private fun sendNotificationToUser(userId: String, title: String, message: String, bookingId: String) {
+    private fun sendNotificationToUser(
+        userId: String,
+        title: String,
+        message: String,
+        bookingId: String
+    ) {
         fetchUserToken(userId) { token ->
             if (token != null) {
-                Log.d("UpcomingBookingWorker", "Enviando notificação para o usuário com token: $token")
+                Log.d(
+                    "UpcomingBookingWorker",
+                    "Enviando notificação para o usuário com token: $token"
+                )
                 sendFCMNotification(token, title, message) { success ->
                     if (success) {
                         // Atualizar o campo notified para true apenas se a notificação for enviada com sucesso
@@ -118,13 +132,21 @@ class UpcomingBookingWorker(
         }
     }
 
-    private fun sendNotificationToAdmin(companyId: String, title: String, message: String, bookingId: String) {
+    private fun sendNotificationToAdmin(
+        companyId: String,
+        title: String,
+        message: String,
+        bookingId: String
+    ) {
         firestore.collection("business").document(companyId)
             .get()
             .addOnSuccessListener { businessDocument ->
                 val adminToken = businessDocument.getString("fcmToken")
                 if (adminToken != null) {
-                    Log.d("UpcomingBookingWorker", "Enviando notificação para o administrador com token: $adminToken")
+                    Log.d(
+                        "UpcomingBookingWorker",
+                        "Enviando notificação para o administrador com token: $adminToken"
+                    )
                     sendFCMNotification(adminToken, title, message) { success ->
                         if (success) {
                             // Atualizar o campo notified para true apenas se a notificação for enviada com sucesso
@@ -132,7 +154,10 @@ class UpcomingBookingWorker(
                         }
                     }
                 } else {
-                    Log.e("UpcomingBookingWorker", "Token do administrador para $companyId não encontrado.")
+                    Log.e(
+                        "UpcomingBookingWorker",
+                        "Token do administrador para $companyId não encontrado."
+                    )
                 }
             }
             .addOnFailureListener { e ->
@@ -154,7 +179,12 @@ class UpcomingBookingWorker(
             }
     }
 
-    private fun sendFCMNotification(token: String, title: String, message: String, callback: (Boolean) -> Unit) {
+    private fun sendFCMNotification(
+        token: String,
+        title: String,
+        message: String,
+        callback: (Boolean) -> Unit
+    ) {
         val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
         val payload = """
         {
@@ -214,7 +244,10 @@ class UpcomingBookingWorker(
                 Log.d("UpcomingBookingWorker", "Agendamento $bookingId marcado como notificado.")
             }
             .addOnFailureListener { e ->
-                Log.e("UpcomingBookingWorker", "Erro ao marcar o agendamento como notificado: ${e.message}")
+                Log.e(
+                    "UpcomingBookingWorker",
+                    "Erro ao marcar o agendamento como notificado: ${e.message}"
+                )
             }
     }
 }

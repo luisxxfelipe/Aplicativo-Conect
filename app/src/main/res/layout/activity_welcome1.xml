@@ -9,10 +9,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="120dp"
-        app:srcCompat="@drawable/apresentacao1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/apresentacao1" />
 
     <TextView
         android:id="@+id/welcomeTitle"
@@ -31,10 +31,10 @@
         android:id="@+id/welcomeDescription"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingRight="30dp"
+        android:layout_marginTop="20dp"
         android:gravity="center"
         android:paddingLeft="30dp"
-        android:layout_marginTop="20dp"
+        android:paddingRight="30dp"
         android:text="O seu novo parceiro para agendamentos rápidos e fáceis! Com o ConecteX, você pode descobrir e agendar uma variedade de serviços oferecidos por estabelecimentos locais, tudo em um único lugar."
         android:textAlignment="center"
         android:textColor="@color/black"
@@ -47,13 +47,13 @@
         android:id="@+id/nextButton1"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:backgroundTint="@color/roxo"
-        android:text="Próximo"
-        app:cornerRadius="15dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="32dp"
+        android:backgroundTint="@color/roxo"
+        android:text="Próximo"
         android:textColor="@color/white"
+        app:cornerRadius="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

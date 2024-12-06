@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.PaymentService
 import com.conect.aplicativoconect.view.ui.admin.AdminHomeActivity
@@ -135,7 +136,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun showExpiredSubscriptionDialog(userId: String) {
         val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
-        dialogBuilder.setTitle("Assinatura Expirada")
+        val dialog = dialogBuilder.setTitle("Assinatura Expirada")
             .setMessage("Sua assinatura expirou. Deseja renovar para continuar?")
             .setPositiveButton("Renovar Assinatura") { _, _ ->
                 initiatePayment(userId)  // Chama o pagamento
@@ -147,57 +148,86 @@ class LoginActivity : AppCompatActivity() {
                 finish()
             }
             .setCancelable(false) // Evita que o usuário feche o diálogo fora das opções dadas
-            .show()
+            .create()
+
+        // Usar setOnShowListener para garantir que os botões existem antes de configurar a cor
+        dialog.setOnShowListener {
+            val positiveButton =
+                dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+            val negativeButton =
+                dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)
+
+            positiveButton.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    R.color.roxo
+                )
+            ) // Define a cor roxa
+            negativeButton.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    R.color.roxo
+                )
+            ) // Define a cor roxa
+        }
+
+        dialog.show()
     }
 
-    private fun initiatePayment(userId: String) {
-        FirebaseAuth.getInstance().signOut()  // Desloga o usuário imediatamente
 
+    private fun initiatePayment(userId: String) {
+        // Fazendo logout do usuário antes de iniciar o pagamento
+        FirebaseAuth.getInstance().signOut()
+
+        // Agora, você cria uma Coroutine para chamar a função suspensa
         CoroutineScope(Dispatchers.Main).launch {
             val paymentService = PaymentService(this@LoginActivity)
+
+            // Chama a função suspensa createPayment dentro da coroutine
             paymentService.createPayment(
                 amount = 25.0f,
                 title = "Assinatura Mensal",
                 payerEmail = auth.currentUser?.email ?: "",
                 onSuccess = {
+                    // Chama a função para renovar a assinatura após o pagamento
                     renewSubscription(userId)
-                    Toast.makeText(this@LoginActivity, "Pagamento bem-sucedido", Toast.LENGTH_SHORT)
-                        .show()
 
-                    // Re-autenticar o usuário após o pagamento bem-sucedido
-                    auth.signInWithEmailAndPassword(
-                        emailEditText.text.toString().trim(),
-                        passwordEditText.text.toString().trim()
-                    )
-                        .addOnCompleteListener { signInTask ->
-                            if (signInTask.isSuccessful) {
-                                startActivity(
-                                    Intent(
-                                        this@LoginActivity,
-                                        AdminHomeActivity::class.java
-                                    )
-                                )
-                                finish()
-                            } else {
-                                Toast.makeText(
-                                    this@LoginActivity,
-                                    "Erro ao re-autenticar após pagamento.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
+                    // Agora, reautentica o usuário após o pagamento bem-sucedido
+                    reAuthenticateAndRedirect(userId)
                 },
                 onError = { errorMessage ->
+                    // Caso ocorra um erro no pagamento, mostra a mensagem e retorna para a tela de login
                     Toast.makeText(
                         this@LoginActivity,
                         "Erro no pagamento: $errorMessage",
                         Toast.LENGTH_LONG
                     ).show()
                     startActivity(Intent(this@LoginActivity, LoginActivity::class.java))
+                    finish()
                 }
             )
         }
     }
+
+
+    private fun reAuthenticateAndRedirect(userId: String) {
+        auth.signInWithEmailAndPassword(
+            emailEditText.text.toString().trim(),
+            passwordEditText.text.toString().trim()
+        ).addOnCompleteListener { signInTask ->
+            if (signInTask.isSuccessful) {
+                // Após reautenticar, verifica o tipo de usuário e redireciona
+                verifyUserType(userId)  // Essa função já faz o redirecionamento para a home correta
+            } else {
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Erro ao re-autenticar após pagamento.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
 
     private fun renewSubscription(userId: String) {
         db.collection("subscriptions").document(userId).get()

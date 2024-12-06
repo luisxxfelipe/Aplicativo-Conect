@@ -2,25 +2,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center">
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/appVersionText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:text="Versão do App: 1.0.0"
-        android:textSize="18sp"
         android:textColor="@color/textPrimary"
-        android:layout_marginBottom="8dp"/>
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/appDeveloperText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Desenvolvedor: ConectX"
-        android:textSize="18sp"
-        android:textColor="@color/textPrimary" />
+        android:textColor="@color/textPrimary"
+        android:textSize="18sp" />
 
 </LinearLayout>

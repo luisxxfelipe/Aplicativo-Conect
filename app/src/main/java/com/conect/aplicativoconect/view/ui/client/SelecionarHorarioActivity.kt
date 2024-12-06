@@ -93,7 +93,11 @@ class SelecionarHorarioActivity : AppCompatActivity() {
 
                 // Verifica se a data selecionada está dentro do limite de 3 semanas
                 if (selectedCalendar.after(maxDateCalendar)) {
-                    Toast.makeText(this, "Não é possível agendar com mais de 3 semanas de antecedência.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Não é possível agendar com mais de 3 semanas de antecedência.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@DatePickerDialog
                 }
 
@@ -128,7 +132,6 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         // Exibe o DatePickerDialog
         datePickerDialog.show()
     }
-
 
 
     private fun fetchOperatingHours() {
@@ -251,17 +254,30 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 // Salvar o agendamento no Firestore
                 firestore.collection("bookings").add(bookingData)
                     .addOnSuccessListener {
-                        Toast.makeText(this, "Agendamento realizado com sucesso!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Agendamento realizado com sucesso!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         finish()
                     }
                     .addOnFailureListener { e ->
-                        Toast.makeText(this, "Erro ao agendar: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Erro ao agendar: ${e.message}", Toast.LENGTH_SHORT)
+                            .show()
                     }
             }.addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao buscar telefone do business: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Erro ao buscar telefone do business: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }.addOnFailureListener { e ->
-            Toast.makeText(this, "Erro ao buscar dados do usuário: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Erro ao buscar dados do usuário: ${e.message}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

@@ -8,25 +8,25 @@
     <TextView
         android:id="@+id/textViewServiceName"
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:textSize="16sp" />
 
     <EditText
         android:id="@+id/editTextServicePrice"
         android:layout_width="80dp"
         android:layout_height="wrap_content"
-        android:inputType="numberDecimal"
-        android:hint="Preço" />
+        android:hint="Preço"
+        android:inputType="numberDecimal" />
 
     <ImageButton
         android:id="@+id/buttonRemoveService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:background="@drawable/rounded_button"
         android:contentDescription="Remover serviço"
         android:padding="8dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_delete"
-        android:layout_marginStart="16dp" />
+        android:src="@drawable/ic_delete" />
 </LinearLayout>

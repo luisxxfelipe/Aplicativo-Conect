@@ -1,95 +1,95 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fillViewport="true"
     android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp"
+        android:background="@android:color/white"
         android:gravity="center"
-        android:background="@android:color/white">
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/editBusinessImage"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_marginBottom="16dp"
-        android:src="@drawable/foto_perfil_generica"
-        android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="Foto do Negócio" />
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/editBusinessImage"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="16dp"
+            android:clickable="true"
+            android:contentDescription="Foto do Negócio"
+            android:focusable="true"
+            android:src="@drawable/foto_perfil_generica" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Nome do Proprietário"
-        app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
-        app:boxBackgroundMode="outline"
-        android:layout_marginBottom="16dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editOwnerName"
-            android:layout_width="match_parent"
-            android:backgroundTint="@android:color/transparent"
-            android:layout_height="wrap_content"
-            android:inputType="textPersonName" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Nome da Empresa"
-        app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
-        app:boxBackgroundMode="outline"
-        android:layout_marginBottom="16dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editBusinessName"
-            android:layout_width="match_parent"
-            android:backgroundTint="@android:color/transparent"
-            android:layout_height="wrap_content"
-            android:inputType="text" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="E-mail"
-        app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
-        app:boxBackgroundMode="outline"
-        android:layout_marginBottom="16dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editBusinessEmail"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
-            android:inputType="textEmailAddress" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_marginBottom="16dp"
+            android:hint="Nome do Proprietário"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/roxo"
+            app:hintTextColor="@color/roxo">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Endereço"
-        app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
-        app:boxBackgroundMode="outline"
-        android:layout_marginBottom="16dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editOwnerName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:inputType="textPersonName" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editBusinessAddress"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
-            android:inputType="textPostalAddress" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_marginBottom="16dp"
+            android:hint="Nome da Empresa"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/roxo"
+            app:hintTextColor="@color/roxo">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editBusinessName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="E-mail"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/roxo"
+            app:hintTextColor="@color/roxo">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editBusinessEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:inputType="textEmailAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="Endereço"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/roxo"
+            app:hintTextColor="@color/roxo">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editBusinessAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:inputType="textPostalAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- CPF Field -->
         <com.google.android.material.textfield.TextInputLayout
@@ -97,18 +97,18 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:hint="CPF"
+            app:boxBackgroundMode="outline"
             app:boxStrokeColor="@color/roxo"
-            app:hintTextColor="@color/roxo"
-            app:boxBackgroundMode="outline">
+            app:hintTextColor="@color/roxo">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editBusinessCpf"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
-                android:textColor="@color/black"
                 android:backgroundTint="@android:color/transparent"
-                android:inputType="number" />
+                android:inputType="number"
+                android:padding="12dp"
+                android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Phone Field -->
@@ -117,44 +117,44 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:hint="Telefone"
+            app:boxBackgroundMode="outline"
             app:boxStrokeColor="@color/roxo"
-            app:hintTextColor="@color/roxo"
-            app:boxBackgroundMode="outline">
+            app:hintTextColor="@color/roxo">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editBusinessPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
-                android:textColor="@color/black"
                 android:backgroundTint="@android:color/transparent"
-                android:inputType="phone" />
+                android:inputType="phone"
+                android:padding="12dp"
+                android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Descrição"
-        app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
-        app:boxBackgroundMode="outline"
-        android:layout_marginBottom="24dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editBusinessDescription"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
-            android:inputType="textMultiLine" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_marginBottom="24dp"
+            android:hint="Descrição"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/roxo"
+            app:hintTextColor="@color/roxo">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/saveBusinessProfileButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Salvar Alterações"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@color/roxo"
-        app:cornerRadius="8dp" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editBusinessDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:inputType="textMultiLine" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/saveBusinessProfileButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/roxo"
+            android:text="Salvar Alterações"
+            android:textColor="@android:color/white"
+            app:cornerRadius="8dp" />
     </LinearLayout>
 </ScrollView>

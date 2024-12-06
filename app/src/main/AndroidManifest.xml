@@ -2,19 +2,19 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permissões -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".view.ConectApplication"
         android:allowBackup="true"
-        android:label="ConecteX"
         android:icon="@drawable/ic_logo_app"
+        android:label="ConecteX"
         android:theme="@style/Theme.AplicativoConect">
 
         <!-- WorkManager BOOT_COMPLETED Receiver -->
@@ -23,8 +23,8 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 
@@ -33,7 +33,7 @@
             android:name=".view.ui.MyFirebaseMessagingService"
             android:exported="true">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
@@ -44,9 +44,10 @@
             android:permission="android.permission.WAKE_LOCK"
             tools:replace="android:permission">
             <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-                <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-                <category android:name="com.conect.aplicativoconect"/>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
+                <category android:name="com.conect.aplicativoconect" />
             </intent-filter>
         </receiver>
 
@@ -56,7 +57,7 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
@@ -65,53 +66,102 @@
             android:name=".view.ui.SplashActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <!-- Atividades do aplicativo -->
-        <activity android:name=".view.ui.WelcomeActivity" android:exported="true" />
-        <activity android:name=".view.ui.auth.RoleSelectionActivity" android:exported="true" />
-        <activity android:name=".view.ui.auth.LoginActivity" android:exported="true" />
-        <activity android:name=".view.ui.auth.SignupClientActivity" android:exported="true" />
-        <activity android:name=".view.ui.auth.SignupBusinessActivity" android:exported="true" />
-        <activity android:name=".view.ui.client.ClienteHomeActivity" android:exported="true" />
-        <activity android:name=".view.ui.admin.AdminHomeActivity" android:exported="true" />
-        <activity android:name=".view.ui.admin.RegisterBusinessActivity" android:exported="true" />
-        <activity android:name=".view.ui.client.EmpresaDetalhesActivity" android:exported="true" />
-        <activity android:name=".view.ui.client.SelecionarHorarioActivity" android:exported="true" />
-        <activity android:name=".view.ui.admin.AddBookingActivity" android:exported="true" />
-        <activity android:name=".view.ui.admin.AdminSettingsFragment" android:exported="true" />
-        <activity android:name=".view.ui.admin.PublishPhotoActivity" android:exported="true" />
+        <activity
+            android:name=".view.ui.WelcomeActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.auth.RoleSelectionActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.auth.LoginActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.auth.SignupClientActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.auth.SignupBusinessActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.client.ClienteHomeActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.admin.AdminHomeActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.admin.RegisterBusinessActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.client.EmpresaDetalhesActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.client.SelecionarHorarioActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.admin.AddBookingActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.admin.AdminSettingsFragment"
+            android:exported="true"
+            tools:ignore="Instantiatable" />
+        <activity
+            android:name=".view.ui.admin.PublishPhotoActivity"
+            android:exported="true" />
 
 
         <!-- EditProfileActivity e EditBusinessProfileActivity -->
-        <activity android:name=".view.ui.client.EditProfileActivity" android:exported="true" />
-        <activity android:name=".view.ui.admin.EditBusinessProfileActivity" android:exported="true" />
-        <activity android:name=".view.ui.PolicyActivity" android:exported="true" />
+        <activity
+            android:name=".view.ui.client.EditProfileActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.admin.EditBusinessProfileActivity"
+            android:exported="true" />
+        <activity
+            android:name=".view.ui.PolicyActivity"
+            android:exported="true" />
 
         <!-- Activity para gerenciamento do resultado do pagamento -->
-        <activity android:name=".view.ui.PaymentResultActivity" android:exported="true">
+        <activity
+            android:name=".view.ui.PaymentResultActivity"
+            android:exported="true"
+            tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="conectapp" android:host="success" />
+
+                <data
+                    android:host="success"
+                    android:scheme="conectapp" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="conectapp" android:host="failure" />
+
+                <data
+                    android:host="failure"
+                    android:scheme="conectapp" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="conectapp" android:host="pending" />
+
+                <data
+                    android:host="pending"
+                    android:scheme="conectapp" />
             </intent-filter>
         </activity>
+
 
         <meta-data
             android:name="preloaded_fonts"

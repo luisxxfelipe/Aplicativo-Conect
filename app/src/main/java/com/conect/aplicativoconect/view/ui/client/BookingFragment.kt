@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.conect.aplicativoconect.R
@@ -183,18 +184,15 @@ class BookingFragment : Fragment() {
         return false
     }
 
-
     private fun confirmBooking(booking: Booking) {
         firestore.collection("bookings").document(booking.id!!)
             .update("status_cliente", "confirmed")
             .addOnSuccessListener {
-                sendNotificationToBusiness(
-                    booking,
-                    "Agendamento Confirmado",
-                    "Olá, o agendamento de ${booking.name} foi confirmado!"
-                )
-                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT)
-                    .show()
+                // Aqui você estava passando o objeto booking diretamente, altere para passar o booking.id!!
+                sendNotification(booking.id!!, "Agendamento Confirmado", "Olá, o agendamento de ${booking.name} foi confirmado pelo cliente!", false)
+
+                // Exibe o Toast e carrega novamente os agendamentos
+                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT).show()
                 loadBookings()
             }
             .addOnFailureListener { e ->
@@ -207,15 +205,16 @@ class BookingFragment : Fragment() {
             }
     }
 
+
+
     private fun cancelBooking(booking: Booking) {
         firestore.collection("bookings").document(booking.id!!)
             .delete()
             .addOnSuccessListener {
-                sendNotificationToBusiness(
-                    booking,
+                sendNotification(
+                    booking.id!!,
                     "Agendamento Cancelado",
-                    "Olá, o agendamento de ${booking.name} foi cancelado!"
-                )
+                    "Olá, o agendamento de ${booking.name} foi cancelado!",false)
                 Toast.makeText(
                     requireContext(),
                     "Agendamento cancelado e excluído.",
@@ -234,31 +233,52 @@ class BookingFragment : Fragment() {
     }
 
 
-    private fun sendNotificationToBusiness(booking: Booking, title: String, message: String) {
-        val companyId = booking.companyId ?: return
+    // Função para enviar notificações, com a opção de notificar o cliente ou o administrador
+    private fun sendNotification(
+        bookingId: String,
+        title: String,
+        message: String,
+        notifyAdmin: Boolean
+    ) {
+            // Buscar o token do administrador
+            firestore.collection("bookings").document(bookingId)
+                .get()
+                .addOnSuccessListener { bookingDocument ->
+                    val companyId =
+                        bookingDocument.getString("companyId") ?: return@addOnSuccessListener
+                    fetchBusinessToken(companyId) { adminToken ->
+                        if (adminToken != null) {
+                            sendFCMNotification(adminToken, title, message)
+                        } else {
+                            Log.e(
+                                "FCM",
+                                "Token do administrador não encontrado para a empresa ID: $companyId"
+                            )
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
+        }
+    }
 
+    // Função para buscar o token do administrador
+    private fun fetchBusinessToken(companyId: String, callback: (String?) -> Unit) {
         firestore.collection("business").document(companyId)
             .get()
             .addOnSuccessListener { document ->
-                val fcmToken = document.getString("fcmToken")
-                Log.d("FCM", "Token FCM recebido: $fcmToken")
-
-                if (!fcmToken.isNullOrEmpty()) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        if (isAdded) {
-                            sendFCMNotification(fcmToken, title, message)
-                        }
-                    }
-                } else {
-                    Log.e("FCM", "Token FCM não encontrado para empresa: $companyId")
-                }
+                val token = document.getString("fcmToken")
+                Log.d("FCM", "Token do administrador para empresa $companyId: $token") // Loga o token
+                callback(token)
             }
             .addOnFailureListener { e ->
-                Log.e("BookingFragment", "Erro ao buscar token FCM: ${e.message}")
+                Log.e("FCM", "Erro ao buscar token do administrador para empresa $companyId: ${e.message}")
+                callback(null)
             }
     }
 
-    private suspend fun sendFCMNotification(token: String, title: String, message: String) {
+    // Função para enviar a notificação FCM
+    private fun sendFCMNotification(token: String, title: String, message: String) {
         val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
         val payload = """
         {
@@ -273,34 +293,42 @@ class BookingFragment : Fragment() {
             }
           }
         }
-        """.trimIndent()
+    """.trimIndent()
 
-        val accessToken = withContext(Dispatchers.IO) {
-            context?.let { TokenUtils.getAccessTokenFromServiceAccount(it) }
-        }
-
-        if (accessToken == null) {
-            Log.e("FCM", "Erro ao obter token de acesso.")
-            return
-        }
-
-        val request = object : StringRequest(
-            Method.POST, url,
-            { response -> Log.d("FCM", "Notificação enviada: $response") },
-            { error -> Log.e("FCM", "Erro ao enviar notificação: ${error.message}") }
-        ) {
-            override fun getHeaders(): Map<String, String> {
-                return mapOf(
-                    "Authorization" to "Bearer $accessToken",
-                    "Content-Type" to "application/json"
-                )
+        // Aqui estamos lançando uma corrotina dentro de um escopo adequado
+        CoroutineScope(Dispatchers.IO).launch {
+            // Aqui dentro você pode usar withContext pois estamos dentro de uma corrotina
+            val accessToken = withContext(Dispatchers.IO) {
+                context?.let { TokenUtils.getAccessTokenFromServiceAccount(it) }
             }
 
-            override fun getBody(): ByteArray = payload.toByteArray(Charsets.UTF_8)
-        }
+            if (accessToken == null) {
+                Log.e("FCM", "Falha ao obter o token de acesso.")
+                return@launch
+            }
 
-        withContext(Dispatchers.Main) {
-            context?.let { Volley.newRequestQueue(it).add(request) }
+            val request = object : StringRequest(
+                Method.POST, url,
+                Response.Listener { response ->
+                    Log.d("FCM", "Notificação enviada com sucesso: $response")
+                },
+                Response.ErrorListener { error ->
+                    Log.e("FCM", "Erro ao enviar notificação: ${error.message}")
+                }
+            ) {
+                override fun getHeaders(): Map<String, String> {
+                    return mapOf(
+                        "Authorization" to "Bearer $accessToken",
+                        "Content-Type" to "application/json"
+                    )
+                }
+
+                override fun getBody(): ByteArray = payload.toByteArray(Charsets.UTF_8)
+            }
+
+            withContext(Dispatchers.Main) {
+                Volley.newRequestQueue(context).add(request)
+            }
         }
     }
 
@@ -309,7 +337,8 @@ class BookingFragment : Fragment() {
         val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
         val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
-        val commentEditText = dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
+        val commentEditText =
+            dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
         val dialog = AlertDialog.Builder(requireContext())
@@ -318,7 +347,12 @@ class BookingFragment : Fragment() {
             .create()
 
         // Ajuste da cor da fonte do botão "Salvar"
-        saveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo)) // Definindo a cor roxa
+        saveButton.setTextColor(
+            ContextCompat.getColor(
+                requireContext(),
+                R.color.roxo
+            )
+        ) // Definindo a cor roxa
 
         saveButton.setOnClickListener {
             val qualityRating = ratingQuality.rating.toInt()

@@ -225,7 +225,11 @@ class SignupClientActivity : AppCompatActivity() {
                     // Verifica se o Android ID já está registrado
                     checkIfAndroidIdExists(androidId) { exists ->
                         if (exists) {
-                            Toast.makeText(this, "Este dispositivo já está registrado.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Este dispositivo já está registrado.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else {
                             // Fazer upload da imagem de perfil se houver
                             imageUri?.let {
@@ -241,9 +245,17 @@ class SignupClientActivity : AppCompatActivity() {
                 } else {
                     val exception = task.exception
                     if (exception is FirebaseAuthWeakPasswordException) {
-                        Toast.makeText(this, "A senha é muito fraca. Por favor, escolha uma senha mais forte.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "A senha é muito fraca. Por favor, escolha uma senha mais forte.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        Toast.makeText(this, "Falha ao cadastrar. Tente novamente.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Falha ao cadastrar. Tente novamente.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -352,7 +364,11 @@ class SignupClientActivity : AppCompatActivity() {
                 }
                 .addOnFailureListener { e ->
                     Log.e("Firestore", "Erro ao salvar o usuário: ${e.message}")
-                    Toast.makeText(this, "Falha ao salvar usuário. Tente novamente.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Falha ao salvar usuário. Tente novamente.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         }
     }

@@ -14,8 +14,8 @@
             android:id="@+id/companyImage"
             android:layout_width="match_parent"
             android:layout_height="180dp"
-            android:scaleType="centerCrop"
-            android:contentDescription="Descrição da empresa" />
+            android:contentDescription="Descrição da empresa"
+            android:scaleType="centerCrop" />
 
         <View
             android:layout_width="match_parent"
@@ -26,9 +26,9 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="-50dp"
         android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:layout_marginTop="-50dp">
+        android:paddingEnd="16dp">
 
         <!-- Imagem de perfil sobreposta -->
         <de.hdodenhof.circleimageview.CircleImageView
@@ -36,21 +36,21 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_alignParentStart="true"
-            android:src="@drawable/foto_perfil_generica"
+            android:elevation="4dp"
             android:scaleType="centerCrop"
-            android:elevation="4dp" />
+            android:src="@drawable/foto_perfil_generica" />
 
         <!-- Nome da empresa ao lado da imagem de perfil -->
         <TextView
             android:id="@+id/companyName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/companyProfileImage"
             android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_toEndOf="@id/companyProfileImage"
             android:text="Nome da Empresa"
             android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp" />
+            android:textStyle="bold" />
 
         <!-- Horário de funcionamento -->
         <TextView
@@ -58,11 +58,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/companyName"
-            android:layout_toEndOf="@id/companyProfileImage"
             android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_toEndOf="@id/companyProfileImage"
             android:text="Horário: 8:00 - 18:00"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp" />
+            android:textSize="14sp" />
 
         <!-- Categoria -->
         <TextView
@@ -70,11 +70,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/companyOperatingHours"
-            android:layout_toEndOf="@id/companyProfileImage"
             android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_toEndOf="@id/companyProfileImage"
             android:text="Categoria: Estética"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp" />
+            android:textSize="14sp" />
     </RelativeLayout>
 
     <!-- Descrição da empresa -->
@@ -82,10 +82,10 @@
         android:id="@+id/companyDescription"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Descrição do trabalho da empresa"
-        android:textSize="16sp"
+        android:layout_marginTop="8dp"
         android:padding="16dp"
-        android:layout_marginTop="8dp" />
+        android:text="Descrição do trabalho da empresa"
+        android:textSize="16sp" />
 
     <!-- Tabs de navegação -->
     <com.google.android.material.tabs.TabLayout

@@ -1,5 +1,4 @@
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -8,33 +7,33 @@
     app:cardElevation="4dp">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:padding="16dp">
 
         <TextView
             android:id="@+id/bookingService"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
+            android:textColor="@color/black"
             android:textSize="18sp"
-            android:textColor="@color/black" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/bookingDateTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="@color/cinza" />
+            android:textColor="@color/cinza"
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/cancelButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
             android:layout_marginTop="20dp"
             android:text="Cancelar"
+            android:textColor="@color/white"
             android:visibility="visible" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

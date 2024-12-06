@@ -1,5 +1,4 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -10,19 +9,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
-        android:maxHeight="200dp"
-        android:scaleType="centerInside"
-        android:contentDescription="Foto do Serviço"
         android:background="@drawable/rounded_border"
-        android:clipToOutline="true" />
+        android:clipToOutline="true"
+        android:contentDescription="Foto do Serviço"
+        android:maxHeight="200dp"
+        android:scaleType="centerInside" />
 
     <TextView
         android:id="@+id/textViewCaption"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:paddingTop="4dp"
-        android:textSize="14sp"
-        android:textColor="@android:color/black"
         android:text="Legenda da Foto"
-        android:gravity="center_horizontal"/>
+        android:textColor="@android:color/black"
+        android:textSize="14sp" />
 </LinearLayout>

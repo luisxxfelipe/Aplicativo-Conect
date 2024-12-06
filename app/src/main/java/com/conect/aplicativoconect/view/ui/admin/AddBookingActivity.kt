@@ -156,7 +156,12 @@ class AddBookingActivity : AppCompatActivity() {
             buttonOk.setTextColor(ContextCompat.getColor(this, R.color.roxo))
 
             // Defina a cor do texto do botão "Cancelar" (opcional)
-            buttonCancel.setTextColor(ContextCompat.getColor(this, R.color.red)) // Exemplo: vermelho
+            buttonCancel.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    R.color.red
+                )
+            ) // Exemplo: vermelho
         }
 
         // Exibe o DatePickerDialog
@@ -213,7 +218,12 @@ class AddBookingActivity : AppCompatActivity() {
 
         // Acessando o botão "Cancelar" e alterando a cor do texto
         val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-        negativeButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Cor roxa para o texto
+        negativeButton.setTextColor(
+            ContextCompat.getColor(
+                this,
+                R.color.roxo
+            )
+        ) // Cor roxa para o texto
     }
 
     private fun saveBooking() {

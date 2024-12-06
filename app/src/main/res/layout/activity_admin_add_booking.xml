@@ -1,10 +1,9 @@
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="16dp"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:padding="16dp">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -16,37 +15,37 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:gravity="center"
+            android:orientation="vertical"
             android:padding="24dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 android:text="Novo Agendamento"
-                android:textSize="24sp"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="16dp" />
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:hint="Nome do Cliente"
-                app:boxStrokeWidth="1dp"
                 app:boxBackgroundMode="outline"
-                app:boxStrokeColor="@color/colorPrimary">
+                app:boxStrokeColor="@color/colorPrimary"
+                app:boxStrokeWidth="1dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="12dp"
-                    android:textColor="@color/black"
                     android:backgroundTint="@android:color/transparent"
                     android:inputType="textPersonName"
-                    android:minHeight="48dp" />
+                    android:minHeight="48dp"
+                    android:padding="12dp"
+                    android:textColor="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
@@ -67,56 +66,56 @@
                 android:id="@+id/buttonSelectDate"
                 android:layout_width="250dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/colorPrimary"
                 android:text="Selecionar Data"
                 android:textColor="@android:color/white"
-                app:cornerRadius="8dp"
                 android:visibility="visible"
-                android:layout_marginTop="16dp"
-                android:backgroundTint="@color/colorPrimary" />
+                app:cornerRadius="8dp" />
 
             <TextView
                 android:id="@+id/textViewSelectedDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Data não selecionada"
+                android:layout_marginTop="4dp"
                 android:gravity="center"
+                android:text="Data não selecionada"
                 android:textAlignment="center"
-                android:visibility="gone"
                 android:textColor="@color/cinza"
-                android:layout_marginTop="4dp" />
+                android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonSelectTime"
                 android:layout_width="250dp"
                 android:layout_height="wrap_content"
-                android:text="Selecionar Horário"
-                android:visibility="gone"
-                android:textColor="@android:color/white"
-                app:cornerRadius="8dp"
                 android:layout_marginTop="16dp"
-                android:backgroundTint="@color/colorPrimary" />
+                android:backgroundTint="@color/colorPrimary"
+                android:text="Selecionar Horário"
+                android:textColor="@android:color/white"
+                android:visibility="gone"
+                app:cornerRadius="8dp" />
 
             <TextView
                 android:id="@+id/textViewSelectedTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Horário não selecionado"
+                android:layout_marginTop="4dp"
                 android:gravity="center"
+                android:text="Horário não selecionado"
                 android:textAlignment="center"
-                android:visibility="gone"
                 android:textColor="@color/cinza"
-                android:layout_marginTop="4dp" />
+                android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonSaveBooking"
                 android:layout_width="250dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="@color/roxo"
                 android:text="Salvar Agendamento"
                 android:textColor="@android:color/white"
-                app:cornerRadius="8dp"
-                android:layout_marginTop="24dp"
                 android:visibility="gone"
-                android:backgroundTint="@color/roxo" />
+                app:cornerRadius="8dp" />
 
             <ProgressBar
                 android:id="@+id/progressBarSaving"

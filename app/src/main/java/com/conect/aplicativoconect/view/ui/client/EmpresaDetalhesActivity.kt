@@ -53,7 +53,8 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
         }.attach()
 
         // Verificar o tema atual (modo claro ou escuro)
-        val isDarkMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val isDarkMode =
+            resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 
         // Adiciona o listener para detectar as abas selecionadas
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -64,17 +65,33 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                     // Definindo o fundo da aba dependendo do tema
                     if (isDarkMode) {
                         // No modo escuro, o fundo da aba deve ser transparente
-                        tabView.setBackgroundColor(ContextCompat.getColor(this@EmpresaDetalhesActivity, android.R.color.transparent))
+                        tabView.setBackgroundColor(
+                            ContextCompat.getColor(
+                                this@EmpresaDetalhesActivity,
+                                android.R.color.transparent
+                            )
+                        )
                     } else {
                         // No modo claro, o fundo será roxo
-                        tabView.setBackgroundColor(ContextCompat.getColor(this@EmpresaDetalhesActivity, R.color.roxo))
+                        tabView.setBackgroundColor(
+                            ContextCompat.getColor(
+                                this@EmpresaDetalhesActivity,
+                                R.color.roxo
+                            )
+                        )
                     }
 
                     // Definindo a cor do texto da aba dependendo do tema
                     val textColor = if (isDarkMode) {
-                        ContextCompat.getColor(this@EmpresaDetalhesActivity, R.color.white) // Branco no modo escuro
+                        ContextCompat.getColor(
+                            this@EmpresaDetalhesActivity,
+                            R.color.white
+                        ) // Branco no modo escuro
                     } else {
-                        ContextCompat.getColor(this@EmpresaDetalhesActivity, R.color.roxo) // Roxo no modo claro
+                        ContextCompat.getColor(
+                            this@EmpresaDetalhesActivity,
+                            R.color.roxo
+                        ) // Roxo no modo claro
                     }
 
                     it.view.findViewById<TextView>(android.R.id.title)?.setTextColor(textColor)
@@ -86,13 +103,24 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                     val tabView = it.view
 
                     // Definindo o fundo transparente quando a aba não está selecionada
-                    tabView.setBackgroundColor(ContextCompat.getColor(this@EmpresaDetalhesActivity, android.R.color.transparent))
+                    tabView.setBackgroundColor(
+                        ContextCompat.getColor(
+                            this@EmpresaDetalhesActivity,
+                            android.R.color.transparent
+                        )
+                    )
 
                     // Mudando a cor do texto para cinza, dependendo do tema
                     val textColor = if (isDarkMode) {
-                        ContextCompat.getColor(this@EmpresaDetalhesActivity, R.color.cinza_escuro) // Cinza escuro no modo escuro
+                        ContextCompat.getColor(
+                            this@EmpresaDetalhesActivity,
+                            R.color.cinza_escuro
+                        ) // Cinza escuro no modo escuro
                     } else {
-                        ContextCompat.getColor(this@EmpresaDetalhesActivity, R.color.cinza_escuro) // Cinza claro no modo claro
+                        ContextCompat.getColor(
+                            this@EmpresaDetalhesActivity,
+                            R.color.cinza_escuro
+                        ) // Cinza claro no modo claro
                     }
                     it.view.findViewById<TextView>(android.R.id.title)?.setTextColor(textColor)
                 }
@@ -110,7 +138,12 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
 
             // Definindo o fundo da aba inicial
             if (isDarkMode) {
-                tabView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent)) // Modo escuro
+                tabView.setBackgroundColor(
+                    ContextCompat.getColor(
+                        this,
+                        android.R.color.transparent
+                    )
+                ) // Modo escuro
             } else {
                 tabView.setBackgroundColor(ContextCompat.getColor(this, R.color.roxo)) // Modo claro
             }
@@ -128,7 +161,6 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
         // Defina a cor do traço da aba
         tabLayout.setSelectedTabIndicatorColor(ContextCompat.getColor(this, R.color.roxo)) // Roxo
     }
-
 
 
     private fun fetchCompanyDetails(companyId: String) {

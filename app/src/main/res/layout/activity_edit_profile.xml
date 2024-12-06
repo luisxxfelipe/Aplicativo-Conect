@@ -2,10 +2,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:background="@color/white"
     android:gravity="center"
-    android:padding="24dp"
-    android:background="@color/white">
+    android:orientation="vertical"
+    android:padding="24dp">
 
     <!-- Imagem de perfil clicável -->
     <de.hdodenhof.circleimageview.CircleImageView
@@ -13,12 +13,12 @@
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginBottom="16dp"
-        android:src="@drawable/foto_perfil_generica"
-        android:contentDescription="Imagem de Perfil"
         android:clickable="true"
+        android:contentDescription="Imagem de Perfil"
         android:focusable="true"
-        app:civ_border_width="2dp"
-        app:civ_border_color="@color/colorPrimary" />
+        android:src="@drawable/foto_perfil_generica"
+        app:civ_border_color="@color/colorPrimary"
+        app:civ_border_width="2dp" />
 
     <!-- Campo Nome -->
     <com.google.android.material.textfield.TextInputLayout
@@ -26,18 +26,18 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="Nome"
-        app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
-        app:boxStrokeWidth="1dp">
+        app:boxStrokeColor="@color/roxo"
+        app:boxStrokeWidth="1dp"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editUserName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
             android:backgroundTint="@android:color/transparent"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:padding="12dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Campo Email -->
@@ -45,20 +45,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:hint="Email"
-        app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
-        app:boxBackgroundMode="outline"
         android:backgroundTint="@android:color/transparent"
-        app:boxStrokeWidth="1dp">
+        android:hint="Email"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeColor="@color/roxo"
+        app:boxStrokeWidth="1dp"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editUserEmail"
             android:layout_width="match_parent"
-            android:backgroundTint="@android:color/transparent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:inputType="textEmailAddress" />
+            android:backgroundTint="@android:color/transparent"
+            android:inputType="textEmailAddress"
+            android:padding="12dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Campo CPF -->
@@ -67,18 +67,18 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="CPF"
-        app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
         app:boxBackgroundMode="outline"
-        app:boxStrokeWidth="1dp">
+        app:boxStrokeColor="@color/roxo"
+        app:boxStrokeWidth="1dp"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editUserCpf"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
             android:backgroundTint="@android:color/transparent"
-            android:inputType="number" />
+            android:inputType="number"
+            android:padding="12dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Campo Telefone -->
@@ -89,16 +89,16 @@
         android:hint="Telefone"
         app:boxBackgroundMode="outline"
         app:boxStrokeColor="@color/roxo"
-        app:hintTextColor="@color/roxo"
-        app:boxStrokeWidth="1dp">
+        app:boxStrokeWidth="1dp"
+        app:hintTextColor="@color/roxo">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editUserPhone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
             android:backgroundTint="@android:color/transparent"
-            android:inputType="phone" />
+            android:inputType="phone"
+            android:padding="12dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Botão Salvar Alterações -->
@@ -106,8 +106,8 @@
         android:id="@+id/saveProfileButton"
         android:layout_width="220dp"
         android:layout_height="wrap_content"
-        android:text="Salvar Alterações"
+        android:layout_marginTop="16dp"
         android:backgroundTint="@color/roxo"
-        android:textColor="@android:color/white"
-        android:layout_marginTop="16dp" />
+        android:text="Salvar Alterações"
+        android:textColor="@android:color/white" />
 </LinearLayout>

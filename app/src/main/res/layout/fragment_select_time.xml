@@ -9,10 +9,10 @@
         android:id="@+id/selectedService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:text="Serviço Selecionado"
         android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
+        android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/scheduleRecyclerView"
@@ -24,9 +24,9 @@
         android:id="@+id/bookNowButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Agendar Agora"
-        android:enabled="false"
         android:backgroundTint="@color/roxo"
+        android:enabled="false"
+        android:text="Agendar Agora"
         android:textColor="@android:color/white" />
 
 </LinearLayout>

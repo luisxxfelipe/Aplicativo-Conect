@@ -7,7 +7,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 
-class TipsAdapter(private val tips: List<String>) : RecyclerView.Adapter<TipsAdapter.TipViewHolder>() {
+class TipsAdapter(private val tips: List<String>) :
+    RecyclerView.Adapter<TipsAdapter.TipViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TipViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_tip, parent, false)

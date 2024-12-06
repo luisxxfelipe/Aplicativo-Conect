@@ -68,18 +68,22 @@ class ClienteHomeActivity : AppCompatActivity() {
                     loadFragment(ClienteHomeFragment())
                     true
                 }
+
                 R.id.navigation_appointments -> {
                     loadFragment(BookingFragment())
                     true
                 }
+
                 R.id.navigation_profile -> {
                     loadFragment(ClienteProfileFragment())
                     true
                 }
+
                 R.id.navigation_logout -> {
                     showLogoutConfirmationDialog()
                     true
                 }
+
                 else -> false
             }
         }
@@ -96,8 +100,10 @@ class ClienteHomeActivity : AppCompatActivity() {
     }
 
     private fun setBottomNavIconColors(bottomNavigation: BottomNavigationView) {
-        val selectedColor = ContextCompat.getColor(this, R.color.roxo) // Cor roxa para ícones selecionados
-        val unselectedColor = ContextCompat.getColor(this, R.color.cinza_escuro) // Cor para ícones não selecionados
+        val selectedColor =
+            ContextCompat.getColor(this, R.color.roxo) // Cor roxa para ícones selecionados
+        val unselectedColor =
+            ContextCompat.getColor(this, R.color.cinza_escuro) // Cor para ícones não selecionados
 
         // Criar o ColorStateList para ícones selecionados e não selecionados
         val colorStateList = ColorStateList(
@@ -166,7 +172,8 @@ class ClienteHomeActivity : AppCompatActivity() {
                 .get()
                 .addOnSuccessListener { querySnapshot ->
                     if (!querySnapshot.isEmpty) {
-                        val userName = querySnapshot.documents[0].getString("name") ?: "Nome não encontrado"
+                        val userName =
+                            querySnapshot.documents[0].getString("name") ?: "Nome não encontrado"
                         clientViewModel.loadUserData(user.uid)
                         loadFragment(ClienteHomeFragment(), userName)
                         fetchTodayBookings(user.uid)
@@ -243,7 +250,13 @@ class ClienteHomeActivity : AppCompatActivity() {
             val qualityRating = ratingQuality.rating.toInt()
             val punctualityRating = ratingPunctuality.rating.toInt()
             val serviceRating = ratingService.rating.toInt()
-            clientViewModel.saveRatings(this, booking.id, qualityRating, punctualityRating, serviceRating)
+            clientViewModel.saveRatings(
+                this,
+                booking.id,
+                qualityRating,
+                punctualityRating,
+                serviceRating
+            )
             dialog.dismiss()
         }
 
@@ -261,10 +274,20 @@ class ClienteHomeActivity : AppCompatActivity() {
         // Usar setOnShowListener para garantir que os botões foram inflados antes de manipular
         dialog.setOnShowListener {
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            positiveButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Cor roxa para o botão "Sim"
+            positiveButton.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    R.color.roxo
+                )
+            ) // Cor roxa para o botão "Sim"
 
             val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-            negativeButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Cor roxa para o botão "Cancelar"
+            negativeButton.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    R.color.roxo
+                )
+            ) // Cor roxa para o botão "Cancelar"
         }
 
         dialog.show()

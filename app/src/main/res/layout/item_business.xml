@@ -1,10 +1,9 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@android:color/white"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@android:color/white">
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -31,9 +30,9 @@
                 android:id="@+id/businessName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/black"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/black" />
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:id="@+id/ratingContainer"
@@ -53,25 +52,25 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="0.0"
-                    android:textSize="14sp"
-                    android:textColor="@color/textSecondary" />
+                    android:textColor="@color/textSecondary"
+                    android:textSize="14sp" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/businessAddress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
+                android:text="Categoria do Serviço"
                 android:textColor="@color/textSecondary"
-                android:text="Categoria do Serviço" />
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/businessOperatingHours"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
+                android:text="Horário de Funcionamento"
                 android:textColor="@color/textSecondary"
-                android:text="Horário de Funcionamento" />
+                android:textSize="14sp" />
 
         </LinearLayout>
 
@@ -81,16 +80,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:backgroundTint="@color/roxo"
             android:text="Conhecer"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/roxo" />
+            android:textColor="@android:color/white" />
     </LinearLayout>
 
     <!-- Linha Divisória com Espaço Extra -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/cinza_claro"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"/> <!-- Espaço adicional entre os itens -->
+        android:layout_marginBottom="12dp"
+        android:background="@color/cinza_claro" /> <!-- Espaço adicional entre os itens -->
 </LinearLayout>

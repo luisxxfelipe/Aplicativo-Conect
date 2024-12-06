@@ -246,7 +246,8 @@ class RegisterBusinessActivity : AppCompatActivity(),
                 val fcmToken = task.result
 
                 // Definir o caminho para salvar a imagem no Firebase Storage
-                val storageRef = storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
+                val storageRef =
+                    storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
 
                 // Fazer o upload da imagem para o Firebase Storage
                 val uploadTask = storageRef.putFile(imageUri)
@@ -283,7 +284,10 @@ class RegisterBusinessActivity : AppCompatActivity(),
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 val intent = Intent(this, AdminHomeActivity::class.java)
-                                intent.putExtra("FROM_REGISTER", true) // Passando a informação de que veio do cadastro
+                                intent.putExtra(
+                                    "FROM_REGISTER",
+                                    true
+                                ) // Passando a informação de que veio do cadastro
                                 startActivity(intent)
                                 finish()
                             }

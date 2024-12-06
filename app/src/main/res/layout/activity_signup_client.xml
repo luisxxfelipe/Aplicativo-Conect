@@ -9,18 +9,18 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:gravity="center">
+        android:padding="24dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
             android:text="Criar agora sua conta"
-            android:textSize="24sp"
-            android:textStyle="bold"
             android:textColor="@color/black"
-            android:layout_marginBottom="24dp" />
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
         <FrameLayout
             android:layout_width="120dp"
@@ -45,18 +45,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_upload"
-                android:contentDescription="Upload da imagem" />
+                android:contentDescription="Upload da imagem"
+                android:src="@drawable/ic_upload" />
         </FrameLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/uploadButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Fazer Upload"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="@android:color/white"
             android:layout_marginBottom="24dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="Fazer Upload"
+            android:textColor="@android:color/white"
             app:cornerRadius="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -72,9 +72,9 @@
                 android:id="@+id/nameInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
                 android:padding="12dp"
-                android:textColor="@color/black"
-                android:backgroundTint="@android:color/transparent" />
+                android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -90,10 +90,10 @@
                 android:id="@+id/emailInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
                 android:inputType="textEmailAddress"
                 android:padding="12dp"
-                android:textColor="@color/black"
-                android:backgroundTint="@android:color/transparent" />
+                android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- CPF -->
@@ -103,18 +103,18 @@
             android:layout_marginBottom="16dp"
             android:hint="CPF"
             app:boxBackgroundMode="outline"
-            app:boxStrokeWidth="1dp"
             app:boxStrokeColor="@color/roxo"
+            app:boxStrokeWidth="1dp"
             app:hintTextColor="@color/roxo">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/cpfInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
-                android:textColor="@color/black"
+                android:backgroundTint="@android:color/transparent"
                 android:inputType="number"
-                android:backgroundTint="@android:color/transparent" />
+                android:padding="12dp"
+                android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -130,10 +130,10 @@
                 android:id="@+id/passwordInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
                 android:inputType="textPassword"
                 android:padding="12dp"
-                android:textColor="@color/black"
-                android:backgroundTint="@android:color/transparent" />
+                android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -149,30 +149,30 @@
                 android:id="@+id/confirmPasswordInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
                 android:inputType="textPassword"
                 android:padding="12dp"
-                android:textColor="@color/black"
-                android:backgroundTint="@android:color/transparent" />
+                android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/signupButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Cadastrar"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="@android:color/white"
             android:layout_marginTop="24dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="Cadastrar"
+            android:textColor="@android:color/white"
             app:cornerRadius="8dp" />
 
         <TextView
             android:id="@+id/loginTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Já tem uma conta? Faça login"
-            android:textColor="@color/colorPrimary"
             android:layout_marginTop="16dp"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:text="Já tem uma conta? Faça login"
+            android:textColor="@color/colorPrimary" />
     </LinearLayout>
 </ScrollView>

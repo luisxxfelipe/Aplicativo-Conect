@@ -12,9 +12,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
+        android:gravity="center"
         android:text="Como você gostaria de usar o ConecteX?"
         android:textAlignment="center"
-        android:gravity="center"
         android:textColor="@color/black"
         android:textSize="24sp"
         android:textStyle="bold" />
@@ -26,12 +26,12 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:background="@drawable/card_background_role"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:elevation="4dp"
-        android:gravity="center_vertical"
         android:clickable="true"
-        android:focusable="true">
+        android:elevation="4dp"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
 
         <ImageView
             android:id="@+id/clientIcon"
@@ -44,8 +44,8 @@
             android:id="@+id/clientText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="16dp"
+            android:layout_weight="1"
             android:text="Cliente"
             android:textColor="@color/cinza_escuro"
             android:textSize="18sp"
@@ -57,12 +57,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/card_background_role"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:elevation="4dp"
-        android:gravity="center_vertical"
         android:clickable="true"
-        android:focusable="true">
+        android:elevation="4dp"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
 
         <ImageView
             android:id="@+id/businessIcon"
@@ -75,8 +75,8 @@
             android:id="@+id/businessText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="16dp"
+            android:layout_weight="1"
             android:text="Prestador de Serviços"
             android:textColor="@color/cinza_escuro"
             android:textSize="18sp"

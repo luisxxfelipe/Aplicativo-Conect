@@ -43,8 +43,10 @@ class AdminSettingsFragment : Fragment() {
     }
 
     private fun configureNotificationSwitch() {
-        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val isNotificationsEnabled = sharedPreferences.getBoolean("admin_notifications_enabled", false)
+        val sharedPreferences =
+            requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val isNotificationsEnabled =
+            sharedPreferences.getBoolean("admin_notifications_enabled", false)
         binding.notificationsSwitch.isChecked = isNotificationsEnabled
 
         binding.notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -56,14 +58,16 @@ class AdminSettingsFragment : Fragment() {
                 FirebaseMessaging.getInstance().subscribeToTopic("admin_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             } else {
                 FirebaseMessaging.getInstance().unsubscribeFromTopic("admin_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             }
@@ -107,10 +111,20 @@ class AdminSettingsFragment : Fragment() {
 
         // Acessando os botões e alterando as cores
         val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-        positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo)) // Cor roxa para o texto do botão "Excluir"
+        positiveButton.setTextColor(
+            ContextCompat.getColor(
+                requireContext(),
+                R.color.roxo
+            )
+        ) // Cor roxa para o texto do botão "Excluir"
 
         val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-        negativeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange)) // Cor laranja para o texto do botão "Cancelar"
+        negativeButton.setTextColor(
+            ContextCompat.getColor(
+                requireContext(),
+                R.color.orange
+            )
+        ) // Cor laranja para o texto do botão "Cancelar"
     }
 
 

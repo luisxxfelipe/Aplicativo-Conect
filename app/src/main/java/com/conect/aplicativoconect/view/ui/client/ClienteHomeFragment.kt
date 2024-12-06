@@ -2,7 +2,6 @@ package com.conect.aplicativoconect.view.ui.client
 
 import CategoriesPagerAdapter
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RatingBar
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -26,9 +24,6 @@ import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class ClienteHomeFragment : Fragment() {
@@ -49,7 +44,7 @@ class ClienteHomeFragment : Fragment() {
         return _binding!!.root
     }
 
-    // No método onViewCreated, inicie o carregamento imediato dos dados
+    // No metodo onViewCreated, inicie o carregamento imediato dos dados
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -112,7 +107,12 @@ class ClienteHomeFragment : Fragment() {
         clientBookingAdapter = ClientBookingAdapter(
             context = requireContext(),
             bookings = bookings,
-            onConfirmClick = { booking -> clientViewModel.confirmBooking(requireContext(), booking) },
+            onConfirmClick = { booking ->
+                clientViewModel.confirmBooking(
+                    requireContext(),
+                    booking
+                )
+            },
             onCancelClick = { booking -> clientViewModel.cancelBooking(requireContext(), booking) },
             onRateClick = { booking -> showRatingPopup(booking) },
             onEmptyList = { showNoBookingsMessage(true) }  // Exibe mensagem de lista vazia
@@ -148,7 +148,13 @@ class ClienteHomeFragment : Fragment() {
             val qualityRating = ratingQuality.rating.toInt()
             val punctualityRating = ratingPunctuality.rating.toInt()
             val serviceRating = ratingService.rating.toInt()
-            clientViewModel.saveRatings(requireContext(), booking.id, qualityRating, punctualityRating, serviceRating)
+            clientViewModel.saveRatings(
+                requireContext(),
+                booking.id,
+                qualityRating,
+                punctualityRating,
+                serviceRating
+            )
             dialog.dismiss()
         }
 
@@ -179,7 +185,8 @@ class ClienteHomeFragment : Fragment() {
         }
 
         clientViewModel.todayBookings.observe(viewLifecycleOwner) { bookings ->
-            binding.progressBar.visibility = View.GONE  // Esconde o loading quando dados são carregados
+            binding.progressBar.visibility =
+                View.GONE  // Esconde o loading quando dados são carregados
             if (bookings.isNotEmpty()) {
                 setupClientBookingAdapter(bookings)
                 showNoBookingsMessage(false)

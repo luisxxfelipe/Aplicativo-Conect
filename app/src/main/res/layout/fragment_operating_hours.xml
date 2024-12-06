@@ -1,5 +1,4 @@
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:scrollbars="none">
@@ -7,25 +6,25 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:gravity="center">
+        android:padding="16dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Selecione os horários de funcionamento:"
-            android:textSize="23sp"
+            android:layout_marginBottom="16dp"
             android:gravity="center"
+            android:text="Selecione os horários de funcionamento:"
             android:textColor="@color/black"
-            android:layout_marginBottom="16dp"/>
+            android:textSize="23sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
             android:text="Horário de Abertura:"
-            android:textSize="18sp"
-            android:layout_marginTop="14dp" />
+            android:textSize="18sp" />
 
         <TimePicker
             android:id="@+id/timePickerOpen"
@@ -36,9 +35,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="Horário de Fechamento:"
-            android:textSize="18sp"
-            android:layout_marginTop="16dp"/>
+            android:textSize="18sp" />
 
         <TimePicker
             android:id="@+id/timePickerClose"
@@ -49,9 +48,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="Selecione os dias da semana:"
-            android:textSize="18sp"
-            android:layout_marginTop="16dp"/>
+            android:textSize="18sp" />
 
         <GridLayout
             android:layout_width="wrap_content"
@@ -64,57 +63,57 @@
                 android:id="@+id/buttonMonday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Seg"
                 android:layout_margin="4dp"
-                android:backgroundTint="@color/orange"/>
+                android:backgroundTint="@color/orange"
+                android:text="Seg" />
 
             <Button
                 android:id="@+id/buttonTuesday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ter"
                 android:layout_margin="4dp"
-                android:backgroundTint="@color/orange"/>
+                android:backgroundTint="@color/orange"
+                android:text="Ter" />
 
             <Button
                 android:id="@+id/buttonWednesday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Qua"
                 android:layout_margin="4dp"
-                android:backgroundTint="@color/orange"/>
+                android:backgroundTint="@color/orange"
+                android:text="Qua" />
 
             <Button
                 android:id="@+id/buttonThursday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Qui"
                 android:layout_margin="4dp"
-                android:backgroundTint="@color/orange"/>
+                android:backgroundTint="@color/orange"
+                android:text="Qui" />
 
             <Button
                 android:id="@+id/buttonFriday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Sex"
                 android:layout_margin="4dp"
-                android:backgroundTint="@color/orange"/>
+                android:backgroundTint="@color/orange"
+                android:text="Sex" />
 
             <Button
                 android:id="@+id/buttonSaturday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Sáb"
                 android:layout_margin="4dp"
-                android:backgroundTint="@color/orange"/>
+                android:backgroundTint="@color/orange"
+                android:text="Sáb" />
 
             <Button
                 android:id="@+id/buttonSunday"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Dom"
                 android:layout_margin="4dp"
-                android:backgroundTint="@color/orange"/>
+                android:backgroundTint="@color/orange"
+                android:text="Dom" />
 
         </GridLayout>
 
@@ -122,10 +121,10 @@
             android:id="@+id/saveHoursButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Salvar Horários"
-            android:textColor="@color/white"
+            android:layout_marginTop="16dp"
             android:backgroundTint="@color/roxo"
-            android:layout_marginTop="16dp"/>
+            android:text="Salvar Horários"
+            android:textColor="@color/white" />
 
     </LinearLayout>
 </ScrollView>

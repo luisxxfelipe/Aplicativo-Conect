@@ -42,7 +42,8 @@ class ClienteProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val sharedPreferences =
+            requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val isNotificationsEnabled = sharedPreferences.getBoolean("notifications_enabled", false)
         binding.notificationsSwitch.isChecked = isNotificationsEnabled
 
@@ -93,14 +94,16 @@ class ClienteProfileFragment : Fragment() {
                 FirebaseMessaging.getInstance().subscribeToTopic("all_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             } else {
                 FirebaseMessaging.getInstance().unsubscribeFromTopic("all_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             }
@@ -118,11 +121,21 @@ class ClienteProfileFragment : Fragment() {
 
             // Ajuste da cor da fonte do botão "Excluir" (positivo)
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo)) // Cor roxa para o texto do botão "Excluir"
+            positiveButton.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.roxo
+                )
+            ) // Cor roxa para o texto do botão "Excluir"
 
             // Ajuste da cor da fonte do botão "Cancelar" (negativo)
             val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-            negativeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo)) // Cor laranja para o texto do botão "Cancelar"
+            negativeButton.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.roxo
+                )
+            ) // Cor laranja para o texto do botão "Cancelar"
         }
 
     }
@@ -139,7 +152,8 @@ class ClienteProfileFragment : Fragment() {
                     deleteUserDocument(uid)
                 }
                 .addOnFailureListener {
-                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT)
+                        .show()
                 }
         }
     }
@@ -151,7 +165,8 @@ class ClienteProfileFragment : Fragment() {
                 deleteUserAccount()
             }
             .addOnFailureListener {
-                Toast.makeText(context, "Erro ao deletar dados do usuário", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Erro ao deletar dados do usuário", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -159,7 +174,11 @@ class ClienteProfileFragment : Fragment() {
         FirebaseAuth.getInstance().currentUser?.delete()
             ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(context, "Conta e dados excluídos com sucesso", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Conta e dados excluídos com sucesso",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     startActivity(Intent(requireContext(), LoginActivity::class.java))
                     activity?.finish()
                 } else {

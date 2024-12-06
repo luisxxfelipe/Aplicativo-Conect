@@ -76,7 +76,11 @@ class BookingAdapter(
         val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
         val statusColor = when (booking.status_adm) {
             "completed" -> ContextCompat.getColor(holder.itemView.context, R.color.green)
-            "cancelled", "not_completed" -> ContextCompat.getColor(holder.itemView.context, R.color.red)
+            "cancelled", "not_completed" -> ContextCompat.getColor(
+                holder.itemView.context,
+                R.color.red
+            )
+
             else -> ContextCompat.getColor(holder.itemView.context, R.color.yellow)
         }
         statusIndicator.setBackgroundColor(statusColor)
@@ -89,13 +93,14 @@ class BookingAdapter(
 
         // Define a lógica de exibição dos botões
         val showConfirmationButtons = booking.status_adm == "pending" && !isCompleted
-        val showCompletionButtons = hasPassedTime && !isCompleted && booking.status_adm == "confirmed"
+        val showCompletionButtons =
+            hasPassedTime && !isCompleted && booking.status_adm == "confirmed"
 
         holder.confirmButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (showConfirmationButtons) View.VISIBLE else View.GONE
         holder.completeButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
-        holder.notCompletedButton.visibility = if (showCompletionButtons) View.VISIBLE else View.GONE
-
+        holder.notCompletedButton.visibility =
+            if (showCompletionButtons) View.VISIBLE else View.GONE
 
 
         // Ação de confirmar agendamento
@@ -111,9 +116,19 @@ class BookingAdapter(
                         booking.status_adm = "confirmed"
                         notifyItemChanged(position)
                         // Notificar o cliente
-                        sendNotification(bookingId, "Agendamento Confirmado", "Olá ${booking.name}, seu agendamento foi confirmado.", false)
+                        sendNotification(
+                            bookingId,
+                            "Agendamento Confirmado",
+                            "Olá ${booking.name}, seu agendamento foi confirmado.",
+                            false
+                        )
                         // Notificar o administrador
-                        sendNotification(bookingId, "Novo Agendamento Confirmado", "O agendamento foi confirmado.", true)
+                        sendNotification(
+                            bookingId,
+                            "Novo Agendamento Confirmado",
+                            "O agendamento foi confirmado.",
+                            true
+                        )
                     }
             }
         }
@@ -128,7 +143,12 @@ class BookingAdapter(
                     .update("status_adm", "cancelled")
                     .addOnSuccessListener {
                         // Notificar o cliente
-                        sendNotification(bookingId, "Agendamento Cancelado", "Olá ${booking.name}, seu agendamento foi cancelado.", false)
+                        sendNotification(
+                            bookingId,
+                            "Agendamento Cancelado",
+                            "Olá ${booking.name}, seu agendamento foi cancelado.",
+                            false
+                        )
                         coroutineScope.launch {
                             delay(2000L)
                             firestore.collection("bookings").document(bookingId)
@@ -159,7 +179,12 @@ class BookingAdapter(
                         booking.status_cliente = "completed"
                         notifyItemChanged(position)
                         // Notificar o cliente
-                        sendNotification(bookingId, "Serviço Completo", "O serviço para ${booking.serviceName} foi concluído! Agora você pode avaliá-lo.", false)
+                        sendNotification(
+                            bookingId,
+                            "Serviço Completo",
+                            "O serviço para ${booking.serviceName} foi concluído! Agora você pode avaliá-lo.",
+                            false
+                        )
                     }
             }
         }
@@ -241,26 +266,45 @@ class BookingAdapter(
 
         // Acessando os botões e alterando as cores
         val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-        positiveButton.setTextColor(ContextCompat.getColor(context, R.color.roxo)) // Cor roxa para o texto do botão "Sim"
+        positiveButton.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.roxo
+            )
+        ) // Cor roxa para o texto do botão "Sim"
 
         val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-        negativeButton.setTextColor(ContextCompat.getColor(context, R.color.black)) // Cor laranja para o texto do botão "Não"
+        negativeButton.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.black
+            )
+        ) // Cor laranja para o texto do botão "Não"
     }
 
 
     // Função para enviar notificações, com a opção de notificar o cliente ou o administrador
-    private fun sendNotification(bookingId: String, title: String, message: String, notifyAdmin: Boolean) {
+    private fun sendNotification(
+        bookingId: String,
+        title: String,
+        message: String,
+        notifyAdmin: Boolean
+    ) {
         if (notifyAdmin) {
             // Buscar o token do administrador
             firestore.collection("bookings").document(bookingId)
                 .get()
                 .addOnSuccessListener { bookingDocument ->
-                    val companyId = bookingDocument.getString("companyId") ?: return@addOnSuccessListener
+                    val companyId =
+                        bookingDocument.getString("companyId") ?: return@addOnSuccessListener
                     fetchBusinessToken(companyId) { adminToken ->
                         if (adminToken != null) {
                             sendFCMNotification(adminToken, title, message)
                         } else {
-                            Log.e("FCM", "Token do administrador não encontrado para a empresa ID: $companyId")
+                            Log.e(
+                                "FCM",
+                                "Token do administrador não encontrado para a empresa ID: $companyId"
+                            )
                         }
                     }
                 }

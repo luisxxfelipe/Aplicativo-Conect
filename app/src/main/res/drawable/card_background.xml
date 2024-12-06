@@ -3,10 +3,16 @@
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="16dp" />
-            <stroke android:color="#D8BAB9B9"/>
+            <stroke android:color="#D8BAB9B9" />
             <solid android:color="@android:color/white" />
-            <padding android:left="2dp" android:top="2dp" android:right="2dp" android:bottom="2dp"/>
-            <shadow android:color="#30000000" android:radius="8dp" />
+            <padding
+                android:bottom="2dp"
+                android:left="2dp"
+                android:right="2dp"
+                android:top="2dp" />
+            <shadow
+                android:color="#30000000"
+                android:radius="8dp" />
         </shape>
     </item>
 </layer-list>

@@ -1,17 +1,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@android:color/white"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@android:color/white"> <!-- Adicione o fundo branco -->
+    android:padding="16dp"> <!-- Adicione o fundo branco -->
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Selecione os Horários de Funcionamento"
+        android:textColor="@color/black"
         android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/black" />
+        android:textStyle="bold" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
@@ -22,9 +22,9 @@
             android:id="@+id/openingHoursInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:focusable="false"
             android:hint="Horário de Abertura"
-            android:inputType="none"
-            android:focusable="false" />
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -36,9 +36,9 @@
             android:id="@+id/closingHoursInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:focusable="false"
             android:hint="Horário de Fechamento"
-            android:inputType="none"
-            android:focusable="false" />
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button

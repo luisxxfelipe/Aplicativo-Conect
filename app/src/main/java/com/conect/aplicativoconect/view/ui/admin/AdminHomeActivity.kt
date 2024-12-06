@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.ui.admin
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -9,12 +10,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.view.ui.UpcomingBookingWorker
 import com.conect.aplicativoconect.view.ui.WelcomeActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.androidbrowserhelper.playbilling.provider.PaymentActivity
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -43,8 +42,6 @@ class AdminHomeActivity : AppCompatActivity() {
                 .commit()
         }
 
-        testWorkerExecution()  // Apenas para teste
-
         setupBottomNavigation()
     }
 
@@ -54,9 +51,9 @@ class AdminHomeActivity : AppCompatActivity() {
             firestore.collection("subscriptions")
                 .whereEqualTo("ownerId", userId)
                 .get()
-                .addOnSuccessListener { documents ->
-                    if (!documents.isEmpty) {
-                        val document = documents.documents[0]
+                .addOnSuccessListener { querySnapshot ->
+                    if (!querySnapshot.isEmpty) { // Verifique se a consulta retornou documentos
+                        val document = querySnapshot.documents[0]
                         companyId = document.id
                         val endDate = document.getTimestamp("endDate")
                         val isActive = document.getBoolean("isActive") ?: false
@@ -75,19 +72,21 @@ class AdminHomeActivity : AppCompatActivity() {
                             return@addOnSuccessListener
                         }
 
-                        if (daysUntil(endDate) <= 2) {
-                            Log.d(
-                                "SubscriptionCheck",
-                                "Conditions met for subscription expiry alert."
-                            )
-                            showSubscriptionExpiryAlert(endDate)
-                        } else {
-                            Log.d(
-                                "SubscriptionCheck",
-                                "No alert needed: isActive=$isActive, daysUntilEndDate=${
-                                    daysUntil(endDate)
-                                }"
-                            )
+                        // Verifica se a assinatura está ativa e se falta pouco para expirar
+                        if (!isActive || daysUntil(endDate) <= 2) {
+                            showSubscriptionExpiryAlert(endDate) // Exibe alerta de expiração se necessário
+                        }
+
+                        // Se assinatura estiver expirada ou não ativa, podemos redirecionar o usuário
+                        if (!isActive) {
+                            Toast.makeText(
+                                this,
+                                "Sua assinatura expirou. Por favor, renove sua assinatura.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            // Redirecionar para a tela de pagamento ou renovação da assinatura
+                            startActivity(Intent(this, PaymentActivity::class.java))
+                            finish()
                         }
 
                     } else {
@@ -104,11 +103,6 @@ class AdminHomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun testWorkerExecution() {
-        val testWorkRequest = OneTimeWorkRequestBuilder<UpcomingBookingWorker>().build()
-        WorkManager.getInstance(this).enqueue(testWorkRequest)
-        Log.d("AdminHomeActivity", "Enfileirando execução de teste do worker.")
-    }
 
     private fun daysUntil(endDate: Timestamp): Long {
         val currentDate = Calendar.getInstance().time
@@ -123,11 +117,13 @@ class AdminHomeActivity : AppCompatActivity() {
         val lastAlertDay = sharedPreferences.getInt("lastAlertDay", -1)
         val dailyAlertCount = sharedPreferences.getInt("dailyAlertCount", 0)
 
+        // Se o dia mudou, resetamos a contagem de alertas
         if (lastAlertDay != today) {
             sharedPreferences.edit().putInt("dailyAlertCount", 0).putInt("lastAlertDay", today)
                 .apply()
         }
 
+        // Se a quantidade de alertas diários for menor que o máximo, mostramos o alerta
         if (dailyAlertCount < MAX_DAILY_ALERTS) {
             val endDateFormatted =
                 SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate.toDate())
@@ -142,18 +138,45 @@ class AdminHomeActivity : AppCompatActivity() {
 
             // Acessando o botão "OK" e alterando a cor do texto para roxo
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            positiveButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Cor roxa para o texto
+            positiveButton.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    R.color.roxo
+                )
+            ) // Cor roxa para o texto
 
+            // Atualizando a contagem de alertas diários
             sharedPreferences.edit().putInt("dailyAlertCount", dailyAlertCount + 1).apply()
             Log.d("SubscriptionCheck", "Alert shown, count updated to: ${dailyAlertCount + 1}")
-        }
-        else {
+        } else {
             Log.d("SubscriptionCheck", "Alert not shown due to daily limit.")
         }
     }
 
     private fun setupBottomNavigation() {
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
+
+        // Configurar as cores para os ícones e textos selecionados
+        val selectedColor =
+            ContextCompat.getColor(this, R.color.roxo) // Cor roxa para ícones selecionados
+        val unselectedColor =
+            ContextCompat.getColor(this, R.color.cinza_escuro) // Cor para ícones não selecionados
+
+        val colorStateList = ColorStateList(
+            arrayOf(
+                intArrayOf(android.R.attr.state_selected),  // Item selecionado
+                intArrayOf(-android.R.attr.state_selected)  // Item não selecionado
+            ),
+            intArrayOf(
+                selectedColor,
+                unselectedColor
+            )  // Cor para ícone selecionado e não selecionado
+        )
+
+        // Aplicar a cor nos ícones e no texto dos itens
+        bottomNavigation.itemIconTintList = colorStateList
+        bottomNavigation.itemTextColor = colorStateList
+
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
@@ -186,6 +209,7 @@ class AdminHomeActivity : AppCompatActivity() {
         }
     }
 
+
     private fun showAddServiceDialog() {
         val dialog = AddServiceDialogFragment()
         val args = Bundle().apply { putString("companyId", companyId) }
@@ -217,7 +241,7 @@ class AdminHomeActivity : AppCompatActivity() {
 
         positiveButton.setTextColor(ContextCompat.getColor(this, android.R.color.black))
 
-       negativeButton.setTextColor(ContextCompat.getColor(this, android.R.color.black))
+        negativeButton.setTextColor(ContextCompat.getColor(this, android.R.color.black))
     }
 
 

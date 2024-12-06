@@ -42,7 +42,8 @@ class ClientBookingAdapter(
         val confirmButton: Button = itemView.findViewById(R.id.confirmButton)
         val cancelButton: Button = itemView.findViewById(R.id.cancelButton)
         val rateButton: Button = itemView.findViewById(R.id.rateButton)
-        val whatsappIcon: ImageView = itemView.findViewById(R.id.whatsappIcon) // Novo ícone do WhatsApp
+        val whatsappIcon: ImageView =
+            itemView.findViewById(R.id.whatsappIcon) // Novo ícone do WhatsApp
 
     }
 
@@ -61,7 +62,8 @@ class ClientBookingAdapter(
 
         // Configuração do ícone do WhatsApp
         holder.whatsappIcon.setOnClickListener {
-            var businessPhoneNumber = booking.businessPhone // Adicione o número de telefone do Business na classe Booking
+            var businessPhoneNumber =
+                booking.businessPhone // Adicione o número de telefone do Business na classe Booking
 
             // Limpar o número de telefone, removendo espaços, parênteses, e hífens
             if (businessPhoneNumber != null) {
@@ -75,7 +77,8 @@ class ClientBookingAdapter(
                 }
             }
 
-            val message = "Olá, meu nome é ${booking.name}. Queria tirar dúvidas sobre meu agendamento de ${booking.serviceName} no dia ${booking.date} às ${booking.hour}."
+            val message =
+                "Olá, meu nome é ${booking.name}. Queria tirar dúvidas sobre meu agendamento de ${booking.serviceName} no dia ${booking.date} às ${booking.hour}."
 
             openWhatsApp(businessPhoneNumber, message)
         }
@@ -97,7 +100,8 @@ class ClientBookingAdapter(
         // Visibilidade dos botões com a nova lógica de avaliação
         holder.confirmButton.visibility = if (isPending) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (isPending) View.VISIBLE else View.GONE
-        holder.rateButton.visibility = if (isCompleted && hasPassedTime && !hasRating) View.VISIBLE else View.GONE
+        holder.rateButton.visibility =
+            if (isCompleted && hasPassedTime && !hasRating) View.VISIBLE else View.GONE
 
         holder.confirmButton.setOnClickListener { onConfirmClick(booking) }
         holder.cancelButton.setOnClickListener {

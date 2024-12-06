@@ -2,36 +2,36 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="12dp"
     android:layout_margin="8dp"
-    android:background="@drawable/service_item_background">
+    android:background="@drawable/service_item_background"
+    android:orientation="vertical"
+    android:padding="12dp">
 
     <TextView
         android:id="@+id/serviceName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
         android:text="Nome do Serviço"
-        android:textSize="16sp"
-        android:textStyle="bold"
         android:textColor="@android:color/black"
-        android:layout_marginBottom="4dp" />
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/servicePrice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:text="R$ 0.00"
-        android:textSize="14sp"
         android:textColor="@android:color/holo_green_dark"
-        android:layout_marginBottom="8dp" />
+        android:textSize="14sp" />
 
     <Button
         android:id="@+id/bookButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Agendar"
+        android:layout_gravity="end"
         android:backgroundTint="@color/roxo"
-        android:textColor="@android:color/white"
-        android:layout_gravity="end" />
+        android:text="Agendar"
+        android:textColor="@android:color/white" />
 </LinearLayout>

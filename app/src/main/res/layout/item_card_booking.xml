@@ -1,11 +1,10 @@
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
-    app:cardElevation="4dp"
     app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
     app:cardUseCompatPadding="true">
 
     <LinearLayout
@@ -46,9 +45,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:layout_marginTop="8dp"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <!-- Ícone do WhatsApp -->
                 <ImageView
@@ -86,8 +85,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/confirmButton"
@@ -103,8 +102,8 @@
                     android:id="@+id/cancelButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:layout_weight="1"
                     android:backgroundTint="@color/red"
                     android:text="Cancelar"
                     android:textColor="@android:color/white"
@@ -117,8 +116,8 @@
                     android:backgroundTint="@color/colorPrimary"
                     android:text="Avaliar Serviço"
                     android:textColor="@android:color/white"
-                    app:cornerRadius="8dp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    app:cornerRadius="8dp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -1,9 +1,9 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="@android:color/white">
+    android:background="@android:color/white"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -29,10 +29,10 @@
                     android:id="@+id/textViewSelectService"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Selecione um Serviço"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
+                    android:textStyle="bold" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerViewServiceTypes"
@@ -63,15 +63,15 @@
                     android:id="@+id/textViewPrice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Preço"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="8dp"
+                    android:text="Preço" />
 
                 <EditText
                     android:id="@+id/editTextPrice"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="numberDecimal"
                     android:hint="Digite o preço do serviço"
+                    android:inputType="numberDecimal"
                     android:padding="12dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -81,9 +81,9 @@
             android:id="@+id/buttonAddService"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Adicionar Serviço"
             android:layout_marginBottom="16dp"
             android:backgroundTint="@color/roxo"
+            android:text="Adicionar Serviço"
             android:textColor="@android:color/white" />
 
         <!-- Lista de Serviços Adicionados -->
@@ -91,10 +91,10 @@
             android:id="@+id/textViewAddedServices"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:text="Serviços Adicionados"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewAddedServices"
@@ -107,9 +107,9 @@
             android:id="@+id/buttonSaveServices"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Salvar Serviços"
             android:layout_marginTop="16dp"
             android:backgroundTint="@color/roxo"
+            android:text="Salvar Serviços"
             android:textColor="@android:color/white" />
     </LinearLayout>
 </ScrollView>

@@ -1,5 +1,4 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -10,11 +9,11 @@
         android:id="@+id/newBookingsTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:text="Novos Agendamentos"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
     <androidx.core.widget.NestedScrollView
@@ -35,11 +34,11 @@
         android:id="@+id/oldBookingsTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
         android:text="Agendamentos Antigos"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -57,9 +56,9 @@
             android:id="@+id/emptyBookingsLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
             android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
             android:visibility="gone">
 
             <TextView
@@ -67,8 +66,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Ainda não há agendamentos."
-                android:textColor="@color/cinza"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:textColor="@color/cinza" />
 
             <ImageView
                 android:id="@+id/emptyBookingsImage"

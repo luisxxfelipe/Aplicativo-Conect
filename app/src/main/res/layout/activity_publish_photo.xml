@@ -9,12 +9,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Adicionar Fotos do Serviço"
-        android:textSize="20sp"
-        android:textColor="@color/cinza_escuro"
         android:layout_gravity="center"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp"
+        android:text="Adicionar Fotos do Serviço"
+        android:textColor="@color/cinza_escuro"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
     <!-- Texto de dica para o usuário -->
     <TextView
@@ -22,22 +22,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
+        android:background="@drawable/rounded_border"
+        android:gravity="center"
+        android:padding="12dp"
         android:text="Adicione várias fotos para ilustrar o serviço, mostrando diferentes estilos, resultados ou etapas. Isso ajudará seus clientes a visualizar melhor o que você oferece."
         android:textColor="@color/cinza"
-        android:textSize="16sp"
-        android:padding="12dp"
-        android:background="@drawable/rounded_border"
-        android:gravity="center"/>
+        android:textSize="16sp" />
 
     <!-- Título da Foto -->
     <EditText
         android:id="@+id/editTextPhotoTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:hint="Título da Foto (Opcional)"
         android:inputType="textCapSentences"
-        android:padding="12dp"
-        android:layout_marginBottom="8dp"/>
+        android:padding="12dp" />
 
     <!-- RecyclerView para exibir as fotos selecionadas em duas colunas -->
     <androidx.recyclerview.widget.RecyclerView
@@ -45,17 +45,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:padding="4dp"/>
+        android:padding="4dp" />
 
     <!-- Botão flutuante para adicionar novas fotos -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/buttonAddPhoto"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_adicionar"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="20dp"
         android:backgroundTint="@color/orange"
+        android:src="@drawable/ic_adicionar"
         app:tint="@color/white" />
 
     <!-- Botão de salvar com ícone, posicionado acima do final da tela -->
@@ -63,14 +63,14 @@
         android:id="@+id/buttonSavePhoto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
         android:backgroundTint="@color/roxo"
-        android:text="Salvar"
-        android:textColor="@android:color/white"
         android:drawableStart="@drawable/ic_prox"
         android:drawablePadding="8dp"
+        android:enabled="false"
         android:padding="12dp"
-        android:layout_marginBottom="20dp"
-        android:enabled="false"/>
+        android:text="Salvar"
+        android:textColor="@android:color/white" />
 
     <!-- Barra de progresso -->
     <ProgressBar
@@ -78,6 +78,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:visibility="gone"
-        android:layout_marginTop="20dp"/>
+        android:layout_marginTop="20dp"
+        android:visibility="gone" />
 </LinearLayout>
