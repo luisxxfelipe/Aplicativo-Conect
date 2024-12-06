@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.ui.client
 
 import android.app.Dialog
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,6 +17,7 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -88,6 +90,27 @@ class ClienteHomeActivity : AppCompatActivity() {
         clientViewModel.todayBookings.observe(this) { bookings ->
             updateBookingsView(bookings)
         }
+
+        // Aplicar as cores de ícones com base no tema (modo claro ou escuro)
+        setBottomNavIconColors(bottomNavigation)
+    }
+
+    private fun setBottomNavIconColors(bottomNavigation: BottomNavigationView) {
+        val selectedColor = ContextCompat.getColor(this, R.color.roxo) // Cor roxa para ícones selecionados
+        val unselectedColor = ContextCompat.getColor(this, R.color.cinza_escuro) // Cor para ícones não selecionados
+
+        // Criar o ColorStateList para ícones selecionados e não selecionados
+        val colorStateList = ColorStateList(
+            arrayOf(
+                intArrayOf(android.R.attr.state_selected), // Item selecionado
+                intArrayOf(-android.R.attr.state_selected) // Item não selecionado
+            ),
+            intArrayOf(selectedColor, unselectedColor) // Cor do ícone selecionado e não selecionado
+        )
+
+        // Aplicar o ColorStateList tanto nos ícones quanto no texto dos itens
+        bottomNavigation.itemIconTintList = colorStateList
+        bottomNavigation.itemTextColor = colorStateList
     }
 
     private fun redirectToLogin() {
@@ -208,10 +231,13 @@ class ClienteHomeActivity : AppCompatActivity() {
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
-        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+        val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
             .setCancelable(true)
             .create()
+
+        // Ajuste da cor da fonte do botão "Salvar"
+        saveButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Definindo a cor roxa
 
         saveButton.setOnClickListener {
             val qualityRating = ratingQuality.rating.toInt()
@@ -220,17 +246,30 @@ class ClienteHomeActivity : AppCompatActivity() {
             clientViewModel.saveRatings(this, booking.id, qualityRating, punctualityRating, serviceRating)
             dialog.dismiss()
         }
+
         dialog.show()
     }
 
     private fun showLogoutConfirmationDialog() {
-        val builder = AlertDialog.Builder(this, R.style.CustomAlertDialog)
-        builder.setTitle("Confirmar Logout")
+        val builder = AlertDialog.Builder(this)
+        val dialog = builder.setTitle("Confirmar Logout")
             .setMessage("Você tem certeza que deseja sair?")
             .setPositiveButton("Sim") { _, _ -> logout() }
             .setNegativeButton("Cancelar", null)
-            .show()
+            .create()
+
+        // Usar setOnShowListener para garantir que os botões foram inflados antes de manipular
+        dialog.setOnShowListener {
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            positiveButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Cor roxa para o botão "Sim"
+
+            val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+            negativeButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Cor roxa para o botão "Cancelar"
+        }
+
+        dialog.show()
     }
+
 
     private fun logout() {
         FirebaseAuth.getInstance().signOut()

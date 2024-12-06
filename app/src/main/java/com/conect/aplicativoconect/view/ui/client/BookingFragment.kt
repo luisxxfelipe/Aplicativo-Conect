@@ -12,6 +12,7 @@ import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -308,14 +309,16 @@ class BookingFragment : Fragment() {
         val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
         val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
-        val commentEditText =
-            dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
+        val commentEditText = dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
-        val dialog = AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
+        val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .setCancelable(true)
             .create()
+
+        // Ajuste da cor da fonte do botão "Salvar"
+        saveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo)) // Definindo a cor roxa
 
         saveButton.setOnClickListener {
             val qualityRating = ratingQuality.rating.toInt()
@@ -329,7 +332,6 @@ class BookingFragment : Fragment() {
 
         dialog.show()
     }
-
 
     private fun saveRatings(
         bookingId: String?,

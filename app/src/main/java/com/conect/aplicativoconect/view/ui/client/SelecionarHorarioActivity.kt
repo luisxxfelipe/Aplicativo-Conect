@@ -190,7 +190,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             return
         }
 
-        val builder = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+        val builder = AlertDialog.Builder(this)
         builder.setTitle("Selecione um horário")
         builder.setItems(availableHours.toTypedArray()) { _, which ->
             selectedHour = availableHours[which]

@@ -196,7 +196,7 @@ class AddBookingActivity : AppCompatActivity() {
             return
         }
 
-        val builder = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+        val builder = AlertDialog.Builder(this)
         builder.setTitle("Selecione um Horário Disponível")
             .setItems(availableTimes.toTypedArray()) { _, which ->
                 textViewSelectedTime.text = availableTimes[which] // Define o horário selecionado
@@ -206,7 +206,14 @@ class AddBookingActivity : AppCompatActivity() {
                 buttonSaveBooking.visibility = View.VISIBLE
             }
             .setNegativeButton("Cancelar", null)
-            .show()
+
+        // Criação e exibição do diálogo
+        val dialog = builder.create()
+        dialog.show()
+
+        // Acessando o botão "Cancelar" e alterando a cor do texto
+        val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+        negativeButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Cor roxa para o texto
     }
 
     private fun saveBooking() {

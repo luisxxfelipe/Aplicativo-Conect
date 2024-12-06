@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.bumptech.glide.Glide
@@ -106,13 +107,24 @@ class ClienteProfileFragment : Fragment() {
         }
 
         binding.deleteAccountButton.setOnClickListener {
-            AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
+            val dialog = AlertDialog.Builder(requireContext())
                 .setTitle("Excluir Conta")
                 .setMessage("Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita.")
                 .setPositiveButton("Excluir") { _, _ -> deleteUserAccountAndData() }
                 .setNegativeButton("Cancelar", null)
-                .show()
+                .create()
+
+            dialog.show()
+
+            // Ajuste da cor da fonte do botão "Excluir" (positivo)
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo)) // Cor roxa para o texto do botão "Excluir"
+
+            // Ajuste da cor da fonte do botão "Cancelar" (negativo)
+            val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+            negativeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo)) // Cor laranja para o texto do botão "Cancelar"
         }
+
     }
 
     private fun deleteUserAccountAndData() {

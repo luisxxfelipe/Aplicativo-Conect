@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -130,16 +131,23 @@ class AdminHomeActivity : AppCompatActivity() {
         if (dailyAlertCount < MAX_DAILY_ALERTS) {
             val endDateFormatted =
                 SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate.toDate())
-            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+
+            val dialog = AlertDialog.Builder(this)
                 .setTitle("Sua assinatura está quase vencendo!")
                 .setMessage("Sua assinatura vencerá em breve em $endDateFormatted. Garanta sua renovação para continuar aproveitando os serviços.")
                 .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                 .create()
-                .show()
+
+            dialog.show()
+
+            // Acessando o botão "OK" e alterando a cor do texto para roxo
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            positiveButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Cor roxa para o texto
 
             sharedPreferences.edit().putInt("dailyAlertCount", dailyAlertCount + 1).apply()
             Log.d("SubscriptionCheck", "Alert shown, count updated to: ${dailyAlertCount + 1}")
-        } else {
+        }
+        else {
             Log.d("SubscriptionCheck", "Alert not shown due to daily limit.")
         }
     }
@@ -191,13 +199,27 @@ class AdminHomeActivity : AppCompatActivity() {
     }
 
     private fun showLogoutConfirmationDialog() {
-        AlertDialog.Builder(this, R.style.CustomAlertDialog)
+        val builder = AlertDialog.Builder(this)
             .setTitle("Confirmar Logout")
             .setMessage("Você tem certeza que deseja sair?")
             .setPositiveButton("Sim") { _, _ -> logout() }
             .setNegativeButton("Cancelar", null)
-            .show()
+
+        // Criação do dialog
+        val dialog = builder.create()
+
+        // Exibindo o dialog
+        dialog.show()
+
+        // Acessando os botões e alterando suas cores
+        val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+
+        positiveButton.setTextColor(ContextCompat.getColor(this, android.R.color.black))
+
+       negativeButton.setTextColor(ContextCompat.getColor(this, android.R.color.black))
     }
+
 
     private fun logout() {
         FirebaseAuth.getInstance().signOut()

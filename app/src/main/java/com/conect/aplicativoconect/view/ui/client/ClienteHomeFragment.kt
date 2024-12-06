@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.ui.client
 
 import CategoriesPagerAdapter
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import android.widget.RatingBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -137,7 +139,7 @@ class ClienteHomeFragment : Fragment() {
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
-        val dialog = AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
+        val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .setCancelable(true)
             .create()
@@ -149,8 +151,14 @@ class ClienteHomeFragment : Fragment() {
             clientViewModel.saveRatings(requireContext(), booking.id, qualityRating, punctualityRating, serviceRating)
             dialog.dismiss()
         }
+
         dialog.show()
+
+        // Ajuste da cor da fonte do botão "Salvar"
+        val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo))
     }
+
 
     private fun observeUserData() {
         clientViewModel.userName.observe(viewLifecycleOwner) { userName ->

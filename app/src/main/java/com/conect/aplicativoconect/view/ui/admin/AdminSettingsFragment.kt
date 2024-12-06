@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.LayoutAdminSettingsBinding
@@ -95,13 +96,23 @@ class AdminSettingsFragment : Fragment() {
     }
 
     private fun showDeleteDataConfirmation() {
-        AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle("Excluir Dados")
             .setMessage("Tem certeza de que deseja excluir todos os dados associados à sua conta? A assinatura será mantida.")
             .setPositiveButton("Excluir") { _, _ -> deleteUserData() }
             .setNegativeButton("Cancelar", null)
-            .show()
+            .create()
+
+        dialog.show()
+
+        // Acessando os botões e alterando as cores
+        val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.roxo)) // Cor roxa para o texto do botão "Excluir"
+
+        val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+        negativeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange)) // Cor laranja para o texto do botão "Cancelar"
     }
+
 
     private fun deleteUserData() {
         userId?.let { uid ->

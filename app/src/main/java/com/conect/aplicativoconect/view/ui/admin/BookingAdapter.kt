@@ -230,13 +230,23 @@ class BookingAdapter(
         message: String,
         onConfirm: () -> Unit
     ) {
-        AlertDialog.Builder(context, R.style.CustomAlertDialog)
+        val dialog = AlertDialog.Builder(context)
             .setTitle(title)
             .setMessage(message)
             .setPositiveButton("Sim") { _, _ -> onConfirm() }
             .setNegativeButton("Não", null)
-            .show()
+            .create()
+
+        dialog.show()
+
+        // Acessando os botões e alterando as cores
+        val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        positiveButton.setTextColor(ContextCompat.getColor(context, R.color.roxo)) // Cor roxa para o texto do botão "Sim"
+
+        val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+        negativeButton.setTextColor(ContextCompat.getColor(context, R.color.black)) // Cor laranja para o texto do botão "Não"
     }
+
 
     // Função para enviar notificações, com a opção de notificar o cliente ou o administrador
     private fun sendNotification(bookingId: String, title: String, message: String, notifyAdmin: Boolean) {
