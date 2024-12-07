@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.RatingBar
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -144,7 +143,6 @@ class ClienteHomeActivity : AppCompatActivity() {
         }, 3000)
     }
 
-
     private fun showLoadingDialog() {
         loadingDialog?.show()
     }
@@ -184,7 +182,6 @@ class ClienteHomeActivity : AppCompatActivity() {
         Log.d("ClientHomeActivity", "Fragment ${fragment.javaClass.simpleName} carregado.")
     }
 
-
     private fun fetchUserName() {
         val user = FirebaseAuth.getInstance().currentUser
         user?.email?.let { userEmail ->
@@ -205,7 +202,6 @@ class ClienteHomeActivity : AppCompatActivity() {
         }
     }
 
-
     private fun fetchTodayBookings(userId: String) {
         clientViewModel.fetchUserBookings(userId)
     }
@@ -215,31 +211,25 @@ class ClienteHomeActivity : AppCompatActivity() {
         val noBookingsImage = findViewById<ImageView>(R.id.noBookingsImage)
         val recyclerView = findViewById<RecyclerView>(R.id.todayBookingsRecyclerView)
 
-        if (noBookingsMessage == null || noBookingsImage == null || recyclerView == null) {
-            Log.e("ClienteHomeActivity", "Views de agendamentos não foram encontradas.")
-            return
-        }
-
         if (bookings.isEmpty()) {
-            noBookingsMessage.visibility = View.VISIBLE
-            noBookingsImage.visibility = View.VISIBLE
-            recyclerView.visibility = View.GONE
+            noBookingsMessage?.visibility = View.VISIBLE
+            noBookingsImage?.visibility = View.VISIBLE
+            recyclerView?.visibility = View.GONE
         } else {
-            noBookingsMessage.visibility = View.GONE
-            noBookingsImage.visibility = View.GONE
-            recyclerView.visibility = View.VISIBLE
+            noBookingsMessage?.visibility = View.GONE
+            noBookingsImage?.visibility = View.GONE
+            recyclerView?.visibility = View.VISIBLE
 
             if (!::clientBookingAdapter.isInitialized) {
                 clientBookingAdapter = ClientBookingAdapter(
-                    context = this,
+                    context = this,  // Aqui você está passando o contexto correto
                     bookings = bookings,
-                    onConfirmClick = { booking -> clientViewModel.confirmBooking(this, booking) },
-                    onCancelClick = { booking -> clientViewModel.cancelBooking(this, booking) },
-                    onRateClick = { booking -> showRatingPopup(booking) },
-                    onEmptyList = { showNoBookingsMessage() }
+                    onConfirmClick = { booking -> clientViewModel.confirmBooking(booking, this) }, // Passando o contexto
+                    onCancelClick = { booking -> clientViewModel.cancelBooking(booking, this) }, // Passando o contexto
+                    onEmptyList = { showNoBookingsMessage() }  // Mantido apenas a funcionalidade de "empty list"
                 )
-                recyclerView.layoutManager = LinearLayoutManager(this)
-                recyclerView.adapter = clientBookingAdapter
+                recyclerView?.layoutManager = LinearLayoutManager(this)
+                recyclerView?.adapter = clientBookingAdapter
             } else {
                 clientBookingAdapter.updateData(bookings)
             }
@@ -253,38 +243,6 @@ class ClienteHomeActivity : AppCompatActivity() {
         findViewById<RecyclerView>(R.id.todayBookingsRecyclerView)?.visibility = View.GONE
     }
 
-    private fun showRatingPopup(booking: Booking) {
-        val dialogView = layoutInflater.inflate(R.layout.popup_rating, null)
-        val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
-        val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
-        val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
-        val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
-
-        // Ajuste da cor da fonte do botão "Salvar"
-        saveButton.setTextColor(ContextCompat.getColor(this, R.color.roxo)) // Definindo a cor roxa
-
-        saveButton.setOnClickListener {
-            val qualityRating = ratingQuality.rating.toInt()
-            val punctualityRating = ratingPunctuality.rating.toInt()
-            val serviceRating = ratingService.rating.toInt()
-            clientViewModel.saveRatings(
-                this,
-                booking.id,
-                qualityRating,
-                punctualityRating,
-                serviceRating
-            )
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
     private fun showLogoutConfirmationDialog() {
         val builder = AlertDialog.Builder(this)
         val dialog = builder.setTitle("Confirmar Logout")
@@ -293,28 +251,16 @@ class ClienteHomeActivity : AppCompatActivity() {
             .setNegativeButton("Cancelar", null)
             .create()
 
-        // Usar setOnShowListener para garantir que os botões foram inflados antes de manipular
         dialog.setOnShowListener {
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            positiveButton.setTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.roxo
-                )
-            ) // Cor roxa para o botão "Sim"
+            positiveButton.setTextColor(ContextCompat.getColor(this, R.color.roxo))
 
             val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-            negativeButton.setTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.roxo
-                )
-            ) // Cor roxa para o botão "Cancelar"
+            negativeButton.setTextColor(ContextCompat.getColor(this, R.color.roxo))
         }
 
         dialog.show()
     }
-
 
     private fun logout() {
         FirebaseAuth.getInstance().signOut()

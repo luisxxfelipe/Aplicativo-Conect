@@ -349,8 +349,7 @@ class BookingFragment : Fragment() {
         val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
         val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
-        val commentEditText =
-            dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
+        val commentEditText = dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
         val dialog = AlertDialog.Builder(requireContext())
@@ -358,13 +357,33 @@ class BookingFragment : Fragment() {
             .setCancelable(true)
             .create()
 
-        // Ajuste da cor da fonte do botão "Salvar"
+        // Ajuste da cor do botão "Salvar"
         saveButton.setTextColor(
-            ContextCompat.getColor(
-                requireContext(),
-                R.color.roxo
-            )
-        ) // Definindo a cor roxa
+            ContextCompat.getColor(requireContext(), R.color.white)
+        ) // Definindo a cor da fonte como branca
+
+        // Garantir que o fundo do botão seja roxo
+        val buttonBackgroundColor = ContextCompat.getColor(requireContext(), R.color.roxo)
+        saveButton.setBackgroundColor(buttonBackgroundColor) // Definindo o fundo do botão como roxo
+
+        // Personalizar o fundo do diálogo e os textos
+        dialog.setOnShowListener {
+            // Personalizar o fundo do AlertDialog
+            val background = dialog.window?.decorView
+            background?.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.white)) // Fundo branco
+
+            // Ajuste da cor da fonte no EditText (comentário)
+            commentEditText.setTextColor(ContextCompat.getColor(requireContext(), R.color.cinza_escuro)) // Cor cinza
+
+            // Ajuste dos botões
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            positiveButton?.setTextColor(ContextCompat.getColor(requireContext(), R.color.white)) // Cor branca para o texto do botão
+            positiveButton?.setBackgroundColor(buttonBackgroundColor) // Cor de fundo do botão roxa
+
+            val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+            negativeButton?.setTextColor(ContextCompat.getColor(requireContext(), R.color.white)) // Cor branca para o texto do botão
+            negativeButton?.setBackgroundColor(buttonBackgroundColor) // Cor de fundo do botão roxa
+        }
 
         saveButton.setOnClickListener {
             val qualityRating = ratingQuality.rating.toInt()
@@ -378,6 +397,8 @@ class BookingFragment : Fragment() {
 
         dialog.show()
     }
+
+
 
     private fun saveRatings(
         bookingId: String?,

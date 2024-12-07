@@ -98,14 +98,16 @@ class ClienteProfileFragment : Fragment() {
                 FirebaseMessaging.getInstance().subscribeToTopic("all_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações ativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             } else {
                 FirebaseMessaging.getInstance().unsubscribeFromTopic("all_users")
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Notificações desativadas", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             }

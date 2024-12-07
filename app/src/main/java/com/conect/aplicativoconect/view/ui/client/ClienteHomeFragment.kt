@@ -147,12 +147,10 @@ class ClienteHomeFragment : Fragment() {
             context = requireContext(),
             bookings = bookings,
             onConfirmClick = { booking ->
-                clientViewModel.confirmBooking(
-                    requireContext(),
-                    booking
-                )
+                // Confirma o agendamento passando o booking, não o contexto.
+                clientViewModel.confirmBooking(booking, requireContext())
             },
-            onCancelClick = { booking -> clientViewModel.cancelBooking(requireContext(), booking) },
+            onCancelClick = { booking -> clientViewModel.cancelBooking(booking, requireContext()) },
             onRateClick = { booking -> showRatingPopup(booking) },
             onEmptyList = { showNoBookingsMessage(true) }  // Exibe mensagem de lista vazia
         )
@@ -160,6 +158,7 @@ class ClienteHomeFragment : Fragment() {
         binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.todayBookingsRecyclerView.adapter = clientBookingAdapter
     }
+
 
 
     private fun showDefaultView() {

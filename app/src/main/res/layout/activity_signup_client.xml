@@ -143,8 +143,8 @@
             android:layout_marginTop="16dp"
             android:hint="Confirmar Senha"
             app:boxBackgroundMode="outline"
-            app:endIconMode="password_toggle"
             app:boxStrokeColor="@color/roxo"
+            app:endIconMode="password_toggle"
             app:hintTextColor="@color/roxo">
 
             <com.google.android.material.textfield.TextInputEditText

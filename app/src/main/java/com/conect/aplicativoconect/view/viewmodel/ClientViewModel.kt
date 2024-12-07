@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.conect.aplicativoconect.view.TokenUtils
@@ -43,13 +44,14 @@ class ClientViewModel : ViewModel() {
             .addOnSuccessListener { document ->
                 _userName.value = document.getString("name")
                 _userImage.value = document.getString("imageUrl")
-                _userEmail.value = document.getString("email")  // Adicione esta linha
+                _userEmail.value = document.getString("email")
             }
             .addOnFailureListener { e ->
                 Log.e("ClientViewModel", "Erro ao carregar dados do usuário: ${e.message}")
             }
     }
 
+    // Carrega agendamentos futuros do usuário
     fun fetchUserBookings(userId: String) {
         firestore.collection("bookings")
             .whereEqualTo("userId", userId)
@@ -77,139 +79,131 @@ class ClientViewModel : ViewModel() {
             }
     }
 
-
-
-    private fun getCurrentDate(): String {
-        val currentDate = Calendar.getInstance()
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return sdf.format(currentDate.time)
-    }
-
-
     // Confirmação de agendamento
-    fun confirmBooking(context: Context, booking: Booking) {
+    fun confirmBooking(booking: Booking, context: Context) {
         firestore.collection("bookings").document(booking.id!!)
             .update("status_cliente", "confirmed")
             .addOnSuccessListener {
-                sendNotificationToBusiness(
+                sendBookingNotification(
                     context,
-                    booking,
+                    booking.id!!,
                     "Agendamento Confirmado",
-                    "O agendamento de ${booking.name} foi confirmado!"
+                    "Olá, o agendamento de ${booking.name} foi confirmado pelo cliente!"
                 )
-                Toast.makeText(context, "Agendamento confirmado.", Toast.LENGTH_SHORT).show()
-                booking.userId?.let { it1 -> fetchUserBookings(it1) }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(context, "Erro ao confirmar agendamento.", Toast.LENGTH_SHORT).show()
                 Log.e("ClientViewModel", "Erro ao confirmar agendamento: ${e.message}")
             }
     }
 
-    // Cancelamento de agendamento
-    fun cancelBooking(context: Context, booking: Booking) {
+    // Função para cancelar o agendamento
+    fun cancelBooking(booking: Booking, context: Context) {
         firestore.collection("bookings").document(booking.id!!)
             .delete()
             .addOnSuccessListener {
-                sendNotificationToBusiness(
+                sendBookingNotification(
                     context,
-                    booking,
+                    booking.id!!,
                     "Agendamento Cancelado",
-                    "O agendamento de ${booking.name} foi cancelado."
+                    "Olá, o agendamento de ${booking.name} foi cancelado!"
                 )
-                Toast.makeText(context, "Agendamento cancelado e excluído.", Toast.LENGTH_SHORT)
-                    .show()
-                booking.userId?.let { it1 -> fetchUserBookings(it1) }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(context, "Erro ao cancelar agendamento.", Toast.LENGTH_SHORT).show()
                 Log.e("ClientViewModel", "Erro ao cancelar agendamento: ${e.message}")
             }
     }
 
-    // Envio de notificação para o estabelecimento
-    private fun sendNotificationToBusiness(
-        context: Context,
-        booking: Booking,
-        title: String,
-        message: String
-    ) {
-        val companyId = booking.companyId ?: return
-
-        firestore.collection("business").document(companyId)
+    // Função para enviar notificações
+    private fun sendBookingNotification(context: Context, bookingId: String, title: String, message: String) {
+        firestore.collection("bookings").document(bookingId)
             .get()
-            .addOnSuccessListener { document ->
-                val fcmToken = document.getString("fcmToken")
-                if (!fcmToken.isNullOrEmpty()) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        sendFCMNotification(context, fcmToken, title, message)
+            .addOnSuccessListener { bookingDocument ->
+                val companyId = bookingDocument.getString("companyId") ?: return@addOnSuccessListener
+                fetchBusinessToken(companyId) { adminToken ->
+                    if (adminToken != null) {
+                        sendFCMNotification(context, adminToken, title, message)
+                    } else {
+                        Log.e("FCM", "Token do administrador não encontrado para a empresa $companyId")
                     }
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("ClientViewModel", "Erro ao buscar token FCM: ${e.message}")
+                Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
             }
     }
 
-    private suspend fun sendFCMNotification(
-        context: Context,
-        token: String,
-        title: String,
-        message: String
-    ) {
+    // Função para buscar o token do administrador
+    private fun fetchBusinessToken(companyId: String, callback: (String?) -> Unit) {
+        firestore.collection("business").document(companyId)
+            .get()
+            .addOnSuccessListener { document ->
+                val token = document.getString("fcmToken")
+                Log.d("FCM", "Token do administrador para empresa $companyId: $token")
+                callback(token)
+            }
+            .addOnFailureListener { e ->
+                Log.e("FCM", "Erro ao buscar token do administrador para empresa $companyId: ${e.message}")
+                callback(null)
+            }
+    }
+
+    // Função para enviar a notificação FCM
+    private fun sendFCMNotification(context: Context, token: String, title: String, message: String) {
         val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
-        val iconName = "ic_notification_icon"
         val payload = """
-        {
-          "message": {
-            "token": "$token",
-            "notification": {
-              "title": "$title",
-              "body": "$message",
-              "icon": "$iconName"
-            },
-            "android": {
-              "priority": "high"
-            }
-          }
+    {
+      "message": {
+        "token": "$token",
+        "notification": {
+          "title": "$title",
+          "body": "$message"
+        },
+        "android": {
+          "priority": "high"
         }
-        """.trimIndent()
+      }
+    }
+    """.trimIndent()
 
-        val accessToken = withContext(Dispatchers.IO) {
-            TokenUtils.getAccessTokenFromServiceAccount(context)
-        }
-
-        if (accessToken == null) {
-            Log.e("ClientViewModel", "Erro ao obter token de acesso.")
-            return
-        }
-
-        val request = object : StringRequest(
-            Method.POST, url,
-            { response -> Log.d("FCM", "Notificação enviada: $response") },
-            { error -> Log.e("FCM", "Erro ao enviar notificação: ${error.message}") }
-        ) {
-            override fun getHeaders(): Map<String, String> {
-                return mapOf(
-                    "Authorization" to "Bearer $accessToken",
-                    "Content-Type" to "application/json"
-                )
+        CoroutineScope(Dispatchers.IO).launch {
+            val accessToken = withContext(Dispatchers.IO) {
+                TokenUtils.getAccessTokenFromServiceAccount(context)
             }
 
-            override fun getBody(): ByteArray = payload.toByteArray(Charsets.UTF_8)
-        }
+            if (accessToken == null) {
+                Log.e("FCM", "Falha ao obter o token de acesso.")
+                return@launch
+            }
 
-        withContext(Dispatchers.Main) {
-            Volley.newRequestQueue(context).add(request)
+            val request = object : StringRequest(
+                Method.POST, url,
+                Response.Listener { response -> Log.d("FCM", "Notificação enviada com sucesso: $response") },
+                Response.ErrorListener { error -> Log.e("FCM", "Erro ao enviar notificação: ${error.message}") }
+            ) {
+                override fun getHeaders(): Map<String, String> {
+                    return mapOf(
+                        "Authorization" to "Bearer $accessToken",
+                        "Content-Type" to "application/json"
+                    )
+                }
+
+                override fun getBody(): ByteArray = payload.toByteArray(Charsets.UTF_8)
+            }
+
+            withContext(Dispatchers.Main) {
+                Volley.newRequestQueue(context).add(request)
+            }
         }
     }
 
+    // Verifica se o agendamento é futuro
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance().time
         val bookingDateTime = parseDateTime(booking.date ?: "", booking.hour)
         return bookingDateTime?.after(currentDateTime) ?: false
     }
 
+    // Parse da data e hora do agendamento
     private fun parseDateTime(date: String, hour: String): Date? {
         return try {
             val dateParts = date.split("/").map { it.toInt() }
@@ -262,6 +256,7 @@ class ClientViewModel : ViewModel() {
             }
     }
 
+    // Atualização da média de avaliação da empresa
     private fun updateBusinessRating(companyId: String, newRating: Double) {
         val businessRef = firestore.collection("business").document(companyId)
         firestore.runTransaction { transaction ->

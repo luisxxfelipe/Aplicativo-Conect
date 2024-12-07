@@ -100,7 +100,10 @@ class AdminBookingsFragment : Fragment() {
 
                 // Ordena os agendamentos futuros por data e hora
                 val sortedNewBookings = newBookings.sortedBy { booking ->
-                    parseDateTime(booking.date ?: "", booking.hour ?: "") // Ordenando por data e hora
+                    parseDateTime(
+                        booking.date ?: "",
+                        booking.hour ?: ""
+                    ) // Ordenando por data e hora
                 }
 
                 withContext(Dispatchers.Main) {
@@ -163,8 +166,10 @@ class AdminBookingsFragment : Fragment() {
             newBookingsTitle.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
             oldBookingsTitle.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
 
-            newBookingsRecyclerView.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
-            oldBookingsRecyclerView.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            newBookingsRecyclerView.visibility =
+                if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            oldBookingsRecyclerView.visibility =
+                if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
 
             // Atualize apenas os novos agendamentos
             newBookingAdapter.addBookings(newBookings)

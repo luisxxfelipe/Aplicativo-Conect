@@ -22,7 +22,7 @@ class ClientBookingAdapter(
     private val context: Context,
     private var bookings: List<Booking>,
     private val onConfirmClick: (Booking) -> Unit,
-    private val onRateClick: (Booking) -> Unit,
+    private val onRateClick: (Booking) -> Unit = {},
     private val onCancelClick: (Booking) -> Unit,
     private val onEmptyList: () -> Unit
 ) : RecyclerView.Adapter<ClientBookingAdapter.ClientBookingViewHolder>() {
