@@ -16,20 +16,17 @@
         android:textStyle="bold"
         android:visibility="gone" />
 
-    <!-- Limite de altura para novos agendamentos -->
-    <androidx.core.widget.NestedScrollView
+    <!-- Limite de altura para novos agendamentos (420dp) -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fillViewport="false"
-        android:overScrollMode="never">
+        android:layout_height="420dp"> <!-- Altura fixa -->
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewNewBookings"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"
-            android:visibility="gone" />
-    </androidx.core.widget.NestedScrollView>
+            android:layout_height="match_parent"
+            android:nestedScrollingEnabled="true" /> <!-- Habilita o scroll interno -->
+    </FrameLayout>
 
     <!-- Agendamentos Antigos -->
     <TextView
@@ -43,11 +40,17 @@
         android:textStyle="bold"
         android:visibility="gone" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewOldBookings"
+    <!-- Limite de altura para agendamentos antigos (420dp) -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone" />
+        android:layout_height="420dp"> <!-- Altura fixa para agendamentos antigos -->
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewOldBookings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:nestedScrollingEnabled="true" /> <!-- Habilita o scroll interno -->
+    </FrameLayout>
 
     <!-- Centralize a mensagem de vazio e a imagem -->
     <LinearLayout

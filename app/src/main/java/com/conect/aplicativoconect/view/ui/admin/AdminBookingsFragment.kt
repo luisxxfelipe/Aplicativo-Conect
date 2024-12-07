@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +34,8 @@ class AdminBookingsFragment : Fragment() {
     private lateinit var newBookingsTitle: TextView
     private lateinit var oldBookingsTitle: TextView
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private var lastVisibleBooking: DocumentSnapshot? = null
+    private val PAGE_SIZE = 20 // Quantidade de agendamentos por vez
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -72,11 +75,18 @@ class AdminBookingsFragment : Fragment() {
                     return@launch
                 }
 
-                // Obter os agendamentos do negócio
-                val bookingsSnapshot = firestore.collection("bookings")
+                // Obter os agendamentos do negócio (com paginação)
+                val query = firestore.collection("bookings")
                     .whereEqualTo("companyId", businessId)
-                    .get()
-                    .await()
+                    .orderBy("date") // Ordena para evitar resultados desordenados
+                    .limit(PAGE_SIZE.toLong())
+
+                // Se existir um último agendamento carregado, buscamos os próximos
+                lastVisibleBooking?.let {
+                    query.startAfter(it)
+                }
+
+                val bookingsSnapshot = query.get().await()
 
                 // Particiona os agendamentos em futuros e antigos
                 val (newBookings, oldBookings) = bookingsSnapshot.documents.mapNotNull { document ->
@@ -85,8 +95,16 @@ class AdminBookingsFragment : Fragment() {
                     booking
                 }.partition { isFutureBooking(it) }
 
+                // Atualiza a referência ao último agendamento
+                lastVisibleBooking = bookingsSnapshot.documents.lastOrNull()
+
+                // Ordena os agendamentos futuros por data e hora
+                val sortedNewBookings = newBookings.sortedBy { booking ->
+                    parseDateTime(booking.date ?: "", booking.hour ?: "") // Ordenando por data e hora
+                }
+
                 withContext(Dispatchers.Main) {
-                    updateUI(newBookings, oldBookings)
+                    updateUI(sortedNewBookings, oldBookings)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -96,24 +114,23 @@ class AdminBookingsFragment : Fragment() {
         }
     }
 
-    private fun adjustNestedScrollViewHeight() {
-        val itemCount = newBookingAdapter.itemCount
 
-        val params = newBookingsRecyclerView.layoutParams
-        params.height = if (itemCount > 3) {
-            resources.getDimensionPixelSize(R.dimen.fixed_height_for_3_items) // Defina 420dp no arquivo dimens.xml
+    private fun adjustRecyclerViewHeight(recyclerView: RecyclerView, adapter: BookingAdapter) {
+        val itemCount = adapter.itemCount
+
+        val params = recyclerView.layoutParams
+        // Lógica para limitar a altura a 420dp para até 3 itens
+        if (itemCount > 3) {
+            params.height = resources.getDimensionPixelSize(R.dimen.fixed_height_for_3_items)
         } else {
-            RecyclerView.LayoutParams.WRAP_CONTENT
+            params.height = RecyclerView.LayoutParams.WRAP_CONTENT
         }
-        newBookingsRecyclerView.layoutParams = params
+        recyclerView.layoutParams = params
     }
 
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance().time
-
         val bookingDateTime = booking.date?.let { parseDateTime(it, booking.hour) } ?: return false
-
-        // Retorna `true` se o agendamento estiver no futuro em relação ao horário atual
         return bookingDateTime.after(currentDateTime)
     }
 
@@ -137,7 +154,6 @@ class AdminBookingsFragment : Fragment() {
         }
     }
 
-
     private fun updateUI(newBookings: List<Booking>, oldBookings: List<Booking>) {
         if (newBookings.isEmpty() && oldBookings.isEmpty()) {
             showEmptyMessage(true)
@@ -147,17 +163,21 @@ class AdminBookingsFragment : Fragment() {
             newBookingsTitle.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
             oldBookingsTitle.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
 
-            newBookingsRecyclerView.visibility =
-                if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
-            oldBookingsRecyclerView.visibility =
-                if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            newBookingsRecyclerView.visibility = if (newBookings.isNotEmpty()) View.VISIBLE else View.GONE
+            oldBookingsRecyclerView.visibility = if (oldBookings.isNotEmpty()) View.VISIBLE else View.GONE
 
-            newBookingAdapter.updateData(newBookings)
+            // Atualize apenas os novos agendamentos
+            newBookingAdapter.addBookings(newBookings)
+            newBookingAdapter.notifyDataSetChanged() // Ou você pode usar notifyItemInserted() para itens novos
+
             oldBookingAdapter.updateData(oldBookings)
 
-            adjustNestedScrollViewHeight()
+            // Ajusta a altura das RecyclerViews
+            adjustRecyclerViewHeight(newBookingsRecyclerView, newBookingAdapter)
+            adjustRecyclerViewHeight(oldBookingsRecyclerView, oldBookingAdapter)
         }
     }
+
 
     private fun showEmptyMessage(show: Boolean) {
         emptyBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
@@ -193,7 +213,6 @@ class AdminBookingsFragment : Fragment() {
         oldBookingsRecyclerView.adapter = oldBookingAdapter
     }
 
-    // Função para confirmar o agendamento
     private fun confirmBooking(bookingId: String) {
         firestore.collection("bookings").document(bookingId)
             .update("status_adm", "confirmed")
@@ -206,7 +225,6 @@ class AdminBookingsFragment : Fragment() {
             }
     }
 
-    // Função para cancelar o agendamento
     private fun cancelBooking(bookingId: String) {
         firestore.collection("bookings").document(bookingId)
             .update("status_adm", "cancelled") // Apenas atualiza o status para 'cancelled'

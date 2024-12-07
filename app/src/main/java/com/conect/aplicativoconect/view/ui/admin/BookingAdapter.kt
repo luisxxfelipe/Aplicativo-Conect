@@ -216,6 +216,21 @@ class BookingAdapter(
         }
     }
 
+    fun addBookings(newBookings: List<Booking>) {
+        val currentBookings = bookings.toMutableList()
+
+        // Verifica se o agendamento já existe antes de adicionar
+        newBookings.forEach { newBooking ->
+            if (!currentBookings.any { it.id == newBooking.id }) {
+                currentBookings.add(newBooking)
+            }
+        }
+
+        bookings = currentBookings
+        notifyItemRangeInserted(currentBookings.size - newBookings.size, newBookings.size)
+    }
+
+
     // Função para verificar se o horário do agendamento já passou
     private fun hasBookingTimePassed(date: String?, hour: String?): Boolean {
         if (date == null || hour == null) return false
