@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.view.ui.client
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -113,7 +114,7 @@ class ClientBookingAdapter(
 
     // Função para abrir o WhatsApp
     private fun openWhatsApp(phoneNumber: String?, message: String) {
-        if (phoneNumber != null && phoneNumber.isNotEmpty()) {
+        if (!phoneNumber.isNullOrEmpty()) {
             val uri = Uri.parse("https://wa.me/$phoneNumber?text=${Uri.encode(message)}")
             val intent = Intent(Intent.ACTION_VIEW, uri)
             intent.setPackage("com.whatsapp")
@@ -174,6 +175,7 @@ class ClientBookingAdapter(
         return ContextCompat.getColor(view.context, colorList[newColorIndex])
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateData(newBookings: List<Booking>) {
         bookings = newBookings
         notifyDataSetChanged()

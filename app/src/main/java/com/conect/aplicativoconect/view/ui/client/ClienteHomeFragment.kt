@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentClienteHomeBinding
@@ -23,6 +24,7 @@ import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
 
@@ -35,6 +37,11 @@ class ClienteHomeFragment : Fragment() {
     private lateinit var clientBookingAdapter: ClientBookingAdapter
     private val businessList = mutableListOf<Business>()
     private val clientViewModel: ClientViewModel by activityViewModels()
+
+    private val PAGE_SIZE = 4 // Número de itens por vez
+    private var lastVisible: DocumentSnapshot? = null // Último documento carregado
+    private var isLoading = false // Controle de carregamento
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -78,30 +85,62 @@ class ClienteHomeFragment : Fragment() {
                 filterBusinessesByCategory(selectedCategory)
             }
 
-        businessAdapter = BusinessAdapter(requireContext(), businessList) { business ->
+        // Atualizando a criação do BusinessAdapter
+        businessAdapter = BusinessAdapter(requireContext()) { business ->
             fetchBusinessIdAndOpenDetails(business.name)
         }
 
         _binding?.establishmentsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
         _binding?.establishmentsRecyclerView?.adapter = businessAdapter
+
+        // Adicionando o OnScrollListener para detectar o fim da lista e carregar mais dados
+        _binding?.establishmentsRecyclerView?.addOnScrollListener(object :
+            RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
+
+                // Quando o usuário chegar perto do fim da lista (4 itens restantes), carregue mais dados
+                if (totalItemCount <= lastVisibleItemPosition + 4 && !isLoading) {
+                    fetchBusinesses()  // Chama a função para carregar mais estabelecimentos
+                }
+            }
+        })
     }
 
     private fun fetchBusinesses() {
-        firestore.collection("business")
-            .get()
+        if (isLoading) return  // Evita múltiplas requisições simultâneas
+
+        isLoading = true  // Inicia o carregamento
+        var query = firestore.collection("business")
+            .limit(PAGE_SIZE.toLong())  // Aumente para um número maior
+
+        // Se já carregamos algum item, usamos startAfter para continuar de onde paramos
+        lastVisible?.let {
+            query = query.startAfter(it)
+        }
+
+        // Inicia a consulta
+        query.get()
             .addOnSuccessListener { querySnapshot ->
                 if (isAdded && _binding != null) {
                     if (!querySnapshot.isEmpty) {
-                        businessList.clear()
-                        businessList.addAll(querySnapshot.toObjects(Business::class.java))
-                        updateBusinessAdapter(businessList)
+                        val businesses = querySnapshot.toObjects(Business::class.java)
+                        businessList.addAll(businesses)  // Adiciona os novos estabelecimentos à lista
+                        lastVisible = querySnapshot.documents.last()  // Atualiza o último documento
+                        updateBusinessAdapter(businessList)  // Atualiza o adaptador com a nova lista
                     }
                 }
+                isLoading = false  // Finaliza o carregamento
             }
             .addOnFailureListener { e ->
                 Log.e("ClienteHomeFragment", "Erro ao buscar estabelecimentos: ${e.message}")
+                isLoading = false  // Finaliza o carregamento em caso de erro
             }
     }
+
 
     private fun setupClientBookingAdapter(bookings: List<Booking>) {
         clientBookingAdapter = ClientBookingAdapter(
@@ -247,11 +286,10 @@ class ClienteHomeFragment : Fragment() {
 
     private fun updateBusinessAdapter(filteredBusinesses: List<Business>) {
         if (isAdded && _binding != null) {
-            businessAdapter = BusinessAdapter(requireContext(), filteredBusinesses) { business ->
-                fetchBusinessIdAndOpenDetails(business.name)
+            // Verifica se a lista é diferente da anterior para evitar updates desnecessários
+            if (filteredBusinesses != businessAdapter.currentList) {
+                businessAdapter.submitList(filteredBusinesses)
             }
-            binding.establishmentsRecyclerView.adapter = businessAdapter
-            businessAdapter.notifyDataSetChanged()
         }
     }
 

@@ -189,10 +189,16 @@ class BookingFragment : Fragment() {
             .update("status_cliente", "confirmed")
             .addOnSuccessListener {
                 // Aqui você estava passando o objeto booking diretamente, altere para passar o booking.id!!
-                sendNotification(booking.id!!, "Agendamento Confirmado", "Olá, o agendamento de ${booking.name} foi confirmado pelo cliente!", false)
+                sendNotification(
+                    booking.id!!,
+                    "Agendamento Confirmado",
+                    "Olá, o agendamento de ${booking.name} foi confirmado pelo cliente!",
+                    false
+                )
 
                 // Exibe o Toast e carrega novamente os agendamentos
-                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT)
+                    .show()
                 loadBookings()
             }
             .addOnFailureListener { e ->
@@ -206,7 +212,6 @@ class BookingFragment : Fragment() {
     }
 
 
-
     private fun cancelBooking(booking: Booking) {
         firestore.collection("bookings").document(booking.id!!)
             .delete()
@@ -214,7 +219,8 @@ class BookingFragment : Fragment() {
                 sendNotification(
                     booking.id!!,
                     "Agendamento Cancelado",
-                    "Olá, o agendamento de ${booking.name} foi cancelado!",false)
+                    "Olá, o agendamento de ${booking.name} foi cancelado!", false
+                )
                 Toast.makeText(
                     requireContext(),
                     "Agendamento cancelado e excluído.",
@@ -240,26 +246,26 @@ class BookingFragment : Fragment() {
         message: String,
         notifyAdmin: Boolean
     ) {
-            // Buscar o token do administrador
-            firestore.collection("bookings").document(bookingId)
-                .get()
-                .addOnSuccessListener { bookingDocument ->
-                    val companyId =
-                        bookingDocument.getString("companyId") ?: return@addOnSuccessListener
-                    fetchBusinessToken(companyId) { adminToken ->
-                        if (adminToken != null) {
-                            sendFCMNotification(adminToken, title, message)
-                        } else {
-                            Log.e(
-                                "FCM",
-                                "Token do administrador não encontrado para a empresa ID: $companyId"
-                            )
-                        }
+        // Buscar o token do administrador
+        firestore.collection("bookings").document(bookingId)
+            .get()
+            .addOnSuccessListener { bookingDocument ->
+                val companyId =
+                    bookingDocument.getString("companyId") ?: return@addOnSuccessListener
+                fetchBusinessToken(companyId) { adminToken ->
+                    if (adminToken != null) {
+                        sendFCMNotification(adminToken, title, message)
+                    } else {
+                        Log.e(
+                            "FCM",
+                            "Token do administrador não encontrado para a empresa ID: $companyId"
+                        )
                     }
                 }
-                .addOnFailureListener { e ->
-                    Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
-        }
+            }
+            .addOnFailureListener { e ->
+                Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
+            }
     }
 
     // Função para buscar o token do administrador
@@ -268,11 +274,17 @@ class BookingFragment : Fragment() {
             .get()
             .addOnSuccessListener { document ->
                 val token = document.getString("fcmToken")
-                Log.d("FCM", "Token do administrador para empresa $companyId: $token") // Loga o token
+                Log.d(
+                    "FCM",
+                    "Token do administrador para empresa $companyId: $token"
+                ) // Loga o token
                 callback(token)
             }
             .addOnFailureListener { e ->
-                Log.e("FCM", "Erro ao buscar token do administrador para empresa $companyId: ${e.message}")
+                Log.e(
+                    "FCM",
+                    "Erro ao buscar token do administrador para empresa $companyId: ${e.message}"
+                )
                 callback(null)
             }
     }

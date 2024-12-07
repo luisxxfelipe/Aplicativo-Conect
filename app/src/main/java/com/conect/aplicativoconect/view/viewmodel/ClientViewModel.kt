@@ -15,8 +15,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 class ClientViewModel : ViewModel() {
 
@@ -48,10 +50,11 @@ class ClientViewModel : ViewModel() {
             }
     }
 
-    // Busca agendamentos futuros do usuário e limita a 2 próximos agendamentos
     fun fetchUserBookings(userId: String) {
         firestore.collection("bookings")
             .whereEqualTo("userId", userId)
+            .orderBy("date")
+            .orderBy("hour")
             .addSnapshotListener { querySnapshot, error ->
                 if (error != null) {
                     Log.e("ClientViewModel", "Erro ao buscar agendamentos: ${error.message}")
@@ -62,14 +65,26 @@ class ClientViewModel : ViewModel() {
                     it.toObject(Booking::class.java)?.apply { id = it.id }
                 }.orEmpty()
 
-                // Filtra e ordena para obter os 2 próximos agendamentos futuros
+                // Filtra os agendamentos futuros
                 val futureBookings = bookings.filter { isFutureBooking(it) }
-                    .sortedBy { parseDateTime(it.date ?: "", it.hour) }
-                    .take(2)
 
-                _todayBookings.value = futureBookings
+                // Limita a 2 próximos agendamentos
+                val nextTwoBookings = futureBookings.take(2)
+
+                // Atualiza a LiveData com os 2 próximos agendamentos futuros
+                _todayBookings.value = nextTwoBookings
+                Log.d("ClientViewModel", "Agendamentos futuros: ${nextTwoBookings.size}")
             }
     }
+
+
+
+    private fun getCurrentDate(): String {
+        val currentDate = Calendar.getInstance()
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return sdf.format(currentDate.time)
+    }
+
 
     // Confirmação de agendamento
     fun confirmBooking(context: Context, booking: Booking) {

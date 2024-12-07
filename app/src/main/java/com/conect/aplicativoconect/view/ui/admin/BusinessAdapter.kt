@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
@@ -15,9 +17,8 @@ import com.conect.aplicativoconect.view.data.model.OperatingHours
 
 class BusinessAdapter(
     private val context: Context,
-    private val businessList: List<Business>,
     private val onBusinessClick: (Business) -> Unit
-) : RecyclerView.Adapter<BusinessAdapter.BusinessViewHolder>() {
+) : ListAdapter<Business, BusinessAdapter.BusinessViewHolder>(BusinessDiffCallback()) {
 
     inner class BusinessViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val businessName: TextView = itemView.findViewById(R.id.businessName)
@@ -30,13 +31,12 @@ class BusinessAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BusinessViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_business, parent, false) // Use o layout correto aqui
+            .inflate(R.layout.item_business, parent, false)
         return BusinessViewHolder(view)
     }
 
-
     override fun onBindViewHolder(holder: BusinessViewHolder, position: Int) {
-        val business = businessList[position]
+        val business = getItem(position) // Usamos getItem() em vez de acessar diretamente a lista
         holder.businessName.text = business.name
         holder.businessCategory.text = business.serviceType
         holder.operatingHours.text = formatOperatingHours(business.operatingHours)
@@ -54,12 +54,22 @@ class BusinessAdapter(
         }
     }
 
-    // Função ajustada para trabalhar com a data class OperatingHours
     private fun formatOperatingHours(operatingHours: OperatingHours?): String {
         val opening = operatingHours?.opening ?: "N/A"
         val closing = operatingHours?.closing ?: "N/A"
         return "$opening - $closing"
     }
+}
 
-    override fun getItemCount(): Int = businessList.size
+// Criação do DiffUtil.ItemCallback para comparar os itens
+class BusinessDiffCallback : DiffUtil.ItemCallback<Business>() {
+    override fun areItemsTheSame(oldItem: Business, newItem: Business): Boolean {
+        // Comparação de ID (ou outro campo único) para garantir que estamos lidando com o mesmo item
+        return oldItem.cpf == newItem.cpf  // Usando CPF como identificador único
+    }
+
+    override fun areContentsTheSame(oldItem: Business, newItem: Business): Boolean {
+        // Verificação de igualdade dos dados do item
+        return oldItem == newItem
+    }
 }

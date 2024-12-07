@@ -89,7 +89,7 @@
             android:exported="true" />
         <activity
             android:name=".view.data.repository.ForgotPasswordActivity"
-            android:exported="true"/>
+            android:exported="true" />
         <activity
             android:name=".view.ui.client.ClienteHomeActivity"
             android:exported="true" />

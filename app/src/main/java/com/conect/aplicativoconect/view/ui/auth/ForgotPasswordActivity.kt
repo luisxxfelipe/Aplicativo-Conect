@@ -36,7 +36,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 // Lógica para enviar o e-mail de redefinição de senha via Firebase
                 sendPasswordResetEmail(email)
             } else {
-                Toast.makeText(this, "Por favor, insira um e-mail válido", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Por favor, insira um e-mail válido", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -47,7 +48,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Sucesso: E-mail enviado
-                    Toast.makeText(this, "Instruções enviadas para $email", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Instruções enviadas para $email", Toast.LENGTH_SHORT)
+                        .show()
 
                     // Opcionalmente, redireciona o usuário de volta para o LoginActivity
                     val intent = Intent(this, LoginActivity::class.java)
@@ -55,7 +57,11 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     finish()
                 } else {
                     // Erro: Exibe mensagem de erro
-                    Toast.makeText(this, "Erro ao enviar o e-mail. Tente novamente.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Erro ao enviar o e-mail. Tente novamente.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
     }

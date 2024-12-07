@@ -144,6 +144,7 @@ class ClienteHomeActivity : AppCompatActivity() {
         }, 3000)
     }
 
+
     private fun showLoadingDialog() {
         loadingDialog?.show()
     }
@@ -153,17 +154,36 @@ class ClienteHomeActivity : AppCompatActivity() {
     }
 
     private fun loadFragment(fragment: Fragment, userName: String? = null) {
+        // Definindo o bundle, se necessário
         if (fragment is ClienteHomeFragment) {
             val bundle = Bundle()
             bundle.putString("userName", userName)
             fragment.arguments = bundle
         }
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment)
+        val transaction = supportFragmentManager.beginTransaction()
+
+        // Verifique se o fragmento atual é o que está sendo mostrado
+        val isFragmentBackNavigation = supportFragmentManager.backStackEntryCount > 0
+
+        // Se estiver voltando, adicione animação de transição
+        if (isFragmentBackNavigation) {
+            transaction.setCustomAnimations(
+                android.R.anim.slide_in_left,  // Novo fragmento entrando da esquerda
+                android.R.anim.slide_out_right // Fragmento atual saindo para a direita
+            )
+        } else {
+            // Caso contrário, não faz animação (navegação para frente)
+            transaction.setCustomAnimations(0, 0)
+        }
+
+        // Substitui o fragmento
+        transaction.replace(R.id.fragment_container, fragment)
             .commit()
+
         Log.d("ClientHomeActivity", "Fragment ${fragment.javaClass.simpleName} carregado.")
     }
+
 
     private fun fetchUserName() {
         val user = FirebaseAuth.getInstance().currentUser
@@ -184,6 +204,7 @@ class ClienteHomeActivity : AppCompatActivity() {
                 }
         }
     }
+
 
     private fun fetchTodayBookings(userId: String) {
         clientViewModel.fetchUserBookings(userId)
@@ -224,6 +245,7 @@ class ClienteHomeActivity : AppCompatActivity() {
             }
         }
     }
+
 
     private fun showNoBookingsMessage() {
         findViewById<TextView>(R.id.noBookingsMessage)?.visibility = View.VISIBLE
