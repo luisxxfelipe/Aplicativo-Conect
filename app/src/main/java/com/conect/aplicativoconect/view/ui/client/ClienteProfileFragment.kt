@@ -28,7 +28,6 @@ class ClienteProfileFragment : Fragment() {
     private var _binding: FragmentClienteProfileBinding? = null
     private val binding get() = _binding!!
     private val clientViewModel: ClientViewModel by activityViewModels()
-    private val firestore = FirebaseFirestore.getInstance()
     private val userId = FirebaseAuth.getInstance().currentUser?.uid
 
     override fun onCreateView(
@@ -108,85 +107,6 @@ class ClienteProfileFragment : Fragment() {
                     }
             }
         }
-
-        binding.deleteAccountButton.setOnClickListener {
-            val dialog = AlertDialog.Builder(requireContext())
-                .setTitle("Excluir Conta")
-                .setMessage("Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita.")
-                .setPositiveButton("Excluir") { _, _ -> deleteUserAccountAndData() }
-                .setNegativeButton("Cancelar", null)
-                .create()
-
-            dialog.show()
-
-            // Ajuste da cor da fonte do botão "Excluir" (positivo)
-            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            positiveButton.setTextColor(
-                ContextCompat.getColor(
-                    requireContext(),
-                    R.color.roxo
-                )
-            ) // Cor roxa para o texto do botão "Excluir"
-
-            // Ajuste da cor da fonte do botão "Cancelar" (negativo)
-            val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-            negativeButton.setTextColor(
-                ContextCompat.getColor(
-                    requireContext(),
-                    R.color.roxo
-                )
-            ) // Cor laranja para o texto do botão "Cancelar"
-        }
-
-    }
-
-    private fun deleteUserAccountAndData() {
-        userId?.let { uid ->
-            firestore.collection("bookings")
-                .whereEqualTo("userId", uid)
-                .get()
-                .addOnSuccessListener { snapshot ->
-                    for (document in snapshot) {
-                        document.reference.delete()
-                    }
-                    deleteUserDocument(uid)
-                }
-                .addOnFailureListener {
-                    Toast.makeText(context, "Erro ao deletar agendamentos", Toast.LENGTH_SHORT)
-                        .show()
-                }
-        }
-    }
-
-    private fun deleteUserDocument(uid: String) {
-        firestore.collection("users").document(uid)
-            .delete()
-            .addOnSuccessListener {
-                deleteUserAccount()
-            }
-            .addOnFailureListener {
-                Toast.makeText(context, "Erro ao deletar dados do usuário", Toast.LENGTH_SHORT)
-                    .show()
-            }
-    }
-
-    private fun deleteUserAccount() {
-        FirebaseAuth.getInstance().currentUser?.delete()
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(
-                        context,
-                        "Conta e dados excluídos com sucesso",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    startActivity(Intent(requireContext(), LoginActivity::class.java))
-                    activity?.finish()
-                } else {
-                    Toast.makeText(context, "Falha ao excluir a conta", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(requireContext(), LoginActivity::class.java))
-                    activity?.finish()
-                }
-            }
     }
 
     override fun onDestroyView() {

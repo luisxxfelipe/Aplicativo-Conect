@@ -87,12 +87,52 @@ class SignupBusinessActivity : AppCompatActivity() {
         }
     }
 
+    fun isValidCpf(cpf: String): Boolean {
+        // Remover a máscara
+        val cleanCpf = cpf.replace(Regex("[^\\d]"), "")
+
+        // Verificar se o CPF tem 11 dígitos
+        if (cleanCpf.length != 11 || cleanCpf.all { it == cleanCpf[0] }) return false
+
+        // Validar primeiro dígito verificador
+        var sum = 0
+        for (i in 0 until 9) {
+            sum += cleanCpf[i].digitToInt() * (10 - i)
+        }
+        var firstCheck = 11 - (sum % 11)
+        if (firstCheck == 10 || firstCheck == 11) firstCheck = 0
+        if (cleanCpf[9].digitToInt() != firstCheck) return false
+
+        // Validar segundo dígito verificador
+        sum = 0
+        for (i in 0 until 10) {
+            sum += cleanCpf[i].digitToInt() * (11 - i)
+        }
+        var secondCheck = 11 - (sum % 11)
+        if (secondCheck == 10 || secondCheck == 11) secondCheck = 0
+        if (cleanCpf[10].digitToInt() != secondCheck) return false
+
+        return true
+    }
+
+
     private fun applyCpfMask() {
         cpfEditText.addTextChangedListener(object : TextWatcher {
             private var isUpdating = false
             private val mask = "###.###.###-##"
-            override fun afterTextChanged(s: Editable?) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                // Após a alteração do texto, você pode verificar se o CPF é válido
+                val cpf = cpfEditText.text.toString()
+                if (isValidCpf(cpf)) {
+                    cpfEditText.error = null  // Remove erro se o CPF for válido
+                } else {
+                    cpfEditText.error = "CPF inválido"  // Exibe erro se o CPF for inválido
+                }
+            }
+
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (isUpdating) {
                     isUpdating = false
@@ -118,6 +158,7 @@ class SignupBusinessActivity : AppCompatActivity() {
             }
         })
     }
+
 
     // Função para criar o usuário de negócio no Firebase Authentication
     private fun createBusinessUser(

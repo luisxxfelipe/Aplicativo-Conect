@@ -97,7 +97,6 @@
                     android:textColor="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Campo de Senha -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -107,20 +106,22 @@
                 app:boxBackgroundMode="outline"
                 app:boxStrokeColor="@color/roxo"
                 app:boxStrokeWidth="1dp"
-                app:hintTextColor="@color/roxo">
+                app:endIconMode="password_toggle"
+            app:hintTextColor="@color/roxo">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/passwordInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/transparent"
-                    android:inputType="textPassword"
-                    android:minHeight="48dp"
-                    android:padding="12dp"
-                    android:textColor="@color/black" />
-            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/passwordInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:inputType="textPassword"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:textColor="@color/black" />
 
-            <!-- Botão de Entrar -->
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Botão de Entrar -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/loginButton"
                 android:layout_width="match_parent"
@@ -131,17 +132,48 @@
                 android:textColor="@android:color/white"
                 app:cornerRadius="8dp" />
 
-            <!-- Botão de Cadastro -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/signupButton"
+            <!-- Texto 'ou' entre os dois botões -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:background="@android:color/transparent"
-                android:clickable="true"
-                android:focusable="true"
-                android:text="Não tem uma conta? Cadastre-se"
-                android:textColor="@color/roxo" />
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="8dp"
+                android:text="ou"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+
+            <!-- LinearLayout para os dois botões lado a lado -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <!-- Botão de Recuperar Senha -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/recoverpassword"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@android:color/darker_gray"
+                    android:text="Recuperar senha"
+                    android:textColor="@color/cinza_escuro"
+                    android:textSize="12sp" />
+
+                <!-- Botão de Cadastro -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/signupButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/orange"
+                    android:text="Cadastrar"
+                    android:textColor="@android:color/white" />
+
+            </LinearLayout>
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

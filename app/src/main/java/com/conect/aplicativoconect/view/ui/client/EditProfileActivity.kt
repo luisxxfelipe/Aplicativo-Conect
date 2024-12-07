@@ -26,7 +26,6 @@ class EditProfileActivity : AppCompatActivity() {
     private lateinit var editUserName: com.google.android.material.textfield.TextInputEditText
     private lateinit var editUserEmail: com.google.android.material.textfield.TextInputEditText
     private lateinit var saveProfileButton: com.google.android.material.button.MaterialButton
-    private lateinit var editUserCpf: com.google.android.material.textfield.TextInputEditText
     private lateinit var editUserPhone: com.google.android.material.textfield.TextInputEditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,41 +38,8 @@ class EditProfileActivity : AppCompatActivity() {
         editUserEmail = findViewById(R.id.editUserEmail)
         saveProfileButton = findViewById(R.id.saveProfileButton)
         editUserPhone = findViewById(R.id.editUserPhone)
-        editUserCpf = findViewById(R.id.editUserCpf)
 
         loadUserProfile()
-
-        // Máscara para CPF
-        editUserCpf.addTextChangedListener(object : TextWatcher {
-            private var isUpdating = false
-            private val mask = "###.###.###-##"
-            override fun afterTextChanged(s: Editable?) {}
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (isUpdating) {
-                    isUpdating = false
-                    return
-                }
-
-                var str = s.toString().replace(Regex("[^\\d]"), "")
-                val maskedStr = StringBuilder()
-                var index = 0
-                for (m in mask.toCharArray()) {
-                    if (m != '#' && index < str.length) {
-                        maskedStr.append(m)
-                        continue
-                    }
-                    if (index >= str.length) break
-                    maskedStr.append(str[index])
-                    index++
-                }
-
-                isUpdating = true
-                editUserCpf.setText(maskedStr.toString())
-                editUserCpf.setSelection(maskedStr.length)
-            }
-        })
-
         // Máscara para Telefone
         editUserPhone.addTextChangedListener(object : TextWatcher {
             private var isUpdating = false
@@ -122,7 +88,6 @@ class EditProfileActivity : AppCompatActivity() {
                 if (document != null) {
                     editUserName.setText(document.getString("name"))
                     editUserEmail.setText(document.getString("email"))
-                    editUserCpf.setText(document.getString("cpf"))
                     editUserPhone.setText(document.getString("phone"))
 
                     val imageUrl = document.getString("imageUrl")
@@ -154,7 +119,6 @@ class EditProfileActivity : AppCompatActivity() {
     private fun saveUserProfile() {
         val name = editUserName.text.toString()
         val email = editUserEmail.text.toString()
-        val cpf = editUserCpf.text.toString()
         val phone = editUserPhone.text.toString()
         val user = firebaseAuth.currentUser ?: return
 
@@ -166,7 +130,7 @@ class EditProfileActivity : AppCompatActivity() {
 
         user.updateProfile(profileUpdates).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                updateFirestoreData(user.uid, name, email, cpf, phone)
+                updateFirestoreData(user.uid, name, email, phone)
             } else {
                 Toast.makeText(this, "Erro ao atualizar perfil", Toast.LENGTH_SHORT).show()
             }
@@ -185,7 +149,7 @@ class EditProfileActivity : AppCompatActivity() {
             ref.putFile(uri).addOnSuccessListener {
                 ref.downloadUrl.addOnSuccessListener { downloadUri ->
                     user.updateProfile(userProfileChangeRequest { photoUri = downloadUri })
-                    updateFirestoreData(user.uid, name, email, cpf, phone, downloadUri.toString())
+                    updateFirestoreData(user.uid, name, email, phone, downloadUri.toString())
                 }
             }
         }
@@ -195,14 +159,12 @@ class EditProfileActivity : AppCompatActivity() {
         userId: String,
         name: String,
         email: String,
-        cpf: String,
         phone: String,
         imageUrl: String? = null
     ) {
         val userData = mutableMapOf<String, Any>(
             "name" to name,
             "email" to email,
-            "cpf" to cpf,
             "phone" to phone
         )
         imageUrl?.let { userData["imageUrl"] = it }

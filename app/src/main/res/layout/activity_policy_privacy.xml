@@ -42,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="Esta política de privacidade descreve como coletamos, usamos e protegemos as informações pessoais dos usuários do nosso aplicativo."
+                android:text="Esta política de privacidade descreve como coletamos, usamos e protegemos as informações pessoais dos usuários do nosso aplicativo. A proteção da sua privacidade é muito importante para nós, por isso, nos comprometemos a processar seus dados pessoais de maneira responsável e transparente."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -61,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="Coletamos dados fornecidos diretamente pelo usuário, como nome, email e endereço. Também podemos coletar dados automáticos, como informações do dispositivo e do uso do aplicativo."
+                android:text="Coletamos dados fornecidos diretamente pelo usuário, como nome, email e endereço. Também podemos coletar dados automáticos, como informações do dispositivo e do uso do aplicativo. O consentimento explícito será solicitado antes da coleta desses dados, sempre que necessário."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -80,7 +80,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="As informações coletadas são utilizadas para melhorar a experiência do usuário, personalizar o conteúdo do aplicativo, enviar notificações importantes sobre serviços e cumprir obrigações legais e regulatórias."
+                android:text="As informações coletadas são utilizadas para melhorar a experiência do usuário, personalizar o conteúdo do aplicativo, enviar notificações importantes sobre serviços e cumprir obrigações legais e regulatórias. Se aplicável, também podemos usar dados para marketing personalizado, desde que o usuário tenha dado consentimento explícito."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -99,7 +99,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="Não vendemos ou compartilhamos dados pessoais com terceiros sem o consentimento do usuário, exceto quando exigido por lei ou necessário para a prestação dos serviços."
+                android:text="Não vendemos ou compartilhamos dados pessoais com terceiros sem o consentimento do usuário, exceto quando exigido por lei ou necessário para a prestação dos serviços. Podemos compartilhar dados com prestadores de serviços, que são obrigados a adotar medidas adequadas de segurança e a processar os dados apenas conforme nossas instruções."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -118,7 +118,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="Armazenamos as informações em servidores seguros e adotamos medidas apropriadas para proteger os dados contra acesso não autorizado."
+                android:text="Armazenamos as informações em servidores seguros e adotamos medidas apropriadas de segurança, como criptografia, para proteger os dados contra acesso não autorizado. No entanto, nenhum método de transmissão de dados pela internet ou de armazenamento eletrônico é 100% seguro."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -137,7 +137,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="Podemos utilizar cookies e outras tecnologias para coletar informações sobre o uso do aplicativo e melhorar nossos serviços."
+                android:text="Podemos utilizar cookies e outras tecnologias para coletar informações sobre o uso do aplicativo e melhorar nossos serviços. O usuário pode configurar o seu dispositivo para recusar cookies ou alertá-lo quando cookies estiverem sendo enviados."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -156,7 +156,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="O usuário tem o direito de acessar, corrigir ou excluir seus dados pessoais, bem como solicitar a suspensão do uso dos dados para determinadas finalidades."
+                android:text="O usuário tem o direito de acessar, corrigir ou excluir seus dados pessoais, bem como solicitar a suspensão do uso dos dados para determinadas finalidades. O consentimento dado pode ser revogado a qualquer momento, sem que isso afete a legalidade do tratamento realizado antes da revogação."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -175,7 +175,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="Esta política pode ser atualizada periodicamente. Notificaremos os usuários sobre mudanças significativas por meio de avisos no aplicativo."
+                android:text="Esta política pode ser atualizada periodicamente. Notificaremos os usuários sobre mudanças significativas por meio de avisos no aplicativo ou por email. Recomendamos que o usuário leia periodicamente esta política para estar ciente de qualquer alteração."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -194,7 +194,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:lineSpacingExtra="8dp"
-                android:text="Em caso de dúvidas sobre nossa política de privacidade, entre em contato pelo email: conectexoficial@gmail.com."
+                android:text="Em caso de dúvidas sobre nossa política de privacidade ou para exercer seus direitos, entre em contato conosco pelo email: conectexoficial@gmail.com."
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 

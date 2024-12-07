@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.PaymentService
+import com.conect.aplicativoconect.view.data.repository.ForgotPasswordActivity
 import com.conect.aplicativoconect.view.ui.admin.AdminHomeActivity
 import com.conect.aplicativoconect.view.ui.client.ClienteHomeActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -61,6 +62,16 @@ class LoginActivity : AppCompatActivity() {
             }
             startActivity(intent)
         }
+
+        // Dentro do metodo onCreate()
+        val recoverPasswordButton: Button = findViewById(R.id.recoverpassword)
+
+        recoverPasswordButton.setOnClickListener {
+            // Ao clicar no botão "Esqueci minha senha", vamos abrir a tela de recuperação
+            val intent = Intent(this, ForgotPasswordActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 
     private fun loginUser(email: String, password: String) {

@@ -159,7 +159,7 @@ class AddServiceFragment : Fragment() {
 
             // Limpa o campo de preço e reseta a seleção do adaptador
             editTextPrice.text.clear()
-            serviceAdapter.clearSelection() // Novo método para limpar a seleção
+            serviceAdapter.clearSelection() // Novo metodo para limpar a seleção
             updateUI()
         } else {
             // Mostra um Toast se faltou selecionar um serviço ou inserir um preço

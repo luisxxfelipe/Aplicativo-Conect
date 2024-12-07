@@ -61,26 +61,6 @@
             android:padding="12dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Campo CPF -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="CPF"
-        app:boxBackgroundMode="outline"
-        app:boxStrokeColor="@color/roxo"
-        app:boxStrokeWidth="1dp"
-        app:hintTextColor="@color/roxo">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editUserCpf"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
-            android:inputType="number"
-            android:padding="12dp" />
-    </com.google.android.material.textfield.TextInputLayout>
-
     <!-- Campo Telefone -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"

@@ -13,7 +13,7 @@ class AppInfoActivity : AppCompatActivity() {
         binding = ActivityAppInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.appVersionText.text = "Versão do App: 1.0.0"
-        binding.appDeveloperText.text = "Desenvolvedor: ConectX"
+        binding.appVersionText.text = "Versão do App: 2.1.0"
+        binding.appDeveloperText.text = "Desenvolvedor: ConecteX"
     }
 }

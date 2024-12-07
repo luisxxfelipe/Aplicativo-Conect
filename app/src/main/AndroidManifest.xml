@@ -88,6 +88,9 @@
             android:name=".view.ui.auth.SignupBusinessActivity"
             android:exported="true" />
         <activity
+            android:name=".view.data.repository.ForgotPasswordActivity"
+            android:exported="true"/>
+        <activity
             android:name=".view.ui.client.ClienteHomeActivity"
             android:exported="true" />
         <activity
