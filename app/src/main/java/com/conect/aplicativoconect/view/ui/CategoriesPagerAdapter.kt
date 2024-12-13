@@ -10,7 +10,7 @@ import java.util.Random
 
 class CategoriesPagerAdapter(
     private val serviceList: List<String>,
-    private val onCategoryClick: (String) -> Unit
+    private val onCategoryClick: (String?) -> Unit // Envia null para indicar que o filtro foi removido
 ) : RecyclerView.Adapter<CategoriesPagerAdapter.CategoryViewHolder>() {
 
     private val categoryColors = listOf(
@@ -22,7 +22,7 @@ class CategoriesPagerAdapter(
     private var selectedPosition: Int =
         RecyclerView.NO_POSITION // Nenhuma posição selecionada inicialmente
     private val itemColors = mutableMapOf<Int, Int>() // Mapa para armazenar cores por item
-    private var lastUsedColor: Int? = null // Última cor usada para garantir que não repita
+    private var lastUsedColor: Int? = null // Última cor usada para evitar repetição
 
     class CategoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val serviceTextView: TextView = itemView.findViewById(R.id.serviceTextView)
@@ -62,22 +62,27 @@ class CategoriesPagerAdapter(
 
         holder.itemView.setOnClickListener {
             val previousPosition = selectedPosition
-            selectedPosition = holder.adapterPosition
+            if (selectedPosition == position) {
+                // Clique na mesma categoria: remove a seleção
+                selectedPosition = RecyclerView.NO_POSITION
+                onCategoryClick(null) // Envia null para indicar que o filtro foi removido
+            } else {
+                // Atualiza a seleção
+                selectedPosition = holder.adapterPosition
+                onCategoryClick(serviceList[selectedPosition]) // Envia a nova seleção
+            }
 
             // Atualiza o item anterior e o atual
             if (previousPosition != RecyclerView.NO_POSITION) {
                 notifyItemChanged(previousPosition)
             }
             notifyItemChanged(selectedPosition)
-
-            // Chama a função de clique
-            onCategoryClick(serviceList[selectedPosition])
         }
     }
 
     override fun getItemCount(): Int = serviceList.size
 
-    // Método para obter a próxima cor que não repita a anterior
+    // Metodo para obter a próxima cor que não repita a anterior
     private fun getNextColor(): Int {
         val availableColors = categoryColors.filter { it != lastUsedColor }
         val randomColor = availableColors[Random().nextInt(availableColors.size)]

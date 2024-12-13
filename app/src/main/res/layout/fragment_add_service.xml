@@ -21,7 +21,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Card para seleção de serviço -->
+            <!-- Nome do Serviço -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -36,26 +36,25 @@
                     android:padding="16dp">
 
                     <TextView
-                        android:id="@+id/textViewSelectService"
+                        android:id="@+id/textViewServiceName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Selecione um Serviço"
+                        android:text="Nome do Serviço"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerViewServiceTypes"
+                    <EditText
+                        android:id="@+id/editTextServiceName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:divider="@android:color/darker_gray"
-                        android:dividerHeight="1dp"
-                        android:nestedScrollingEnabled="false" />
+                        android:hint="Digite o nome do serviço"
+                        android:inputType="text"
+                        android:padding="12dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Campo de Preço -->
+            <!-- Preço -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -74,7 +73,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Preço" />
+                        android:text="Preço"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
 
                     <EditText
                         android:id="@+id/editTextPrice"
@@ -114,7 +115,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Botão Salvar Serviços (MaterialButton) -->
+    <!-- Botão Salvar Serviços -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonSaveServices"
         android:layout_width="0dp"

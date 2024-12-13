@@ -12,14 +12,12 @@ import com.android.volley.toolbox.Volley
 import com.conect.aplicativoconect.view.TokenUtils
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 class ClientViewModel : ViewModel() {
 
@@ -37,6 +35,10 @@ class ClientViewModel : ViewModel() {
     private val _userEmail = MutableLiveData<String?>()
     val userEmail: LiveData<String?> get() = _userEmail
 
+    private val _refreshBookings = MutableLiveData<Boolean>()
+    val refreshBookings: LiveData<Boolean> get() = _refreshBookings
+
+
     // Carrega dados do usuário
     fun loadUserData(userId: String) {
         firestore.collection("users").document(userId)
@@ -47,37 +49,35 @@ class ClientViewModel : ViewModel() {
                 _userEmail.value = document.getString("email")
             }
             .addOnFailureListener { e ->
-                Log.e("ClientViewModel", "Erro ao carregar dados do usuário: ${e.message}")
             }
     }
 
     // Carrega agendamentos futuros do usuário
     fun fetchUserBookings(userId: String) {
+        val currentTimestamp = System.currentTimeMillis()
+        Log.d(
+            "ClientViewModel",
+            "Fetching bookings for userId: $userId with timestamp >= $currentTimestamp"
+        )
+
         firestore.collection("bookings")
             .whereEqualTo("userId", userId)
-            .orderBy("date")
-            .orderBy("hour")
-            .addSnapshotListener { querySnapshot, error ->
-                if (error != null) {
-                    Log.e("ClientViewModel", "Erro ao buscar agendamentos: ${error.message}")
-                    return@addSnapshotListener
-                }
-
-                val bookings = querySnapshot?.documents?.mapNotNull {
+            .whereGreaterThanOrEqualTo("timestamp", currentTimestamp)
+            .orderBy("timestamp", Query.Direction.ASCENDING)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val bookings = querySnapshot.documents.mapNotNull {
                     it.toObject(Booking::class.java)?.apply { id = it.id }
-                }.orEmpty()
-
-                // Filtra os agendamentos futuros
-                val futureBookings = bookings.filter { isFutureBooking(it) }
-
-                // Limita a 2 próximos agendamentos
-                val nextTwoBookings = futureBookings.take(2)
-
-                // Atualiza a LiveData com os 2 próximos agendamentos futuros
-                _todayBookings.value = nextTwoBookings
-                Log.d("ClientViewModel", "Agendamentos futuros: ${nextTwoBookings.size}")
+                }
+                Log.d("ClientViewModel", "Fetched ${bookings.size} bookings")
+                _todayBookings.value = bookings // Atualiza LiveData mesmo que vazio
+            }
+            .addOnFailureListener { e ->
+                Log.e("ClientViewModel", "Error fetching bookings: ${e.message}")
+                _todayBookings.value = emptyList() // Define lista vazia em caso de erro
             }
     }
+
 
     // Confirmação de agendamento
     fun confirmBooking(booking: Booking, context: Context) {
@@ -88,47 +88,59 @@ class ClientViewModel : ViewModel() {
                     context,
                     booking.id!!,
                     "Agendamento Confirmado",
-                    "Olá, o agendamento de ${booking.name} foi confirmado pelo cliente!"
+                    "Olá, o agendamento de ${booking.name} foi confirmado!"
                 )
+                _refreshBookings.value = true
             }
             .addOnFailureListener { e ->
-                Log.e("ClientViewModel", "Erro ao confirmar agendamento: ${e.message}")
             }
     }
 
     // Função para cancelar o agendamento
     fun cancelBooking(booking: Booking, context: Context) {
-        firestore.collection("bookings").document(booking.id!!)
-            .delete()
-            .addOnSuccessListener {
-                sendBookingNotification(
-                    context,
-                    booking.id!!,
-                    "Agendamento Cancelado",
-                    "Olá, o agendamento de ${booking.name} foi cancelado!"
-                )
+        // Envia a notificação antes de deletar
+        sendBookingNotification(
+            context,
+            booking.id!!,
+            "Agendamento Cancelado",
+            "Olá, o agendamento de ${booking.name} foi cancelado!"
+        )
+
+        // Aguarda 3 segundos antes de deletar o agendamento
+        CoroutineScope(Dispatchers.IO).launch {
+            delay(3000) // Aguarda 3 segundos
+            withContext(Dispatchers.Main) {
+                firestore.collection("bookings").document(booking.id!!)
+                    .delete()
+                    .addOnSuccessListener {
+                        _refreshBookings.value = true
+                    }
+                    .addOnFailureListener { e ->
+                    }
             }
-            .addOnFailureListener { e ->
-                Log.e("ClientViewModel", "Erro ao cancelar agendamento: ${e.message}")
-            }
+        }
     }
 
+
     // Função para enviar notificações
-    private fun sendBookingNotification(context: Context, bookingId: String, title: String, message: String) {
+    private fun sendBookingNotification(
+        context: Context,
+        bookingId: String,
+        title: String,
+        message: String
+    ) {
         firestore.collection("bookings").document(bookingId)
             .get()
             .addOnSuccessListener { bookingDocument ->
-                val companyId = bookingDocument.getString("companyId") ?: return@addOnSuccessListener
+                val companyId =
+                    bookingDocument.getString("companyId") ?: return@addOnSuccessListener
                 fetchBusinessToken(companyId) { adminToken ->
                     if (adminToken != null) {
                         sendFCMNotification(context, adminToken, title, message)
-                    } else {
-                        Log.e("FCM", "Token do administrador não encontrado para a empresa $companyId")
                     }
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
             }
     }
 
@@ -138,17 +150,20 @@ class ClientViewModel : ViewModel() {
             .get()
             .addOnSuccessListener { document ->
                 val token = document.getString("fcmToken")
-                Log.d("FCM", "Token do administrador para empresa $companyId: $token")
                 callback(token)
             }
             .addOnFailureListener { e ->
-                Log.e("FCM", "Erro ao buscar token do administrador para empresa $companyId: ${e.message}")
                 callback(null)
             }
     }
 
     // Função para enviar a notificação FCM
-    private fun sendFCMNotification(context: Context, token: String, title: String, message: String) {
+    private fun sendFCMNotification(
+        context: Context,
+        token: String,
+        title: String,
+        message: String
+    ) {
         val url = "https://fcm.googleapis.com/v1/projects/aplicativo-conect-f253d/messages:send"
         val payload = """
     {
@@ -171,14 +186,15 @@ class ClientViewModel : ViewModel() {
             }
 
             if (accessToken == null) {
-                Log.e("FCM", "Falha ao obter o token de acesso.")
                 return@launch
             }
 
             val request = object : StringRequest(
                 Method.POST, url,
-                Response.Listener { response -> Log.d("FCM", "Notificação enviada com sucesso: $response") },
-                Response.ErrorListener { error -> Log.e("FCM", "Erro ao enviar notificação: ${error.message}") }
+                Response.Listener { response ->
+                },
+                Response.ErrorListener { error ->
+                }
             ) {
                 override fun getHeaders(): Map<String, String> {
                     return mapOf(
@@ -193,33 +209,6 @@ class ClientViewModel : ViewModel() {
             withContext(Dispatchers.Main) {
                 Volley.newRequestQueue(context).add(request)
             }
-        }
-    }
-
-    // Verifica se o agendamento é futuro
-    private fun isFutureBooking(booking: Booking): Boolean {
-        val currentDateTime = Calendar.getInstance().time
-        val bookingDateTime = parseDateTime(booking.date ?: "", booking.hour)
-        return bookingDateTime?.after(currentDateTime) ?: false
-    }
-
-    // Parse da data e hora do agendamento
-    private fun parseDateTime(date: String, hour: String): Date? {
-        return try {
-            val dateParts = date.split("/").map { it.toInt() }
-            val timeParts = hour.split(":").map { it.toIntOrNull() ?: 0 }
-
-            Calendar.getInstance().apply {
-                set(Calendar.YEAR, dateParts[2])
-                set(Calendar.MONTH, dateParts[1] - 1)
-                set(Calendar.DAY_OF_MONTH, dateParts[0])
-                set(Calendar.HOUR_OF_DAY, timeParts[0])
-                set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.time
-        } catch (e: Exception) {
-            null
         }
     }
 
@@ -252,7 +241,6 @@ class ClientViewModel : ViewModel() {
             }
             .addOnFailureListener { e ->
                 Toast.makeText(context, "Erro ao salvar avaliação", Toast.LENGTH_SHORT).show()
-                Log.e("ClientViewModel", "Erro ao salvar avaliação: ${e.message}")
             }
     }
 
@@ -271,9 +259,7 @@ class ClientViewModel : ViewModel() {
             transaction.update(businessRef, "averageRating", updatedAverageRating)
             transaction.update(businessRef, "ratingCount", updatedRatingCount)
         }.addOnSuccessListener {
-            Log.d("ClientViewModel", "Média de avaliação da empresa atualizada com sucesso.")
         }.addOnFailureListener { e ->
-            Log.e("ClientViewModel", "Erro ao atualizar média de avaliação: ${e.message}")
         }
     }
 }

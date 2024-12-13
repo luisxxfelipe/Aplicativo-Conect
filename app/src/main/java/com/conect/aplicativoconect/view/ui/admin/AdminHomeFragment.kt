@@ -20,7 +20,9 @@ import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.viewmodel.AdminViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -52,9 +54,14 @@ class AdminHomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         firestore = FirebaseFirestore.getInstance()
+
+        firestore.firestoreSettings = FirebaseFirestoreSettings.Builder()
+            .setPersistenceEnabled(true)
+            .build()
+
         setupWeeklyDateRange()
         setupRecyclerView()
-        loadBookingsInRealTime()
+        loadBookings()
         loadBusinessName()
 
         setupTipsViewPager()
@@ -104,7 +111,7 @@ class AdminHomeFragment : Fragment() {
         binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
     }
 
-    private fun loadBookingsInRealTime() {
+    private fun loadBookings() {
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         firestore.collection("business")
@@ -114,63 +121,87 @@ class AdminHomeFragment : Fragment() {
                 val businessId =
                     businessSnapshot.documents.firstOrNull()?.id ?: return@addOnSuccessListener
 
-                // Atribui o listener à variável `bookingListener` para podermos removê-lo depois
-                bookingListener = firestore.collection("bookings")
+                // Consulta para buscar todos os agendamentos futuros
+                firestore.collection("bookings")
                     .whereEqualTo("companyId", businessId)
-                    .addSnapshotListener { querySnapshot, error ->
-                        if (!isAdded || _binding == null) return@addSnapshotListener  // Verifica se o fragmento ainda está anexado
-
-                        if (error != null) {
-                            showErrorMessage("Erro ao carregar agendamentos.")
-                            return@addSnapshotListener
+                    .whereGreaterThanOrEqualTo("timestamp", System.currentTimeMillis())
+                    .orderBy("timestamp", Query.Direction.ASCENDING)
+                    .get()
+                    .addOnSuccessListener { querySnapshot ->
+                        val allBookings = querySnapshot.documents.mapNotNull { document ->
+                            document.toObject(Booking::class.java)?.apply { id = document.id }
                         }
 
-                        val bookings = querySnapshot?.documents?.mapNotNull { document ->
-                            document.toObject(Booking::class.java)?.apply { id = document.id }
-                        } ?: emptyList()
-
-                        processBookings(bookings)
+                        // Processa os agendamentos em segundo plano
+                        Handler(Looper.getMainLooper()).post {
+                            processBookings(allBookings)
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        showErrorMessage("Erro ao carregar agendamentos.")
                     }
             }
             .addOnFailureListener { e ->
-                if (isAdded && _binding != null) { // Verifica se o fragmento ainda está anexado
-                    showErrorMessage("Erro ao carregar dados da empresa.")
-                }
+                showErrorMessage("Erro ao carregar dados da empresa.")
             }
     }
 
+
     private fun setupWeeklyDateRange() {
         val calendar = Calendar.getInstance().apply {
-            firstDayOfWeek = Calendar.SUNDAY  // Define domingo como primeiro dia da semana
-            set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY) // Define o início da semana
+            firstDayOfWeek = Calendar.SUNDAY
+            set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY) // Início da semana
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
         startOfWeek = calendar.time
 
-        calendar.add(Calendar.DAY_OF_WEEK, 6) // Move para o último dia da semana (sábado)
+        calendar.add(Calendar.DAY_OF_WEEK, 6) // Final da semana (sábado)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
         endOfWeek = calendar.time
     }
 
-
     private fun processBookings(bookings: List<Booking>) {
-        // Remova o filtro que exige que o status_adm seja "confirmed"
-        val futureBookings = bookings.filter { isFutureBooking(it) }
-
-        // Filtra agendamentos para a semana e o mês atual
-        val (weeklyBookings, monthBookings) = filterBookingsByDate(futureBookings)
-        val monthlyProfit = calculateProfit(monthBookings)
-        val weeklyProfit = calculateProfit(weeklyBookings)
-
         if (!isAdded || _binding == null) return
 
-        adminViewModel.setMonthBookingsCount(monthBookings.size)
-        adminViewModel.setTodayBookingsCount(weeklyBookings.size)
-        adminViewModel.setMonthProfit(monthlyProfit)
-        adminViewModel.setTodayProfit(weeklyProfit)
+        // Obtém o timestamp do início e fim da semana
+        val startOfWeekMillis = startOfWeek?.time ?: 0
+        val endOfWeekMillis = endOfWeek?.time ?: Long.MAX_VALUE
 
-        // Ajuste a lógica para mostrar todos os próximos agendamentos, não apenas os confirmados
-        val nearestBookings = futureBookings
-            .sortedBy { it.date?.let { date -> parseDateTime(date, it.hour) } }
-            .take(2) // Exibe os 2 próximos agendamentos
+        // Obtém o timestamp do início e fim do mês
+        val startOfMonthMillis = startOfMonth().time
+        val endOfMonthMillis = endOfMonth().time
+
+        // Filtro para agendamentos dentro da semana atual
+        val weeklyBookings = bookings.filter { booking ->
+            booking.timestamp in startOfWeekMillis..endOfWeekMillis
+        }
+
+        // Filtro para agendamentos dentro do mês atual
+        val monthBookings = bookings.filter { booking ->
+            booking.timestamp in startOfMonthMillis..endOfMonthMillis
+        }
+
+        // Calcula os lucros semanais e mensais
+        val weeklyProfit = calculateProfit(weeklyBookings)
+        val monthlyProfit = calculateProfit(monthBookings)
+
+        // Atualiza os valores no ViewModel
+        adminViewModel.setTodayBookingsCount(weeklyBookings.size) // Total semanal
+        adminViewModel.setMonthBookingsCount(monthBookings.size) // Total mensal
+        adminViewModel.setTodayProfit(weeklyProfit)
+        adminViewModel.setMonthProfit(monthlyProfit)
+
+        // Filtra os agendamentos futuros
+        val futureBookings = bookings.filter { isFutureBooking(it) }
+
+        // Ordena e seleciona os 2 agendamentos mais próximos
+        val nearestBookings = futureBookings.sortedBy { it.timestamp }.take(2)
 
         if (nearestBookings.isEmpty()) {
             showNoBookingsMessage(true)
@@ -181,76 +212,45 @@ class AdminHomeFragment : Fragment() {
     }
 
 
+    private fun isFutureBooking(booking: Booking): Boolean {
+        val currentTimestamp = System.currentTimeMillis()
+        return booking.timestamp!! > currentTimestamp
+    }
+
+    private fun startOfMonth(): Date {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return calendar.time
+    }
+
+    private fun endOfMonth(): Date {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            add(Calendar.MONTH, 1)
+            add(Calendar.MILLISECOND, -1) // Último instante do mês
+        }
+        return calendar.time
+    }
+
     private fun calculateProfit(bookings: List<Booking>): Double {
         return bookings.sumOf { it.price }
     }
 
-    private fun filterBookingsByDate(bookings: List<Booking>): Pair<List<Booking>, List<Booking>> {
-        val calendar = Calendar.getInstance()
-
-        // Configura o primeiro e último dia do mês
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val startOfMonth = calendar.time
-
-        calendar.add(Calendar.MONTH, 1)
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.add(Calendar.MILLISECOND, -1)
-        val endOfMonth = calendar.time
-
-        // Filtra agendamentos para a semana atual, independente do status_adm
-        val weeklyBookings = bookings.filter { booking ->
-            val bookingDate = booking.date?.let { parseDateTime(it, booking.hour) }
-            bookingDate != null && bookingDate in (startOfWeek ?: Date())..(endOfWeek ?: Date())
-        }
-
-        // Filtra agendamentos do mês que são confirmados pelo cliente
-        val monthBookings = bookings.filter { booking ->
-            val bookingDate = booking.date?.let { parseDateTime(it, booking.hour) }
-            bookingDate != null && bookingDate in startOfMonth..endOfMonth && booking.status_cliente == "confirmed"
-        }
-
-        return Pair(weeklyBookings, monthBookings)
-    }
-
-
     private fun setupNearestBookingsAdapter(nearestBookings: List<Booking>) {
-        binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
-        binding.todayBookingsRecyclerView.adapter = BookingAdapter(
-            bookings = nearestBookings,
-            context = requireContext(),
-            onConfirmBooking = { bookingId -> confirmBooking(bookingId) },
-            onCancelBooking = { bookingId -> cancelBooking(bookingId) }
-        )
-    }
-
-    private fun isFutureBooking(booking: Booking): Boolean {
-        val currentDateTime = Calendar.getInstance().time
-        val bookingDateTime = booking.date?.let { parseDateTime(it, booking.hour) }
-        return bookingDateTime?.after(currentDateTime) ?: false
-    }
-
-
-    private fun parseDateTime(date: String, hour: String): Date? {
-        return try {
-            val dateParts = date.split("/").map { it.toInt() }
-            val timeParts = hour.split(":").map { it.toIntOrNull() ?: 0 }
-
-            Calendar.getInstance().apply {
-                set(Calendar.YEAR, dateParts[2])
-                set(Calendar.MONTH, dateParts[1] - 1)
-                set(Calendar.DAY_OF_MONTH, dateParts[0])
-                set(Calendar.HOUR_OF_DAY, timeParts[0])
-                set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.time
-        } catch (e: Exception) {
-            Log.e("AdminHomeFragment", "Erro ao analisar a data/hora: ${e.message}")
-            null
+        binding.todayBookingsRecyclerView.apply {
+            setHasFixedSize(true) // Melhora a performance se o tamanho não muda
+            layoutManager = LinearLayoutManager(context)
+            adapter = BookingAdapter(
+                bookings = nearestBookings,
+                context = requireContext(),
+                onConfirmBooking = { bookingId -> confirmBooking(bookingId) },
+                onCancelBooking = { bookingId -> cancelBooking(bookingId) }
+            )
         }
     }
 
@@ -264,9 +264,13 @@ class AdminHomeFragment : Fragment() {
             "Gerencie seu negócio de qualquer lugar! Com nosso app, seus agendamentos e lucros estão sempre à sua mão."
         )
         tipsAdapter = TipsAdapter(tips)
-        binding.tipsViewPager.adapter = tipsAdapter
-        binding.tipsViewPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+        binding.tipsViewPager.apply {
+            adapter = tipsAdapter
+            orientation = ViewPager2.ORIENTATION_HORIZONTAL
+            offscreenPageLimit = 1 // Limita páginas pré-carregadas
+        }
     }
+
 
     private fun startTipRotation() {
         handler = Handler(Looper.getMainLooper())
@@ -306,7 +310,7 @@ class AdminHomeFragment : Fragment() {
             .update("status_adm", "confirmed")
             .addOnSuccessListener {
                 Log.d("AdminHomeFragment", "Agendamento confirmado com sucesso!")
-                loadBookingsInRealTime()
+                loadBookings()
             }
             .addOnFailureListener { e ->
                 Log.w("AdminHomeFragment", "Erro ao confirmar o agendamento: ", e)
@@ -317,7 +321,7 @@ class AdminHomeFragment : Fragment() {
         firestore.collection("bookings").document(bookingId).delete()
             .addOnSuccessListener {
                 Log.d("CancelBooking", "Agendamento cancelado com sucesso!")
-                loadBookingsInRealTime()
+                loadBookings()
             }
             .addOnFailureListener { e ->
                 Log.w("CancelBooking", "Erro ao cancelar agendamento", e)

@@ -4,61 +4,34 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Novos Agendamentos -->
+    <!-- Título dos Agendamentos -->
     <TextView
-        android:id="@+id/newBookingsTitle"
+        android:id="@+id/bookingsTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:text="Novos Agendamentos"
+        android:text="Agendamentos"
         android:textSize="18sp"
         android:textStyle="bold"
         android:visibility="gone" />
 
-    <!-- Limite de altura para novos agendamentos (420dp) -->
-    <FrameLayout
+    <!-- RecyclerView único para todos os agendamentos -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewBookings"
         android:layout_width="match_parent"
-        android:layout_height="420dp"> <!-- Altura fixa -->
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewNewBookings"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:nestedScrollingEnabled="true" /> <!-- Habilita o scroll interno -->
-    </FrameLayout>
-
-    <!-- Agendamentos Antigos -->
-    <TextView
-        android:id="@+id/oldBookingsTitle"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
-        android:text="Agendamentos Antigos"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:nestedScrollingEnabled="true"
         android:visibility="gone" />
 
-    <!-- Limite de altura para agendamentos antigos (420dp) -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="420dp"> <!-- Altura fixa para agendamentos antigos -->
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewOldBookings"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:nestedScrollingEnabled="true" /> <!-- Habilita o scroll interno -->
-    </FrameLayout>
-
-    <!-- Centralize a mensagem de vazio e a imagem -->
+    <!-- Layout para mensagem de lista vazia -->
     <LinearLayout
+        android:id="@+id/emptyBookingsLayout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/emptyBookingsMessage"
@@ -66,15 +39,13 @@
             android:layout_height="wrap_content"
             android:text="Ainda não há agendamentos."
             android:textAlignment="center"
-            android:textColor="@color/cinza"
-            android:visibility="gone" />
+            android:textColor="@color/cinza" />
 
         <ImageView
             android:id="@+id/emptyBookingsImage"
             android:layout_width="200dp"
             android:layout_height="200dp"
             android:layout_marginTop="8dp"
-            android:src="@drawable/sem_agendamentos"
-            android:visibility="gone" />
+            android:src="@drawable/sem_agendamentos" />
     </LinearLayout>
 </LinearLayout>

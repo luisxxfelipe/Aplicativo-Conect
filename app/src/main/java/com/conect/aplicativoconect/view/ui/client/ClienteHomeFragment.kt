@@ -3,7 +3,6 @@ package com.conect.aplicativoconect.view.ui.client
 import CategoriesPagerAdapter
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -37,7 +36,7 @@ class ClienteHomeFragment : Fragment() {
     private lateinit var clientBookingAdapter: ClientBookingAdapter
     private val businessList = mutableListOf<Business>()
     private val clientViewModel: ClientViewModel by activityViewModels()
-
+    private var selectedCategory: String? = null
     private val PAGE_SIZE = 4 // Número de itens por vez
     private var lastVisible: DocumentSnapshot? = null // Último documento carregado
     private var isLoading = false // Controle de carregamento
@@ -75,17 +74,20 @@ class ClienteHomeFragment : Fragment() {
     }
 
     private fun setupAdapters() {
-        val categories =
-            listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem")
+        val categories = listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem")
         _binding?.categoriesRecyclerView?.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
         _binding?.categoriesRecyclerView?.adapter =
             CategoriesPagerAdapter(categories) { selectedCategory ->
-                filterBusinessesByCategory(selectedCategory)
+                if (selectedCategory != null) {
+                    filterBusinessesByCategory(selectedCategory)
+                } else {
+                    // Caso o filtro seja removido (categoria desmarcada), mostra todos os negócios
+                    updateBusinessAdapter(businessList)
+                }
             }
 
-        // Atualizando a criação do BusinessAdapter
         businessAdapter = BusinessAdapter(requireContext()) { business ->
             fetchBusinessIdAndOpenDetails(business.name)
         }
@@ -93,7 +95,6 @@ class ClienteHomeFragment : Fragment() {
         _binding?.establishmentsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
         _binding?.establishmentsRecyclerView?.adapter = businessAdapter
 
-        // Adicionando o OnScrollListener para detectar o fim da lista e carregar mais dados
         _binding?.establishmentsRecyclerView?.addOnScrollListener(object :
             RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -102,13 +103,13 @@ class ClienteHomeFragment : Fragment() {
                 val totalItemCount = layoutManager.itemCount
                 val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
-                // Quando o usuário chegar perto do fim da lista (4 itens restantes), carregue mais dados
                 if (totalItemCount <= lastVisibleItemPosition + 4 && !isLoading) {
-                    fetchBusinesses()  // Chama a função para carregar mais estabelecimentos
+                    fetchBusinesses()
                 }
             }
         })
     }
+
 
     private fun fetchBusinesses() {
         if (isLoading) return  // Evita múltiplas requisições simultâneas
@@ -136,29 +137,34 @@ class ClienteHomeFragment : Fragment() {
                 isLoading = false  // Finaliza o carregamento
             }
             .addOnFailureListener { e ->
-                Log.e("ClienteHomeFragment", "Erro ao buscar estabelecimentos: ${e.message}")
                 isLoading = false  // Finaliza o carregamento em caso de erro
             }
     }
 
 
     private fun setupClientBookingAdapter(bookings: List<Booking>) {
-        clientBookingAdapter = ClientBookingAdapter(
-            context = requireContext(),
-            bookings = bookings,
-            onConfirmClick = { booking ->
-                // Confirma o agendamento passando o booking, não o contexto.
-                clientViewModel.confirmBooking(booking, requireContext())
-            },
-            onCancelClick = { booking -> clientViewModel.cancelBooking(booking, requireContext()) },
-            onRateClick = { booking -> showRatingPopup(booking) },
-            onEmptyList = { showNoBookingsMessage(true) }  // Exibe mensagem de lista vazia
-        )
-
-        binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.todayBookingsRecyclerView.adapter = clientBookingAdapter
+        if (!::clientBookingAdapter.isInitialized) {
+            clientBookingAdapter = ClientBookingAdapter(
+                context = requireContext(),
+                bookings = bookings,
+                onConfirmClick = { booking ->
+                    clientViewModel.confirmBooking(booking, requireContext())
+                },
+                onCancelClick = { booking ->
+                    clientViewModel.cancelBooking(
+                        booking,
+                        requireContext()
+                    )
+                },
+                onRateClick = { booking -> showRatingPopup(booking) },
+                onEmptyList = { showNoBookingsMessage(true) }
+            )
+            binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+            binding.todayBookingsRecyclerView.adapter = clientBookingAdapter
+        } else {
+            clientBookingAdapter.updateBookings(bookings) // Certifique-se de que este método está no adapter
+        }
     }
-
 
 
     private fun showDefaultView() {
@@ -222,22 +228,39 @@ class ClienteHomeFragment : Fragment() {
             }
         }
 
+        // Observa os agendamentos
         clientViewModel.todayBookings.observe(viewLifecycleOwner) { bookings ->
-            binding.progressBar.visibility =
-                View.GONE  // Esconde o loading quando dados são carregados
+            binding.progressBar.visibility = View.GONE // Esconde o loading
             if (bookings.isNotEmpty()) {
                 setupClientBookingAdapter(bookings)
-                showNoBookingsMessage(false)
+                showNoBookingsMessage(false) // Oculta mensagem de "nenhum agendamento"
             } else {
-                showNoBookingsMessage(true)
+                showNoBookingsMessage(true) // Exibe mensagem e imagem
+            }
+        }
+
+        // Observa mudanças na ação de confirmar/cancelar
+        clientViewModel.refreshBookings.observe(viewLifecycleOwner) { shouldRefresh ->
+            if (shouldRefresh) {
+                clientViewModel.fetchUserBookings(FirebaseAuth.getInstance().currentUser?.uid ?: "")
             }
         }
     }
 
+
     private fun filterBusinessesByCategory(category: String) {
-        val filteredBusinesses = businessList.filter { it.serviceType == category }
-        updateBusinessAdapter(filteredBusinesses)
+        if (selectedCategory == category) {
+            // Se a mesma categoria for clicada novamente, desfaz o filtro
+            selectedCategory = null
+            updateBusinessAdapter(businessList) // Mostra todas as empresas
+        } else {
+            // Aplica o filtro pela nova categoria
+            selectedCategory = category
+            val filteredBusinesses = businessList.filter { it.serviceType == category }
+            updateBusinessAdapter(filteredBusinesses)
+        }
     }
+
 
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -326,8 +349,19 @@ class ClienteHomeFragment : Fragment() {
         binding.todayBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
     }
 
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null  // Evita memory leaks
     }
+
+    override fun onResume() {
+        super.onResume()
+
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        userId?.let {
+            clientViewModel.fetchUserBookings(it) // Recarrega os agendamentos
+        }
+    }
+
 }

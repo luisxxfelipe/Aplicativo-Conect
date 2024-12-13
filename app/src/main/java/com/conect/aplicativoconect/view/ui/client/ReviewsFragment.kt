@@ -22,10 +22,6 @@ class ReviewsFragment : Fragment() {
         super.onCreate(savedInstanceState)
         arguments?.let {
             companyId = it.getString("companyId") ?: ""
-            Log.d(
-                "ReviewsFragment",
-                "companyId recebido: $companyId"
-            )  // Log para verificar o companyId
         }
         firestore = FirebaseFirestore.getInstance()
     }
@@ -68,12 +64,10 @@ class ReviewsFragment : Fragment() {
                         val service = rating?.get("service") as? Long ?: 0L
                         ReviewItem(name, comment, quality, punctuality, service)
                     }
-                    Log.d("fetchReviews", "Avaliações encontradas: ${reviews.size}")
                     reviewsAdapter.submitList(reviews)
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("fetchReviews", "Erro ao buscar avaliações", e)
             }
     }
 

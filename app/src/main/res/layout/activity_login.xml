@@ -159,7 +159,7 @@
                     android:layout_weight="1"
                     android:backgroundTint="@android:color/darker_gray"
                     android:text="Recuperar senha"
-                    android:textColor="@color/cinza_escuro"
+                    android:textColor="@color/white"
                     android:textSize="12sp" />
 
                 <!-- Botão de Cadastro -->
@@ -168,7 +168,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/orange"
+                    android:backgroundTint="#8163FD"
                     android:text="Cadastrar"
                     android:textColor="@android:color/white" />
 

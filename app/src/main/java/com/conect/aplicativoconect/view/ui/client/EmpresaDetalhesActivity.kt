@@ -2,7 +2,6 @@ package com.conect.aplicativoconect.view.ui.client
 
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -194,7 +193,6 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("EmpresaDetalhesActivity", "Erro ao carregar detalhes", e)
                 finish()  // Fechar em caso de erro
             }
     }

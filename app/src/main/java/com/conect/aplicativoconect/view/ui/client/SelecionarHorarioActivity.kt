@@ -3,6 +3,7 @@ package com.conect.aplicativoconect.view.ui.client
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -230,22 +231,33 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             val userName = userDoc.getString("name") ?: "Nome não encontrado"
             val userImageUrl = userDoc.getString("imageUrl")
 
-            // Buscar o telefone do business
+            // Buscar o telefone e o nome do business
             val businessRef = firestore.collection("business").document(companyId)
             businessRef.get().addOnSuccessListener { businessDoc ->
                 val businessPhone = businessDoc.getString("phone") ?: "Número não disponível"
+                val companyName = businessDoc.getString("name") ?: "Nome da empresa não disponível"
+
+                // Calcular o timestamp com base na data e hora selecionadas
+                val dateTimeString = "$selectedDate $selectedHour" // Combina data e hora
+                val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                val timestamp =
+                    dateTimeFormat.parse(dateTimeString)?.time ?: System.currentTimeMillis()
+
+                Log.d("ScheduleAppointment", "Timestamp calculado: $timestamp ($dateTimeString)")
 
                 // Criar os dados do agendamento
                 val bookingData = mapOf(
                     "userId" to userId,
                     "companyId" to companyId,
+                    "companyName" to companyName, // Adiciona o nome da empresa
                     "serviceName" to selectedService.name,
                     "price" to selectedService.price,
                     "hour" to selectedHour,
                     "date" to selectedDate,
+                    "timestamp" to timestamp, // Adiciona o campo timestamp
                     "name" to userName,
                     "userImageUrl" to userImageUrl,
-                    "businessPhone" to businessPhone,  // Adiciona o telefone do business
+                    "businessPhone" to businessPhone, // Adiciona o telefone do business
                     "status_cliente" to "pending",
                     "status_adm" to "pending",
                     "notified" to false
@@ -268,7 +280,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             }.addOnFailureListener { e ->
                 Toast.makeText(
                     this,
-                    "Erro ao buscar telefone do business: ${e.message}",
+                    "Erro ao buscar dados do business: ${e.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -280,5 +292,4 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             ).show()
         }
     }
-
 }

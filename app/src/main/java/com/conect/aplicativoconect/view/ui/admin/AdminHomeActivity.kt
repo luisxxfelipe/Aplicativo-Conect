@@ -177,29 +177,37 @@ class AdminHomeActivity : AppCompatActivity() {
         bottomNavigation.itemIconTintList = colorStateList
         bottomNavigation.itemTextColor = colorStateList
 
+        // Configurar o título inicial do menu
+        updateActionBarTitle(R.id.navigation_home)
+
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
+                    updateActionBarTitle(R.id.navigation_home)
                     loadFragment(AdminHomeFragment())
                     true
                 }
 
                 R.id.navigation_appointments -> {
+                    updateActionBarTitle(R.id.navigation_appointments)
                     loadFragment(AdminBookingsFragment())
                     true
                 }
 
                 R.id.navigation_profile -> {
+                    updateActionBarTitle(R.id.navigation_profile)
                     loadFragment(AdminProfileFragment())
                     true
                 }
 
                 R.id.navigation_add_service -> {
+                    updateActionBarTitle(R.id.navigation_add_service)
                     showAddServiceDialog()
                     true
                 }
 
                 R.id.navigation_logout -> {
+                    updateActionBarTitle(R.id.navigation_logout)
                     showLogoutConfirmationDialog()
                     true
                 }
@@ -209,6 +217,15 @@ class AdminHomeActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateActionBarTitle(itemId: Int) {
+        val title = when (itemId) {
+            R.id.navigation_home -> "Início"
+            R.id.navigation_appointments -> "Agendamentos"
+            R.id.navigation_profile -> "Perfil"
+            else -> "Conectex"
+        }
+        supportActionBar?.title = title
+    }
 
     private fun showAddServiceDialog() {
         val dialog = AddServiceDialogFragment()

@@ -6,8 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings.Secure
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -38,7 +36,6 @@ class SignupClientActivity : AppCompatActivity() {
     private lateinit var nameEditText: EditText
     private lateinit var signUpButton: Button
     private lateinit var loginTextView: TextView
-    private lateinit var cpfEditText: EditText
     private lateinit var profileImageView: ImageView
     private lateinit var uploadProfileButton: Button
     private lateinit var progressDialog: AlertDialog
@@ -59,7 +56,6 @@ class SignupClientActivity : AppCompatActivity() {
         passwordEditText = findViewById(R.id.passwordInput)
         confirmPasswordEditText = findViewById(R.id.confirmPasswordInput)
         nameEditText = findViewById(R.id.nameInput)
-        cpfEditText = findViewById(R.id.cpfInput)
         signUpButton = findViewById(R.id.signupButton)
         loginTextView = findViewById(R.id.loginTextView)
         profileImageView = findViewById(R.id.profileImageView) // Adicione o ImageView no seu layout
@@ -95,20 +91,12 @@ class SignupClientActivity : AppCompatActivity() {
             val password = passwordEditText.text.toString().trim()
             val confirmPassword = confirmPasswordEditText.text.toString().trim()
             val name = nameEditText.text.toString().trim()
-            val cpf = cpfEditText.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty() && cpf.isNotEmpty()) {
-
-                // Valida o CPF antes de continuar
-                if (!isValidCPF(cpf)) {
-                    Toast.makeText(this, "CPF inválido. Digite um CPF correto.", Toast.LENGTH_SHORT)
-                        .show()
-                    return@setOnClickListener
-                }
+            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty()) {
 
                 if (password == confirmPassword) {
                     progressDialog.show() // Mostrar progresso
-                    createUser(email, password, name, cpf)
+                    createUser(email, password, name)
                 } else {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
@@ -117,42 +105,6 @@ class SignupClientActivity : AppCompatActivity() {
                     .show()
             }
         }
-
-        cpfEditText.addTextChangedListener(object : TextWatcher {
-            private var isUpdating = false
-            private val mask = "###.###.###-##"
-
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (isUpdating) {
-                    isUpdating = false
-                    return
-                }
-
-                var str = s.toString().replace(Regex("[^\\d]"), "")
-
-                val maskedStr = StringBuilder()
-                var index = 0
-
-                for (m in mask.toCharArray()) {
-                    if (m != '#' && index < str.length) {
-                        maskedStr.append(m)
-                        continue
-                    }
-                    if (index >= str.length) break
-                    maskedStr.append(str[index])
-                    index++
-                }
-
-                isUpdating = true
-                cpfEditText.setText(maskedStr.toString())
-                cpfEditText.setSelection(maskedStr.length)
-            }
-        })
-
 
         // Navegar para a tela de login ao clicar no TextView
         loginTextView.setOnClickListener {
@@ -170,35 +122,13 @@ class SignupClientActivity : AppCompatActivity() {
         progressDialog = builder.create()
     }
 
-    // Função para validar CPF
-    fun isValidCPF(cpf: String): Boolean {
-        // Remove caracteres não numéricos
-        val cpfClean = cpf.replace("[^\\d]".toRegex(), "")
-
-        // Verifica se o CPF tem 11 dígitos e se não são todos iguais
-        if (cpfClean.length != 11 || cpfClean.all { it == cpfClean[0] }) return false
-
-        try {
-            // Valida os dois dígitos verificadores
-            for (j in 0..1) {
-                var sum = 0
-                for (i in 0 until 9 + j) sum += (cpfClean[i].toString().toInt()) * (10 + j - i)
-                val check = (sum * 10 % 11) % 10
-                if (cpfClean[9 + j].toString().toInt() != check) return false
-            }
-        } catch (e: NumberFormatException) {
-            return false
-        }
-        return true
-    }
-
     private fun openGallery() {
         val intent = Intent(Intent.ACTION_PICK)
         intent.type = "image/*"
         getContent.launch(intent)
     }
 
-    private fun createUser(email: String, password: String, name: String, cpf: String) {
+    private fun createUser(email: String, password: String, name: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
 
@@ -216,7 +146,6 @@ class SignupClientActivity : AppCompatActivity() {
                         "userId" to userId,
                         "email" to email,
                         "name" to name,
-                        "cpf" to cpf,
                         "isActive" to true,
                         "type" to "client",
                         "androidId" to androidId // Adiciona o Android ID aqui

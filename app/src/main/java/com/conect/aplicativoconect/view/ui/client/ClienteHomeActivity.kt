@@ -10,7 +10,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -50,30 +49,31 @@ class ClienteHomeActivity : AppCompatActivity() {
             return
         }
 
-        // Check if the user came from the signup screen
         isFromSignup = intent.getBooleanExtra("FROM_SIGNUP", false)
-
-        // Setup the loading dialog
         setupLoadingDialog()
-
-        // Show the loading dialog only if coming from signup
         if (isFromSignup) {
             showLoadingDialogWithDelay()
         }
 
+        // Configurar o título inicial do menu
+        updateActionBarTitle(R.id.navigation_home)
+
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
+                    updateActionBarTitle(R.id.navigation_home)
                     loadFragment(ClienteHomeFragment())
                     true
                 }
 
                 R.id.navigation_appointments -> {
+                    updateActionBarTitle(R.id.navigation_appointments)
                     loadFragment(BookingFragment())
                     true
                 }
 
                 R.id.navigation_profile -> {
+                    updateActionBarTitle(R.id.navigation_profile)
                     loadFragment(ClienteProfileFragment())
                     true
                 }
@@ -89,13 +89,20 @@ class ClienteHomeActivity : AppCompatActivity() {
 
         loadFragment(ClienteHomeFragment())
         fetchUserName()
-
         clientViewModel.todayBookings.observe(this) { bookings ->
             updateBookingsView(bookings)
         }
-
-        // Aplicar as cores de ícones com base no tema (modo claro ou escuro)
         setBottomNavIconColors(bottomNavigation)
+    }
+
+    private fun updateActionBarTitle(itemId: Int) {
+        val title = when (itemId) {
+            R.id.navigation_home -> "Início"
+            R.id.navigation_appointments -> "Agendamentos"
+            R.id.navigation_profile -> "Perfil"
+            else -> "Conectex"
+        }
+        supportActionBar?.title = title
     }
 
     private fun setBottomNavIconColors(bottomNavigation: BottomNavigationView) {
@@ -224,8 +231,18 @@ class ClienteHomeActivity : AppCompatActivity() {
                 clientBookingAdapter = ClientBookingAdapter(
                     context = this,  // Aqui você está passando o contexto correto
                     bookings = bookings,
-                    onConfirmClick = { booking -> clientViewModel.confirmBooking(booking, this) }, // Passando o contexto
-                    onCancelClick = { booking -> clientViewModel.cancelBooking(booking, this) }, // Passando o contexto
+                    onConfirmClick = { booking ->
+                        clientViewModel.confirmBooking(
+                            booking,
+                            this
+                        )
+                    }, // Passando o contexto
+                    onCancelClick = { booking ->
+                        clientViewModel.cancelBooking(
+                            booking,
+                            this
+                        )
+                    }, // Passando o contexto
                     onEmptyList = { showNoBookingsMessage() }  // Mantido apenas a funcionalidade de "empty list"
                 )
                 recyclerView?.layoutManager = LinearLayoutManager(this)

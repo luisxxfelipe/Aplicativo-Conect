@@ -68,7 +68,7 @@ class AdminViewModel : ViewModel() {
         _companyId.value = id
     }
 
-    // Método para carregar dados do administrador
+    // Metodo para carregar dados do administrador
     fun loadAdminData() {
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         firestore.collection("business") // Nome da coleção no Firestore

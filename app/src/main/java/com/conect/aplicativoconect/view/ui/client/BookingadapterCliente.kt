@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,16 +26,9 @@ class ClientBookingAdapter(
     private val onEmptyList: () -> Unit
 ) : RecyclerView.Adapter<ClientBookingAdapter.ClientBookingViewHolder>() {
 
-    private val colorList = listOf(
-        R.color.colorCategory1,
-        R.color.colorCategory2,
-        R.color.colorCategory3,
-        R.color.colorCategory4
-    )
-    private var lastColorIndex: Int? = null
 
     inner class ClientBookingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val bookingUserName: TextView = itemView.findViewById(R.id.bookingUserName)
+        val bookingNameTextView: TextView = itemView.findViewById(R.id.companyName)
         val bookingServiceType: TextView = itemView.findViewById(R.id.bookingServiceType)
         val bookingTime: TextView = itemView.findViewById(R.id.bookingTime)
         val bookingDate: TextView = itemView.findViewById(R.id.bookingDate)
@@ -56,23 +48,17 @@ class ClientBookingAdapter(
 
     override fun onBindViewHolder(holder: ClientBookingViewHolder, position: Int) {
         val booking = bookings[position]
-        holder.bookingUserName.text = booking.name
+        holder.bookingNameTextView.text = booking.companyName
         holder.bookingServiceType.text = booking.serviceName
         holder.bookingDate.text = booking.date
         holder.bookingTime.text = "${booking.hour}h"
 
         // Configuração do ícone do WhatsApp
         holder.whatsappIcon.setOnClickListener {
-            var businessPhoneNumber =
-                booking.businessPhone // Adicione o número de telefone do Business na classe Booking
+            var businessPhoneNumber = booking.businessPhone
 
-            // Limpar o número de telefone, removendo espaços, parênteses, e hífens
             if (businessPhoneNumber != null) {
                 businessPhoneNumber = businessPhoneNumber.replace("[^\\d]".toRegex(), "")
-            }
-
-            // Adicionar o código do país, se necessário (por exemplo, Brasil é 55)
-            if (businessPhoneNumber != null) {
                 if (!businessPhoneNumber.startsWith("55")) {
                     businessPhoneNumber = "55$businessPhoneNumber"
                 }
@@ -80,25 +66,24 @@ class ClientBookingAdapter(
 
             val message =
                 "Olá, meu nome é ${booking.name}. Queria tirar dúvidas sobre meu agendamento de ${booking.serviceName} no dia ${booking.date} às ${booking.hour}."
-
             openWhatsApp(businessPhoneNumber, message)
         }
 
-
         val statusIndicator = holder.itemView.findViewById<View>(R.id.statusIndicator)
-        val statusColor = if (booking.status_cliente == "confirmed") {
-            getRandomColor(statusIndicator)
+        val isCompleted = booking.status_cliente == "completed" && booking.status_adm == "completed"
+        val hasRating = booking.rating != null
+
+        val statusColor = if (isCompleted && hasRating) {
+            ContextCompat.getColor(holder.itemView.context, R.color.green) // Verde para avaliado
         } else {
-            ContextCompat.getColor(holder.itemView.context, R.color.yellow)
+            ContextCompat.getColor(holder.itemView.context, R.color.yellow) // Amarelo para pendente
         }
         statusIndicator.setBackgroundColor(statusColor)
 
         val isPending = booking.status_cliente == "pending"
-        val isCompleted = booking.status_cliente == "completed" && booking.status_adm == "completed"
         val hasPassedTime = hasServiceTimePassed(booking)
-        val hasRating = booking.rating != null
 
-        // Visibilidade dos botões com a nova lógica de avaliação
+        // Visibilidade dos botões com a lógica ajustada
         holder.confirmButton.visibility = if (isPending) View.VISIBLE else View.GONE
         holder.cancelButton.visibility = if (isPending) View.VISIBLE else View.GONE
         holder.rateButton.visibility =
@@ -112,6 +97,7 @@ class ClientBookingAdapter(
         holder.rateButton.setOnClickListener { onRateClick(booking) }
     }
 
+
     // Função para abrir o WhatsApp
     private fun openWhatsApp(phoneNumber: String?, message: String) {
         if (!phoneNumber.isNullOrEmpty()) {
@@ -122,10 +108,8 @@ class ClientBookingAdapter(
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
-                Log.e("WhatsApp", "Erro ao abrir o WhatsApp: ${e.message}")
             }
         } else {
-            Log.e("WhatsApp", "Número de telefone do Business não está disponível.")
         }
     }
 
@@ -158,6 +142,19 @@ class ClientBookingAdapter(
         bookings = bookings.toMutableList().apply { removeAt(position) }
         notifyItemRemoved(position)
         notifyItemRangeChanged(position, bookings.size)
+
+        // Certifique-se de verificar a lista após a remoção
+        if (bookings.isEmpty()) {
+            onEmptyList()
+        }
+    }
+
+
+    fun updateBookings(newBookings: List<Booking>) {
+        this.bookings = newBookings
+        notifyDataSetChanged()
+
+        // Atualiza a mensagem de lista vazia
         if (bookings.isEmpty()) {
             onEmptyList()
         }
@@ -165,22 +162,15 @@ class ClientBookingAdapter(
 
     override fun getItemCount(): Int = bookings.size
 
-    private fun getRandomColor(view: View): Int {
-        var newColorIndex: Int
-        do {
-            newColorIndex = (colorList.indices).random()
-        } while (newColorIndex == lastColorIndex)
-
-        lastColorIndex = newColorIndex
-        return ContextCompat.getColor(view.context, colorList[newColorIndex])
-    }
-
     @SuppressLint("NotifyDataSetChanged")
     fun updateData(newBookings: List<Booking>) {
         bookings = newBookings
         notifyDataSetChanged()
+
+        // Verifique e chame onEmptyList se não houver agendamentos
         if (bookings.isEmpty()) {
             onEmptyList()
         }
     }
+
 }

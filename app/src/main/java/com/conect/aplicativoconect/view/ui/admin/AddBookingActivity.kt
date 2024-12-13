@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import java.util.Calendar
+import java.util.Locale
 import java.util.UUID
 
 class AddBookingActivity : AppCompatActivity() {
@@ -35,6 +36,7 @@ class AddBookingActivity : AppCompatActivity() {
     private var operatingHours: Pair<Int, Int>? =
         null // Horário de funcionamento (abertura e fechamento)
     private var availableTimes = mutableListOf<String>() // Horários disponíveis
+    private var companyName: String? = null
     private lateinit var progressBarSaving: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,7 +76,9 @@ class AddBookingActivity : AppCompatActivity() {
                             .show()
                         return@addOnSuccessListener
                     }
-                    companyId = documents.documents[0].id
+                    val businessDocument = documents.documents[0]
+                    companyId = businessDocument.id
+                    companyName = businessDocument.getString("name") // Obter o nome da empresa
                     loadServicesAndOperatingHours() // Carrega os serviços e horários
                 }
                 .addOnFailureListener { exception ->
@@ -288,14 +292,22 @@ class AddBookingActivity : AppCompatActivity() {
         price: Double,
         imageUrl: String
     ) {
+        // Calculando o timestamp a partir da data e hora selecionadas
+        val dateTimeString = "$date $hour"
+        val dateTimeFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val timestamp = dateTimeFormat.parse(dateTimeString)?.time ?: System.currentTimeMillis()
+
         val bookingData = mapOf(
             "name" to name,
             "serviceName" to serviceName,
             "date" to date,
             "hour" to hour,
+            "timestamp" to timestamp, // Adicionando o campo timestamp
             "price" to price,
             "userId" to UUID.randomUUID().toString(),
             "companyId" to companyId!!,
+            "companyName" to (companyName
+                ?: "Nome não disponível"), // Adicionando o nome da empresa
             "status_cliente" to "confirmed",
             "status_adm" to "confirmed",
             "imageUrl" to imageUrl,

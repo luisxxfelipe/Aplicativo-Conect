@@ -3,7 +3,6 @@ package com.conect.aplicativoconect.view.ui.admin
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -105,8 +104,6 @@ class AdminProfileFragment : Fragment() {
                 }
             }
             .addOnFailureListener { exception ->
-                // Lidar com falha ao obter a imagem
-                Log.e("AdminProfileFragment", "Error loading profile image", exception)
             }
     }
 

@@ -316,15 +316,10 @@ class BookingAdapter(
                         if (adminToken != null) {
                             sendFCMNotification(adminToken, title, message)
                         } else {
-                            Log.e(
-                                "FCM",
-                                "Token do administrador não encontrado para a empresa ID: $companyId"
-                            )
                         }
                     }
                 }
                 .addOnFailureListener { e ->
-                    Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
                 }
         } else {
             // Buscar o token do usuário (cliente)
@@ -336,12 +331,10 @@ class BookingAdapter(
                         if (userToken != null) {
                             sendFCMNotification(userToken, title, message)
                         } else {
-                            Log.e("FCM", "Token do usuário não encontrado para o ID: $userId")
                         }
                     }
                 }
                 .addOnFailureListener { e ->
-                    Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
                 }
         }
     }
@@ -356,7 +349,6 @@ class BookingAdapter(
                 callback(token)
             }
             .addOnFailureListener { e ->
-                Log.e("FCM", "Erro ao buscar token do administrador: ${e.message}")
                 callback(null)
             }
     }
@@ -367,11 +359,9 @@ class BookingAdapter(
             .get()
             .addOnSuccessListener { document ->
                 val token = document.getString("fcmToken")
-                Log.d("FCM", "Token do usuário: $token")
                 callback(token)
             }
             .addOnFailureListener { e ->
-                Log.e("FCM", "Erro ao buscar token do usuário: ${e.message}")
                 callback(null)
             }
     }
@@ -400,17 +390,15 @@ class BookingAdapter(
             }
 
             if (accessToken == null) {
-                Log.e("FCM", "Falha ao obter o token de acesso.")
+
                 return@launch
             }
 
             val request = object : StringRequest(
                 Method.POST, url,
                 Response.Listener { response ->
-                    Log.d("FCM", "Notificação enviada com sucesso: $response")
                 },
                 Response.ErrorListener { error ->
-                    Log.e("FCM", "Erro ao enviar notificação: ${error.message}")
                 }
             ) {
                 override fun getHeaders(): Map<String, String> {

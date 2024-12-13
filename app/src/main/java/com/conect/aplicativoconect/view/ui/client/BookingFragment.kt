@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.view.ui.client
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,7 +12,6 @@ import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -27,19 +27,18 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.Calendar
+import java.util.Date
 
 class BookingFragment : Fragment() {
 
-    private lateinit var newBookingsRecyclerView: RecyclerView
-    private lateinit var oldBookingsRecyclerView: RecyclerView
-    private lateinit var newBookingAdapter: ClientBookingAdapter
-    private lateinit var oldBookingAdapter: ClientBookingAdapter
+    private lateinit var bookingsRecyclerView: RecyclerView
+    private lateinit var bookingsAdapter: ClientBookingAdapter
     private lateinit var emptyBookingsLayout: LinearLayout
-    private lateinit var newBookingsTitle: TextView
-    private lateinit var oldBookingsTitle: TextView
-    private var firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private lateinit var bookingsTitle: TextView
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,36 +46,20 @@ class BookingFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_cliente_booking, container, false)
 
-        newBookingsRecyclerView = view.findViewById(R.id.recyclerViewNewBookings)
-        oldBookingsRecyclerView = view.findViewById(R.id.recyclerViewOldBookings)
+        bookingsRecyclerView = view.findViewById(R.id.recyclerViewBookings)
         emptyBookingsLayout = view.findViewById(R.id.emptyBookingsLayout)
-        newBookingsTitle = view.findViewById(R.id.newBookingsTitle)
-        oldBookingsTitle = view.findViewById(R.id.oldBookingsTitle)
+        bookingsTitle = view.findViewById(R.id.bookingsTitle)
 
-        setupRecyclerViews()
+        setupRecyclerView()
         loadBookings()
 
         return view
     }
 
-    private fun adjustNestedScrollViewHeight() {
-        val itemCount = newBookingAdapter.itemCount
+    private fun setupRecyclerView() {
+        bookingsRecyclerView.layoutManager = LinearLayoutManager(context)
 
-        val params = newBookingsRecyclerView.layoutParams
-        params.height = if (itemCount > 3) {
-            resources.getDimensionPixelSize(R.dimen.fixed_height_for_3_items) // Defina como 420dp
-        } else {
-            RecyclerView.LayoutParams.WRAP_CONTENT
-        }
-        newBookingsRecyclerView.layoutParams = params
-    }
-
-
-    private fun setupRecyclerViews() {
-        newBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
-        oldBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
-
-        newBookingAdapter = ClientBookingAdapter(
+        bookingsAdapter = ClientBookingAdapter(
             context = requireContext(),
             bookings = listOf(),
             onConfirmClick = { booking -> confirmBooking(booking) },
@@ -85,103 +68,75 @@ class BookingFragment : Fragment() {
             onEmptyList = { showEmptyBookingsMessage(true) }
         )
 
-        oldBookingAdapter = ClientBookingAdapter(
-            context = requireContext(),
-            bookings = listOf(),
-            onConfirmClick = { booking -> confirmBooking(booking) },
-            onCancelClick = { booking -> cancelBooking(booking) },
-            onRateClick = { booking -> showRatingPopup(booking) },
-            onEmptyList = { showEmptyBookingsMessage(true) }
-        )
-
-        newBookingsRecyclerView.adapter = newBookingAdapter
-        oldBookingsRecyclerView.adapter = oldBookingAdapter
+        bookingsRecyclerView.adapter = bookingsAdapter
     }
 
     private fun loadBookings() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-        firestore.collection("bookings")
-            .whereEqualTo("userId", userId)
-            .addSnapshotListener { querySnapshot, error ->
-                if (error != null) {
-                    if (isAdded) { // Verifique se o fragmento ainda está anexado antes de usar o contexto
-                        Toast.makeText(
-                            requireContext(),
-                            "Erro ao buscar agendamentos.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    return@addSnapshotListener
-                }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val bookingsSnapshot = firestore.collection("bookings")
+                    .whereEqualTo("userId", userId)
+                    .get()
+                    .await()
 
-                // Verifique novamente se o fragmento está anexado ao contexto antes de continuar
-                if (!isAdded) return@addSnapshotListener
-
-                val (newBookings, oldBookings) = querySnapshot?.documents?.mapNotNull { document ->
+                val bookings = bookingsSnapshot.documents.mapNotNull { document ->
                     val booking = document.toObject(Booking::class.java)
                     booking?.id = document.id
                     booking
-                }?.partition { isFutureBooking(it) } ?: Pair(emptyList(), emptyList())
+                }.sortedWith(compareByDescending<Booking> {
+                    parseDateTime(it.date ?: "", it.hour)
+                })
 
-                updateUI(newBookings, oldBookings)
-                adjustNestedScrollViewHeight()
+                withContext(Dispatchers.Main) {
+                    if (bookings.isEmpty()) {
+                        showEmptyBookingsMessage(true)
+                    } else {
+                        bookingsAdapter.updateData(bookings)
+                        bookingsRecyclerView.visibility = View.VISIBLE
+                        bookingsTitle.visibility = View.VISIBLE
+                        showEmptyBookingsMessage(false)
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showEmptyBookingsMessage(true)
+                }
             }
+        }
     }
 
-    private fun updateUI(newBookings: List<Booking>, oldBookings: List<Booking>) {
-        // Atualiza os adaptadores primeiro
-        newBookingAdapter.updateData(newBookings)
-        oldBookingAdapter.updateData(oldBookings)
-
-        // Verifica se há novos ou antigos agendamentos
-        val hasNewBookings = newBookings.isNotEmpty()
-        val hasOldBookings = oldBookings.isNotEmpty()
-
-        // Define visibilidade dos títulos e RecyclerViews
-        newBookingsTitle.visibility = if (hasNewBookings) View.VISIBLE else View.GONE
-        oldBookingsTitle.visibility = if (hasOldBookings) View.VISIBLE else View.GONE
-        newBookingsRecyclerView.visibility = if (hasNewBookings) View.VISIBLE else View.GONE
-        oldBookingsRecyclerView.visibility = if (hasOldBookings) View.VISIBLE else View.GONE
-
-        // Exibe a imagem e mensagem de vazio somente se ambos os RecyclerViews estiverem vazios
-        showEmptyBookingsMessage(!hasNewBookings && !hasOldBookings)
-    }
 
     private fun showEmptyBookingsMessage(show: Boolean) {
         emptyBookingsLayout.visibility = if (show) View.VISIBLE else View.GONE
+        bookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        bookingsTitle.visibility = if (show) View.GONE else View.VISIBLE
     }
 
-
     private fun isFutureBooking(booking: Booking): Boolean {
-        val currentDateTime = Calendar.getInstance()
+        val currentDateTime = Calendar.getInstance().time
+        val bookingDateTime = parseDateTime(booking.date ?: "", booking.hour)
+        return bookingDateTime?.after(currentDateTime) ?: false
+    }
 
-        // Verificar se `date` e `hour` estão presentes e processá-los
-        val bookingDateParts = booking.date?.split("/")?.map { it.toIntOrNull() }
-        val bookingHourParts = booking.hour.split(":").map { it.toIntOrNull() }
+    private fun parseDateTime(date: String, hour: String): Date? {
+        return try {
+            val dateParts = date.split("/").map { it.toInt() }
+            val timeParts = hour.split(":").map { it.toIntOrNull() ?: 0 }
 
-        // Verificar se todos os elementos de data foram extraídos corretamente e se `hour` é válido
-        if (bookingDateParts != null && bookingDateParts.size == 3 && bookingHourParts.isNotEmpty()) {
-            // Criar o calendário do agendamento com data e hora
-            val bookingCalendar = Calendar.getInstance().apply {
-                set(Calendar.YEAR, bookingDateParts[2]!!)
-                set(Calendar.MONTH, bookingDateParts[1]!! - 1)
-                set(Calendar.DAY_OF_MONTH, bookingDateParts[0]!!)
-                set(Calendar.HOUR_OF_DAY, bookingHourParts[0]!!)
-                bookingHourParts.getOrElse(1) { 0 }?.let {
-                    set(
-                        Calendar.MINUTE,
-                        it
-                    )
-                } // Caso `minute` não seja especificado, assumimos 0 minutos
+            Calendar.getInstance().apply {
+                set(Calendar.YEAR, dateParts[2])
+                set(Calendar.MONTH, dateParts[1] - 1)
+                set(Calendar.DAY_OF_MONTH, dateParts[0])
+                set(Calendar.HOUR_OF_DAY, timeParts[0])
+                set(Calendar.MINUTE, timeParts.getOrElse(1) { 0 })
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
-            }
-
-            // Comparar o agendamento com a data e hora atuais
-            return bookingCalendar.after(currentDateTime)
+            }.time
+        } catch (e: Exception) {
+            null
         }
-        return false
     }
 
     private fun confirmBooking(booking: Booking) {
@@ -192,8 +147,7 @@ class BookingFragment : Fragment() {
                 sendNotification(
                     booking.id!!,
                     "Agendamento Confirmado",
-                    "Olá, o agendamento de ${booking.name} foi confirmado pelo cliente!",
-                    false
+                    "Olá, o agendamento de ${booking.name} foi confirmado pelo cliente!"
                 )
 
                 // Exibe o Toast e carrega novamente os agendamentos
@@ -202,7 +156,6 @@ class BookingFragment : Fragment() {
                 loadBookings()
             }
             .addOnFailureListener { e ->
-                Log.e("BookingFragment", "Erro ao confirmar agendamento: ${e.message}")
                 Toast.makeText(
                     requireContext(),
                     "Erro ao confirmar agendamento.",
@@ -219,7 +172,7 @@ class BookingFragment : Fragment() {
                 sendNotification(
                     booking.id!!,
                     "Agendamento Cancelado",
-                    "Olá, o agendamento de ${booking.name} foi cancelado!", false
+                    "Olá, o agendamento de ${booking.name} foi cancelado!"
                 )
                 Toast.makeText(
                     requireContext(),
@@ -229,7 +182,6 @@ class BookingFragment : Fragment() {
                 loadBookings()
             }
             .addOnFailureListener { e ->
-                Log.e("BookingFragment", "Erro ao cancelar agendamento: ${e.message}")
                 Toast.makeText(
                     requireContext(),
                     "Erro ao cancelar agendamento.",
@@ -243,8 +195,7 @@ class BookingFragment : Fragment() {
     private fun sendNotification(
         bookingId: String,
         title: String,
-        message: String,
-        notifyAdmin: Boolean
+        message: String
     ) {
         // Buscar o token do administrador
         firestore.collection("bookings").document(bookingId)
@@ -256,15 +207,10 @@ class BookingFragment : Fragment() {
                     if (adminToken != null) {
                         sendFCMNotification(adminToken, title, message)
                     } else {
-                        Log.e(
-                            "FCM",
-                            "Token do administrador não encontrado para a empresa ID: $companyId"
-                        )
                     }
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("FCM", "Erro ao buscar agendamento: ${e.message}")
             }
     }
 
@@ -281,10 +227,6 @@ class BookingFragment : Fragment() {
                 callback(token)
             }
             .addOnFailureListener { e ->
-                Log.e(
-                    "FCM",
-                    "Erro ao buscar token do administrador para empresa $companyId: ${e.message}"
-                )
                 callback(null)
             }
     }
@@ -315,7 +257,6 @@ class BookingFragment : Fragment() {
             }
 
             if (accessToken == null) {
-                Log.e("FCM", "Falha ao obter o token de acesso.")
                 return@launch
             }
 
@@ -325,7 +266,6 @@ class BookingFragment : Fragment() {
                     Log.d("FCM", "Notificação enviada com sucesso: $response")
                 },
                 Response.ErrorListener { error ->
-                    Log.e("FCM", "Erro ao enviar notificação: ${error.message}")
                 }
             ) {
                 override fun getHeaders(): Map<String, String> {
@@ -349,7 +289,8 @@ class BookingFragment : Fragment() {
         val ratingQuality = dialogView.findViewById<RatingBar>(R.id.ratingQuality)
         val ratingPunctuality = dialogView.findViewById<RatingBar>(R.id.ratingPunctuality)
         val ratingService = dialogView.findViewById<RatingBar>(R.id.ratingService)
-        val commentEditText = dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
+        val commentEditText =
+            dialogView.findViewById<EditText>(R.id.commentEditText) // Campo de comentário
         val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
 
         val dialog = AlertDialog.Builder(requireContext())
@@ -370,18 +311,38 @@ class BookingFragment : Fragment() {
         dialog.setOnShowListener {
             // Personalizar o fundo do AlertDialog
             val background = dialog.window?.decorView
-            background?.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.white)) // Fundo branco
+            background?.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.white
+                )
+            ) // Fundo branco
 
             // Ajuste da cor da fonte no EditText (comentário)
-            commentEditText.setTextColor(ContextCompat.getColor(requireContext(), R.color.cinza_escuro)) // Cor cinza
+            commentEditText.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.cinza_escuro
+                )
+            ) // Cor cinza
 
             // Ajuste dos botões
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            positiveButton?.setTextColor(ContextCompat.getColor(requireContext(), R.color.white)) // Cor branca para o texto do botão
+            positiveButton?.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.white
+                )
+            ) // Cor branca para o texto do botão
             positiveButton?.setBackgroundColor(buttonBackgroundColor) // Cor de fundo do botão roxa
 
             val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-            negativeButton?.setTextColor(ContextCompat.getColor(requireContext(), R.color.white)) // Cor branca para o texto do botão
+            negativeButton?.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.white
+                )
+            ) // Cor branca para o texto do botão
             negativeButton?.setBackgroundColor(buttonBackgroundColor) // Cor de fundo do botão roxa
         }
 
@@ -397,7 +358,6 @@ class BookingFragment : Fragment() {
 
         dialog.show()
     }
-
 
 
     private fun saveRatings(
@@ -434,16 +394,10 @@ class BookingFragment : Fragment() {
                         if (!companyId.isNullOrEmpty()) {
                             val averageRating = (quality + punctuality + service) / 3.0
                             updateBusinessRating(companyId, averageRating)
-                        } else {
-                            Log.e(
-                                "saveRatings",
-                                "companyId não encontrado para bookingId: $bookingId"
-                            )
                         }
                     }
             }
             .addOnFailureListener { e ->
-                Log.e("saveRatings", "Erro ao salvar avaliação: ${e.message}")
                 Toast.makeText(requireContext(), "Erro ao salvar avaliação", Toast.LENGTH_SHORT)
                     .show()
             }
@@ -471,7 +425,6 @@ class BookingFragment : Fragment() {
                 "Média de avaliação atualizada com sucesso para companyId: $companyId"
             )
         }.addOnFailureListener { e ->
-            Log.e("updateBusinessRating", "Erro ao atualizar média de avaliação: ${e.message}")
         }
     }
 

@@ -27,7 +27,7 @@
             android:padding="16dp">
 
             <TextView
-                android:id="@+id/bookingUserName"
+                android:id="@+id/companyName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/black"
