@@ -140,6 +140,7 @@ dependencies {
     implementation 'io.grpc:grpc-android:1.62.2'
     // Se necessário, mantenha a versão do grpc-android ou substitua
     implementation "com.airbnb.android:lottie:5.2.0"
+    implementation 'com.github.takusemba:spotlight:2.0.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

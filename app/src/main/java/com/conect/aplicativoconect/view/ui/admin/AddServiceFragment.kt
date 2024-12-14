@@ -22,9 +22,10 @@ class AddServiceFragment : Fragment() {
     private lateinit var addedServicesRecyclerView: RecyclerView
     private lateinit var addedServicesAdapter: AddedServicesAdapter
     private lateinit var firestore: FirebaseFirestore
-    private val addedServices = mutableListOf<Pair<ServiceType, Double>>()
+    private val addedServices = mutableListOf<Triple<ServiceType, Double, Int>>()
     private lateinit var editTextPrice: EditText
     private lateinit var editTextServiceName: EditText
+    private lateinit var editTextDuration: EditText
     private lateinit var buttonSave: Button
     private lateinit var buttonAdd: Button
 
@@ -38,6 +39,7 @@ class AddServiceFragment : Fragment() {
         addedServicesRecyclerView = view.findViewById(R.id.recyclerViewAddedServices)
         editTextPrice = view.findViewById(R.id.editTextPrice)
         editTextServiceName = view.findViewById(R.id.editTextServiceName)
+        editTextDuration = view.findViewById(R.id.editTextDuration) // Campo para duração
         buttonSave = view.findViewById(R.id.buttonSaveServices)
         buttonAdd = view.findViewById(R.id.buttonAddService)
 
@@ -50,16 +52,51 @@ class AddServiceFragment : Fragment() {
         buttonAdd.setOnClickListener { addCustomService() }
         buttonSave.setOnClickListener { saveServices() }
 
-        // Atualizar UI inicial
-        updateAddedServicesRecyclerView()
-        updateUI()
+        // Buscar serviços existentes
+        fetchExistingServices()
 
         return view
     }
 
+
+    private fun fetchExistingServices() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        firestore.collection("business").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                val services = document.get("services") as? List<Map<String, Any>> ?: emptyList()
+
+                // Mapeia os serviços do Firestore para a lista `addedServices`
+                addedServices.clear()
+                addedServices.addAll(
+                    services.map {
+                        Triple(
+                            ServiceType(it["serviceName"] as String),
+                            (it["price"] as Number).toDouble(),
+                            (it["duration"] as Number).toInt()
+                        )
+                    }
+                )
+
+                // Atualiza o RecyclerView
+                updateAddedServicesRecyclerView()
+                updateUI()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao buscar serviços: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+    }
+
+
     private fun addCustomService() {
         val serviceName = editTextServiceName.text.toString().trim()
         val price = editTextPrice.text.toString().toDoubleOrNull()
+        val duration = editTextDuration.text.toString().toIntOrNull()
 
         if (serviceName.isEmpty()) {
             Toast.makeText(requireContext(), "Digite o nome do serviço.", Toast.LENGTH_SHORT).show()
@@ -71,13 +108,23 @@ class AddServiceFragment : Fragment() {
             return
         }
 
+        if (duration == null || duration <= 0) {
+            Toast.makeText(
+                requireContext(),
+                "Digite uma duração válida em minutos.",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
         // Adicionar o serviço à lista
-        addedServices.add(Pair(ServiceType(serviceName), price))
+        addedServices.add(Triple(ServiceType(serviceName), price, duration))
         updateAddedServicesRecyclerView()
 
         // Limpar os campos
         editTextServiceName.text.clear()
         editTextPrice.text.clear()
+        editTextDuration.text.clear()
         hideKeyboard()
         updateUI()
     }
@@ -105,7 +152,8 @@ class AddServiceFragment : Fragment() {
             val serviceData = addedServices.map { service ->
                 hashMapOf(
                     "serviceName" to service.first.name,
-                    "price" to service.second
+                    "price" to service.second,
+                    "duration" to service.third // Salva a duração do serviço
                 )
             }
 

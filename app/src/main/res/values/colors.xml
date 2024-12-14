@@ -26,7 +26,7 @@
     <color name="textSecondary">#757575</color>
     <color name="gradientStart">#4A00E0</color>
     <color name="gradientEnd">#8E2DE2</color>
-
+    <color name="black_overlay">#B3000000</color>
     <color name="background_color">#F8F9FA</color>
     <color name="card_background">#FFFFFF</color>
     <color name="text_primary">#212121</color>

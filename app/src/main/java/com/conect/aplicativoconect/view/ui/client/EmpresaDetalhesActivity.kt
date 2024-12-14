@@ -1,7 +1,8 @@
 package com.conect.aplicativoconect.view.ui.client
 
-import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
@@ -179,14 +180,22 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                     if (document.exists()) {
                         updateUIWithCompanyDetails(document)
                     } else {
-                        Toast.makeText(this@EmpresaDetalhesActivity, "Empresa não encontrada", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@EmpresaDetalhesActivity,
+                            "Empresa não encontrada",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         finish()
                     }
                 }
             } catch (e: Exception) {
                 Log.e("EmpresaDetalhesActivity", "Erro ao carregar empresa: ${e.message}")
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EmpresaDetalhesActivity, "Erro ao carregar dados", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@EmpresaDetalhesActivity,
+                        "Erro ao carregar dados",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     finish()
                 }
             }
@@ -201,7 +210,7 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
         val opening = operatingHoursMap?.get("opening") ?: "N/A"
         val closing = operatingHoursMap?.get("closing") ?: "N/A"
         val operatingHours = "Horário: $opening - $closing"
-        val category = document.getString("serviceType") ?: "Categoria não informada"
+        val address = document.getString("address") ?: "não informado"
 
         findViewById<TextView>(R.id.companyName).text = companyName
         findViewById<TextView>(R.id.companyDescription).apply {
@@ -209,10 +218,33 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
             gravity = android.view.Gravity.CENTER // Centraliza o texto
         }
         findViewById<TextView>(R.id.companyOperatingHours).text = operatingHours
-        findViewById<TextView>(R.id.companyCategory).text = category
+
+        val addressTextView = findViewById<TextView>(R.id.address)
+        addressTextView.text = "Endereço: $address"
+
+        // Adiciona o OnClickListener para abrir o Google Maps
+        addressTextView.setOnClickListener {
+            openGoogleMaps(address)
+        }
 
         val profileImageView = findViewById<ImageView>(R.id.companyProfileImage)
         loadImage(profileImageUrl, profileImageView)
+    }
+
+    // Função para abrir o Google Maps com o endereço fornecido
+    private fun openGoogleMaps(address: String) {
+        if (address.isNotBlank() && address != "não informado") {
+            val uri = Uri.parse("geo:0,0?q=${Uri.encode(address)}")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            intent.setPackage("com.google.android.apps.maps")
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Google Maps não está instalado", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(this, "Endereço inválido", Toast.LENGTH_SHORT).show()
+        }
     }
 
 

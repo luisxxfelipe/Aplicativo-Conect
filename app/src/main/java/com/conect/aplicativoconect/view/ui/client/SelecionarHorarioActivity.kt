@@ -3,7 +3,6 @@ package com.conect.aplicativoconect.view.ui.client
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -19,7 +18,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 class SelecionarHorarioActivity : AppCompatActivity() {
@@ -170,23 +168,84 @@ class SelecionarHorarioActivity : AppCompatActivity() {
     }
 
     private fun generateAvailableHours(bookedHours: List<String>): List<String> {
-        val openingTime = operatingHours["opening"] as? String ?: "09:00"
+        val openingTime = operatingHours["opening"] as? String ?: "06:00"
         val closingTime = operatingHours["closing"] as? String ?: "18:00"
+        val lunchStart = "12:00"
+        val lunchEnd = "13:00"
+        val serviceDuration = selectedService.duration ?: 30 // Duração em minutos
 
-        val openingHour = openingTime.split(":")[0].toInt()
-        val closingHour = closingTime.split(":")[0].toInt()
+        val availableSlots = mutableListOf<String>()
 
-        val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val isToday =
-            selectedDate == SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+        // Horários antes do almoço
+        availableSlots.addAll(
+            generateTimeSlotsDynamic(openingTime, lunchStart, serviceDuration, bookedHours)
+        )
 
-        val allHours =
-            (openingHour until closingHour).map { hour -> String.format("%02d:00", hour) }
+        // Horários após o almoço
+        availableSlots.addAll(
+            generateTimeSlotsDynamic(lunchEnd, closingTime, serviceDuration, bookedHours)
+        )
 
-        return allHours.filter { hour ->
-            (!isToday || hour.split(":")[0].toInt() > currentHour) && !bookedHours.contains(hour)
-        }
+        return availableSlots
     }
+
+    private fun generateTimeSlotsDynamic(
+        start: String,
+        end: String,
+        duration: Int,
+        bookedHours: List<String>
+    ): List<String> {
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val slots = mutableListOf<String>()
+
+        var current = timeFormat.parse(start)
+        val endTime = timeFormat.parse(end)
+
+        while (current.before(endTime)) {
+            val formattedSlot = timeFormat.format(current)
+
+            // Verifica se o bloco atual está livre
+            if (!isSlotOverlapping(formattedSlot, duration, bookedHours, timeFormat)) {
+                slots.add(formattedSlot)
+            }
+
+            // Incrementa pelo tempo de duração do serviço
+            val calendar = Calendar.getInstance()
+            calendar.time = current
+            calendar.add(Calendar.MINUTE, duration)
+            current = calendar.time
+        }
+
+        return slots
+    }
+
+    // Função para verificar sobreposição de horários
+    private fun isSlotOverlapping(
+        slot: String,
+        duration: Int,
+        bookedHours: List<String>,
+        timeFormat: SimpleDateFormat
+    ): Boolean {
+        val slotStart = timeFormat.parse(slot)
+        val calendar = Calendar.getInstance()
+        calendar.time = slotStart
+        calendar.add(Calendar.MINUTE, duration)
+        val slotEnd = calendar.time
+
+        for (booked in bookedHours) {
+            val bookedStart = timeFormat.parse(booked)
+            calendar.time = bookedStart
+            calendar.add(Calendar.MINUTE, duration)
+            val bookedEnd = calendar.time
+
+            if (slotStart.before(bookedEnd) && slotEnd.after(bookedStart)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
 
     private fun showHourSelectionDialog(availableHours: List<String>) {
         if (availableHours.isEmpty()) {
@@ -242,8 +301,6 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 val timestamp =
                     dateTimeFormat.parse(dateTimeString)?.time ?: System.currentTimeMillis()
-
-                Log.d("ScheduleAppointment", "Timestamp calculado: $timestamp ($dateTimeString)")
 
                 // Criar os dados do agendamento
                 val bookingData = mapOf(

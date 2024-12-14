@@ -1,8 +1,8 @@
 package com.conect.aplicativoconect.view.ui.client
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -65,10 +65,18 @@ class BookingFragment : Fragment() {
             onConfirmClick = { booking -> confirmBooking(booking) },
             onCancelClick = { booking -> cancelBooking(booking) },
             onRateClick = { booking -> showRatingPopup(booking) },
-            onEmptyList = { showEmptyBookingsMessage(true) }
+            onEmptyList = { showEmptyBookingsMessage(true) },
+            onCardClick = { companyId -> openCompanyDetails(companyId) }
         )
 
         bookingsRecyclerView.adapter = bookingsAdapter
+    }
+
+    private fun openCompanyDetails(companyId: String) {
+        val intent = Intent(requireContext(), EmpresaDetalhesActivity::class.java).apply {
+            putExtra("companyId", companyId)
+        }
+        startActivity(intent)
     }
 
     private fun loadBookings() {
@@ -220,10 +228,6 @@ class BookingFragment : Fragment() {
             .get()
             .addOnSuccessListener { document ->
                 val token = document.getString("fcmToken")
-                Log.d(
-                    "FCM",
-                    "Token do administrador para empresa $companyId: $token"
-                ) // Loga o token
                 callback(token)
             }
             .addOnFailureListener { e ->
@@ -263,7 +267,6 @@ class BookingFragment : Fragment() {
             val request = object : StringRequest(
                 Method.POST, url,
                 Response.Listener { response ->
-                    Log.d("FCM", "Notificação enviada com sucesso: $response")
                 },
                 Response.ErrorListener { error ->
                 }
@@ -381,15 +384,10 @@ class BookingFragment : Fragment() {
         firestore.collection("bookings").document(bookingId)
             .update("rating", ratingData)
             .addOnSuccessListener {
-                Log.d(
-                    "saveRatings",
-                    "Avaliação e comentário salvos com sucesso para bookingId: $bookingId"
-                )
 
                 firestore.collection("bookings").document(bookingId).get()
                     .addOnSuccessListener { bookingSnapshot ->
                         val companyId = bookingSnapshot.getString("companyId")
-                        Log.d("saveRatings", "companyId encontrado: $companyId")
 
                         if (!companyId.isNullOrEmpty()) {
                             val averageRating = (quality + punctuality + service) / 3.0
@@ -420,10 +418,7 @@ class BookingFragment : Fragment() {
             transaction.update(businessRef, "averageRating", updatedAverageRating)
             transaction.update(businessRef, "ratingCount", updatedRatingCount)
         }.addOnSuccessListener {
-            Log.d(
-                "updateBusinessRating",
-                "Média de avaliação atualizada com sucesso para companyId: $companyId"
-            )
+
         }.addOnFailureListener { e ->
         }
     }

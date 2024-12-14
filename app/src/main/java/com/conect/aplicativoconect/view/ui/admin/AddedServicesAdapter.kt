@@ -12,7 +12,7 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.ServiceType
 
 class AddedServicesAdapter(
-    private val addedServices: MutableList<Pair<ServiceType, Double>>,
+    private val addedServices: MutableList<Triple<ServiceType, Double, Int>>,
     private val onRemoveService: (Int) -> Unit // Lambda para remover serviço
 ) : RecyclerView.Adapter<AddedServicesAdapter.AddedServiceViewHolder>() {
 
@@ -20,12 +20,15 @@ class AddedServicesAdapter(
         private val serviceNameTextView: TextView = itemView.findViewById(R.id.textViewServiceName)
         private val servicePriceEditText: EditText =
             itemView.findViewById(R.id.editTextServicePrice)
+        private val serviceDurationEditText: EditText =
+            itemView.findViewById(R.id.editTextServiceDuration)
         private val removeServiceButton: ImageButton =
             itemView.findViewById(R.id.buttonRemoveService)
 
-        fun bind(service: Pair<ServiceType, Double>, position: Int) {
+        fun bind(service: Triple<ServiceType, Double, Int>, position: Int) {
             serviceNameTextView.text = service.first.name
             servicePriceEditText.setText(service.second.toString())
+            serviceDurationEditText.setText(service.third.toString())
 
             // Define um listener para o botão de remoção
             removeServiceButton.setOnClickListener {
@@ -38,7 +41,8 @@ class AddedServicesAdapter(
                     val newPrice = servicePriceEditText.text.toString().toDoubleOrNull()
                     if (newPrice != null && newPrice >= 0) {
                         // Atualiza o preço se for válido
-                        addedServices[position] = Pair(service.first, newPrice)
+                        addedServices[position] =
+                            Triple(service.first, newPrice, service.third)
                     } else {
                         // Exibe uma mensagem de erro se o preço for inválido
                         Toast.makeText(
@@ -49,6 +53,28 @@ class AddedServicesAdapter(
 
                         // Restaura o valor anterior no campo de texto
                         servicePriceEditText.setText(service.second.toString())
+                    }
+                }
+            }
+
+            // Valida e atualiza a duração quando o campo perde o foco
+            serviceDurationEditText.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    val newDuration = serviceDurationEditText.text.toString().toIntOrNull()
+                    if (newDuration != null && newDuration > 0) {
+                        // Atualiza a duração se for válida
+                        addedServices[position] =
+                            Triple(service.first, service.second, newDuration)
+                    } else {
+                        // Exibe uma mensagem de erro se a duração for inválida
+                        Toast.makeText(
+                            itemView.context,
+                            "Por favor, insira uma duração válida em minutos.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        // Restaura o valor anterior no campo de texto
+                        serviceDurationEditText.setText(service.third.toString())
                     }
                 }
             }

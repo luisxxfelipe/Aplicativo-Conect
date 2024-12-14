@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -35,15 +36,32 @@
         android:text="Horário: 8:00 - 18:00"
         android:textSize="14sp" />
 
-    <!-- Categoria -->
-    <TextView
-        android:id="@+id/companyCategory"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="4dp"
-        android:text="Categoria: Estética"
-        android:textSize="14sp" />
+        android:orientation="horizontal">
+
+        <!-- TextView para o endereço -->
+        <TextView
+            android:id="@+id/address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="Endereço"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- Ícone do Google Maps -->
+        <ImageView
+            android:id="@+id/googleMapsIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="Abrir no Google Maps"
+            app:srcCompat="@drawable/ic_maps_foreground" />
+    </LinearLayout>
+
 
     <!-- Descrição da empresa -->
     <TextView
@@ -51,9 +69,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
         android:text="Descrição do trabalho da empresa"
-        android:textSize="16sp"
-        android:gravity="center" />
+        android:textSize="16sp" />
 
 
     <!-- Tabs de navegação -->

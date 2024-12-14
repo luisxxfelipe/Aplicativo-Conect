@@ -38,7 +38,8 @@ class AddServiceDialogFragment : DialogFragment() {
         // Recupera o UID do usuário logado como companyId
         companyId = FirebaseAuth.getInstance().currentUser?.uid
         if (companyId.isNullOrEmpty()) {
-            Toast.makeText(requireContext(), "Erro: Usuário não autenticado.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Erro: Usuário não autenticado.", Toast.LENGTH_SHORT)
+                .show()
             dismiss()
             return null
         }
@@ -54,7 +55,10 @@ class AddServiceDialogFragment : DialogFragment() {
         addServiceButton.setOnClickListener {
             val fragment = AddServiceFragment().apply {
                 arguments = Bundle().apply {
-                    putString("companyId", companyId) // Passa o companyId diretamente para o fragmento
+                    putString(
+                        "companyId",
+                        companyId
+                    ) // Passa o companyId diretamente para o fragmento
                 }
             }
             val transaction = requireActivity().supportFragmentManager.beginTransaction()
@@ -67,7 +71,10 @@ class AddServiceDialogFragment : DialogFragment() {
         adjustHoursButton.setOnClickListener {
             val fragment = OperatingHoursFragment().apply {
                 arguments = Bundle().apply {
-                    putString("companyId", companyId) // Passa o companyId diretamente para o fragmento
+                    putString(
+                        "companyId",
+                        companyId
+                    ) // Passa o companyId diretamente para o fragmento
                 }
             }
             val transaction = requireActivity().supportFragmentManager.beginTransaction()
@@ -98,22 +105,22 @@ class AddServiceDialogFragment : DialogFragment() {
                     if (!services.isNullOrEmpty()) {
                         // Processa e exibe os serviços encontrados
                         val serviceList = services.map { service ->
-                            val serviceName = service["serviceName"] as? String ?: "Serviço sem nome"
+                            val serviceName =
+                                service["serviceName"] as? String ?: "Serviço sem nome"
                             val price = (service["price"] as? Number)?.toDouble() ?: 0.0
                             "Serviço: $serviceName, Preço: R$ $price"
                         }
-                        // Mostra os serviços carregados em um Toast ou adiciona à interface
-                        Toast.makeText(
-                            requireContext(),
-                            serviceList.joinToString("\n"),
-                            Toast.LENGTH_LONG
-                        ).show()
                     } else {
                         // Lista de serviços está vazia
-                        Toast.makeText(requireContext(), "Nenhum serviço encontrado.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Nenhum serviço encontrado.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Empresa não encontrada.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Empresa não encontrada.", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
             .addOnFailureListener { exception ->

@@ -23,6 +23,7 @@ class ClientBookingAdapter(
     private val onConfirmClick: (Booking) -> Unit,
     private val onRateClick: (Booking) -> Unit = {},
     private val onCancelClick: (Booking) -> Unit,
+    private val onCardClick: (String) -> Unit,
     private val onEmptyList: () -> Unit
 ) : RecyclerView.Adapter<ClientBookingAdapter.ClientBookingViewHolder>() {
 
@@ -52,6 +53,14 @@ class ClientBookingAdapter(
         holder.bookingServiceType.text = booking.serviceName
         holder.bookingDate.text = booking.date
         holder.bookingTime.text = "${booking.hour}h"
+
+
+        // Configuração do clique no card para abrir detalhes
+        holder.itemView.setOnClickListener {
+            booking.companyId?.let { companyId -> // Certifique-se de que o `companyId` está presente
+                onCardClick(companyId) // Chama a função de clique com o ID da empresa
+            }
+        }
 
         // Configuração do ícone do WhatsApp
         holder.whatsappIcon.setOnClickListener {

@@ -99,6 +99,25 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="Telefone"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/roxo"
+            app:hintTextColor="@color/roxo">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/phoneInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:inputType="textEmailAddress"
+                android:padding="12dp"
+                android:textColor="@color/black" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:hint="Senha"
             app:boxBackgroundMode="outline"
             app:boxStrokeColor="@color/roxo"

@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.data.model
 
 data class Booking(
     val name: String? = null,
+    val phoneCliente: String = "",
     var id: String? = null,
     val date: String? = null,
     val hour: String = "",

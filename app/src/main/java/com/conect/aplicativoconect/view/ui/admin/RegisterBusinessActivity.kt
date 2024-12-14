@@ -169,11 +169,22 @@ class RegisterBusinessActivity : AppCompatActivity(),
             val phone = phoneInput.text.toString().trim()
 
             // Validação dos inputs
-            if (!validateInputs(businessName, businessDescription, address, phone, email)) return@setOnClickListener
+            if (!validateInputs(
+                    businessName,
+                    businessDescription,
+                    address,
+                    phone,
+                    email
+                )
+            ) return@setOnClickListener
 
             // Verifica se há uma imagem selecionada, caso contrário exibe mensagem
             if (imageUri == null) {
-                Toast.makeText(this, "Por favor, selecione uma imagem para a empresa.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Por favor, selecione uma imagem para a empresa.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
@@ -216,14 +227,27 @@ class RegisterBusinessActivity : AppCompatActivity(),
             cleanPhone.length <= 2 -> {
                 "($cleanPhone"
             }
+
             cleanPhone.length in 3..6 -> {
                 "(${cleanPhone.substring(0, 2)}) ${cleanPhone.substring(2)}"
             }
+
             cleanPhone.length in 7..10 -> {
-                "(${cleanPhone.substring(0, 2)}) ${cleanPhone.substring(2, 7)}-${cleanPhone.substring(7)}"
+                "(${cleanPhone.substring(0, 2)}) ${
+                    cleanPhone.substring(
+                        2,
+                        7
+                    )
+                }-${cleanPhone.substring(7)}"
             }
+
             else -> {
-                "(${cleanPhone.substring(0, 2)}) ${cleanPhone.substring(2, 7)}-${cleanPhone.substring(7, 11)}"
+                "(${cleanPhone.substring(0, 2)}) ${
+                    cleanPhone.substring(
+                        2,
+                        7
+                    )
+                }-${cleanPhone.substring(7, 11)}"
             }
         }
     }
@@ -386,7 +410,8 @@ class RegisterBusinessActivity : AppCompatActivity(),
                             ).show()
                         }
                     } else {
-                        Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             }
@@ -394,8 +419,10 @@ class RegisterBusinessActivity : AppCompatActivity(),
     }
 
 
-
-    private fun fetchCoordinatesAsync(address: String, callback: (Double?, Double?, String?) -> Unit) {
+    private fun fetchCoordinatesAsync(
+        address: String,
+        callback: (Double?, Double?, String?) -> Unit
+    ) {
         val geocoder = Geocoder(this, Locale.getDefault())
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -403,7 +430,8 @@ class RegisterBusinessActivity : AppCompatActivity(),
                 withContext(Dispatchers.Main) {
                     if (!addresses.isNullOrEmpty()) {
                         val location = addresses[0]
-                        val cityName = location.locality ?: location.subAdminArea // Obtém o nome da cidade
+                        val cityName =
+                            location.locality ?: location.subAdminArea // Obtém o nome da cidade
                         callback(location.latitude, location.longitude, cityName)
                     } else {
                         callback(null, null, null)

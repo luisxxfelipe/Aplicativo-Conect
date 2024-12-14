@@ -3,12 +3,20 @@ package com.conect.aplicativoconect.view.ui.admin
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
+import android.view.Gravity
+import android.view.View
+import android.view.animation.DecelerateInterpolator
+import android.widget.FrameLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.ui.WelcomeActivity
@@ -17,6 +25,8 @@ import com.google.androidbrowserhelper.playbilling.provider.PaymentActivity
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.takusemba.spotlight.Spotlight
+import com.takusemba.spotlight.shape.Circle
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -43,6 +53,95 @@ class AdminHomeActivity : AppCompatActivity() {
         }
 
         setupBottomNavigation()
+
+        // Verifique se veio de RegisterBusiness
+        val fromRegisterBusiness = intent.getBooleanExtra("FROM_REGISTER", false)
+        if (fromRegisterBusiness) {
+            showAddServiceTooltip()
+        }
+    }
+
+    private fun showAddServiceTooltip() {
+        val addServiceButton = findViewById<View>(R.id.navigation_add_service)
+
+        // Garante que o layout foi desenhado antes de calcular as coordenadas
+        addServiceButton.doOnPreDraw {
+            // Calcula a posição do botão
+            val location = IntArray(2)
+            addServiceButton.getLocationOnScreen(location)
+            val anchorX = location[0] + addServiceButton.width / 2f
+            val anchorY = location[1] + addServiceButton.height / 2f - 50f // Ajuste vertical
+
+            // Criação do overlay
+            val overlayContainer = FrameLayout(this).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            }
+
+            // Título (texto principal)
+            val titleText = TextView(this).apply {
+                text = "Adicione seus serviços"
+                setTextColor(Color.WHITE)
+                textSize = 35f
+                gravity = Gravity.CENTER
+                setPadding(20, 50, 20, 0)
+            }
+
+            // Descrição (texto secundário)
+            val descriptionText = TextView(this).apply {
+                text =
+                    "\n\n\n\n\n\nClique aqui para cadastrar os serviços oferecidos pelo seu estabelecimento."
+                setTextColor(Color.LTGRAY)
+                textSize = 20f
+                gravity = Gravity.CENTER
+                setPadding(20, 10, 20, 0)
+            }
+
+            // Adiciona os componentes ao container
+            overlayContainer.addView(titleText)
+            overlayContainer.addView(descriptionText)
+
+            // Criação do Target
+            val target = com.takusemba.spotlight.Target.Builder()
+                .setAnchor(anchorX, anchorY) // Define a posição exata no menu inferior
+                .setShape(Circle(150f)) // Raio do círculo de destaque
+                .setOverlay(overlayContainer) // Define o overlay configurado
+                .setOnTargetListener(object : com.takusemba.spotlight.OnTargetListener {
+                    override fun onStarted() {
+                    }
+
+                    override fun onEnded() {
+                    }
+                })
+                .build()
+
+            // Criação do Spotlight
+            val spotlight = Spotlight.Builder(this)
+                .setTargets(target) // Adiciona o target configurado
+                .setContainer(findViewById(android.R.id.content)) // Define o container raiz
+                .setDuration(1000L) // Duração da animação de entrada
+                .setAnimation(DecelerateInterpolator(2f)) // Animação suave
+                .setOnSpotlightListener(object : com.takusemba.spotlight.OnSpotlightListener {
+                    override fun onStarted() {
+                        // Callback quando o Spotlight é iniciado
+                    }
+
+                    override fun onEnded() {
+                        // Callback quando o Spotlight termina
+                    }
+                })
+                .build()
+
+            // Inicia o Spotlight
+            spotlight.start()
+
+            // Auto-fechamento após 6 segundos
+            Handler(Looper.getMainLooper()).postDelayed({
+                spotlight.finish()
+            }, 6000)
+        }
     }
 
     private fun fetchCompanyIdAndCheckSubscription() {
@@ -72,11 +171,6 @@ class AdminHomeActivity : AppCompatActivity() {
                         if (isTrialActive) {
                             val daysLeftInTrial = daysUntil(endDate)
                             if (daysLeftInTrial > 0) {
-                                Toast.makeText(
-                                    this,
-                                    "Você está no período de teste. Dias restantes: $daysLeftInTrial",
-                                    Toast.LENGTH_LONG
-                                ).show()
                                 return@addOnSuccessListener
                             } else {
                                 // Período de teste expirado
@@ -121,7 +215,6 @@ class AdminHomeActivity : AppCompatActivity() {
                 }
         }
     }
-
 
 
     private fun daysUntil(endDate: Timestamp): Long {

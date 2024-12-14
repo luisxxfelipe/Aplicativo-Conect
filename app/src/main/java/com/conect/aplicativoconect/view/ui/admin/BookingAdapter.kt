@@ -2,12 +2,16 @@ package com.conect.aplicativoconect.view.ui.admin
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -48,6 +52,7 @@ class BookingAdapter(
         val notCompletedButton: Button = view.findViewById(R.id.notCompletedButton)
         val cancelButton: Button = view.findViewById(R.id.cancelButton)
         val userImageView: CircleImageView = view.findViewById(R.id.userImageView)
+        val whatsappIcon: ImageView = itemView.findViewById(R.id.whatsappIcon)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookingViewHolder {
@@ -63,6 +68,20 @@ class BookingAdapter(
         holder.date.text = booking.date
         holder.serviceType.text = booking.serviceName
         holder.bookingTime.text = "${booking.hour}h"
+
+        // Configuração do ícone do WhatsApp
+        holder.whatsappIcon.setOnClickListener {
+            Log.d("ClientBookingAdapter", "Ícone de WhatsApp clicado para ${booking.name}")
+            val businessPhoneNumber = formatPhoneNumber(booking.phoneCliente)
+            if (businessPhoneNumber != null) {
+                val message =
+                    "Olá ${booking.name}, aqui é do estabelecimento ${booking.companyName}. Queria conversar sobre seu agendamento."
+                openWhatsApp(businessPhoneNumber, message)
+            } else {
+                Toast.makeText(context, "Número de telefone inválido", Toast.LENGTH_SHORT).show()
+                Log.e("BusinessAdapter", "Número de telefone inválido: ${booking.phoneCliente}")
+            }
+        }
 
         // Carregar a imagem do usuário usando Glide
         Glide.with(context)
@@ -217,18 +236,28 @@ class BookingAdapter(
         }
     }
 
-    fun addBookings(newBookings: List<Booking>) {
-        val currentBookings = bookings.toMutableList()
+    // Formata o número de telefone para o padrão internacional
+    private fun formatPhoneNumber(phoneNumber: String?): String? {
+        if (phoneNumber.isNullOrEmpty()) return null
+        val sanitizedNumber = phoneNumber.replace("[^\\d]".toRegex(), "")
+        return if (sanitizedNumber.startsWith("55")) sanitizedNumber else "55$sanitizedNumber"
+    }
 
-        // Verifica se o agendamento já existe antes de adicionar
-        newBookings.forEach { newBooking ->
-            if (!currentBookings.any { it.id == newBooking.id }) {
-                currentBookings.add(newBooking)
-            }
+    // Abre o WhatsApp com o número de telefone e a mensagem
+    private fun openWhatsApp(phoneNumber: String, message: String) {
+        val uri = Uri.parse("https://wa.me/$phoneNumber?text=${Uri.encode(message)}")
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Erro ao abrir WhatsApp. Certifique-se de que o aplicativo está instalado.",
+                Toast.LENGTH_SHORT
+            ).show()
+            Log.e("BusinessAdapter", "Erro ao abrir WhatsApp: ${e.message}")
         }
-
-        bookings = currentBookings
-        notifyItemRangeInserted(currentBookings.size - newBookings.size, newBookings.size)
     }
 
 

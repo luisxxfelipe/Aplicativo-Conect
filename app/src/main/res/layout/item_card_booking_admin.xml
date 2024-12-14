@@ -68,16 +68,35 @@
                         android:layout_height="wrap_content"
                         android:textColor="@color/black"
                         android:textSize="15sp" />
+
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/bookingTime"
+                <!-- Novo Layout para Hora e Ícone do WhatsApp -->
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textColor="@color/black"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:gravity="end"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/bookingTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <!-- Ícone do WhatsApp -->
+                    <ImageView
+                        android:id="@+id/whatsappIcon"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="4dp"
+                        android:contentDescription="Converse com o responsável pelo agendamento"
+                        android:src="@drawable/ic_whatsapp" />
+                </LinearLayout>
+
             </LinearLayout>
 
             <LinearLayout

@@ -133,7 +133,8 @@ class ClientViewModel : ViewModel() {
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val bookingDocument = firestore.collection("bookings").document(bookingId).get().await()
+                val bookingDocument =
+                    firestore.collection("bookings").document(bookingId).get().await()
                 val companyId = bookingDocument.getString("companyId") ?: return@launch
 
                 val adminToken = fetchBusinessToken(companyId)
@@ -233,7 +234,8 @@ class ClientViewModel : ViewModel() {
                 firestore.collection("bookings").document(bookingId)
                     .update("rating", ratingData).await()
 
-                val bookingSnapshot = firestore.collection("bookings").document(bookingId).get().await()
+                val bookingSnapshot =
+                    firestore.collection("bookings").document(bookingId).get().await()
                 val companyId = bookingSnapshot.getString("companyId")
 
                 companyId?.let {
@@ -242,7 +244,8 @@ class ClientViewModel : ViewModel() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Avaliação salva com sucesso!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Avaliação salva com sucesso!", Toast.LENGTH_SHORT)
+                        .show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {

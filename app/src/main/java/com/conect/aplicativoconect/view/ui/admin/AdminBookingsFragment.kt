@@ -75,8 +75,8 @@ class AdminBookingsFragment : Fragment() {
             try {
                 // Consulta diretamente na coleção 'bookings' usando o currentUserUid como companyId
                 val bookingsSnapshot = firestore.collection("bookings")
-                    .whereEqualTo("companyId", currentUserUid) // Usando diretamente o UID do usuário logado
-                    .orderBy("timestamp", Query.Direction.ASCENDING) // Ordena por timestamp
+                    .whereEqualTo("companyId", currentUserUid)
+                    .orderBy("timestamp", Query.Direction.ASCENDING)
                     .get()
                     .await()
 
@@ -90,11 +90,11 @@ class AdminBookingsFragment : Fragment() {
 
                 withContext(Dispatchers.Main) {
                     if (bookings.isEmpty()) {
+                        Log.d("AdminBookingsFragment", "Nenhum agendamento encontrado.")
                         showEmptyMessage(true)
                     } else {
+                        Log.d("AdminBookingsFragment", "Exibindo ${bookings.size} agendamentos.")
                         bookingsAdapter.updateData(bookings)
-                        bookingsRecyclerView.visibility = View.VISIBLE
-                        bookingsTitle.visibility = View.VISIBLE
                         showEmptyMessage(false)
                     }
                 }
@@ -104,6 +104,20 @@ class AdminBookingsFragment : Fragment() {
                     showEmptyMessage(true)
                 }
             }
+        }
+    }
+
+    private fun showEmptyMessage(show: Boolean) {
+        if (show) {
+            Log.d("AdminBookingsFragment", "Exibindo mensagem de vazio.")
+            bookingsRecyclerView.visibility = View.GONE
+            bookingsTitle.visibility = View.GONE
+            view?.findViewById<View>(R.id.emptyBookingsLayout)?.visibility = View.VISIBLE
+        } else {
+            Log.d("AdminBookingsFragment", "Ocultando mensagem de vazio.")
+            bookingsRecyclerView.visibility = View.VISIBLE
+            bookingsTitle.visibility = View.VISIBLE
+            view?.findViewById<View>(R.id.emptyBookingsLayout)?.visibility = View.GONE
         }
     }
 
@@ -131,13 +145,6 @@ class AdminBookingsFragment : Fragment() {
         } catch (e: Exception) {
             null
         }
-    }
-
-    private fun showEmptyMessage(show: Boolean) {
-        emptyBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
-        emptyBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
-        bookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
-        bookingsTitle.visibility = if (show) View.GONE else View.VISIBLE
     }
 
     private fun confirmBooking(bookingId: String) {

@@ -144,7 +144,8 @@ class ClienteHomeActivity : AppCompatActivity() {
         args?.let { fragment.arguments = it }
 
         val fragmentTransaction = supportFragmentManager.beginTransaction()
-        val existingFragment = supportFragmentManager.findFragmentByTag(fragment.javaClass.simpleName)
+        val existingFragment =
+            supportFragmentManager.findFragmentByTag(fragment.javaClass.simpleName)
 
         supportFragmentManager.fragments.forEach { frag ->
             fragmentTransaction.hide(frag)
@@ -153,7 +154,11 @@ class ClienteHomeActivity : AppCompatActivity() {
         if (existingFragment != null) {
             fragmentTransaction.show(existingFragment)
         } else {
-            fragmentTransaction.add(R.id.fragment_container, fragment, fragment.javaClass.simpleName)
+            fragmentTransaction.add(
+                R.id.fragment_container,
+                fragment,
+                fragment.javaClass.simpleName
+            )
         }
 
         fragmentTransaction.commit()
@@ -206,14 +211,15 @@ class ClienteHomeActivity : AppCompatActivity() {
             if (!::clientBookingAdapter.isInitialized) {
                 clientBookingAdapter = ClientBookingAdapter(
                     context = this,
-                    bookings = bookings.toMutableList(), // Passa uma lista mutável
+                    bookings = bookings.toMutableList(),
                     onConfirmClick = { booking ->
                         clientViewModel.confirmBooking(booking, this)
                     },
                     onCancelClick = { booking ->
                         clientViewModel.cancelBooking(booking, this)
                     },
-                    onEmptyList = { showNoBookingsMessage() }
+                    onEmptyList = { showNoBookingsMessage() },
+                    onCardClick = { companyId -> openCompanyDetails(companyId) } // Adiciona o clique no card
                 )
                 recyclerView?.layoutManager = LinearLayoutManager(this)
                 recyclerView?.adapter = clientBookingAdapter
@@ -221,6 +227,13 @@ class ClienteHomeActivity : AppCompatActivity() {
                 clientBookingAdapter.updateData(bookings)
             }
         }
+    }
+
+    private fun openCompanyDetails(companyId: String) {
+        val intent = Intent(this, EmpresaDetalhesActivity::class.java).apply {
+            putExtra("companyId", companyId)
+        }
+        startActivity(intent)
     }
 
     private fun showNoBookingsMessage() {

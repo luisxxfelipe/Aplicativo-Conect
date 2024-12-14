@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings.Secure
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -33,6 +35,7 @@ class SignupClientActivity : AppCompatActivity() {
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
+    private lateinit var phoneEditText: EditText
     private lateinit var nameEditText: EditText
     private lateinit var signUpButton: Button
     private lateinit var loginTextView: TextView
@@ -56,6 +59,8 @@ class SignupClientActivity : AppCompatActivity() {
         passwordEditText = findViewById(R.id.passwordInput)
         confirmPasswordEditText = findViewById(R.id.confirmPasswordInput)
         nameEditText = findViewById(R.id.nameInput)
+        phoneEditText = findViewById(R.id.phoneInput)
+        applyPhoneMask(phoneEditText)
         signUpButton = findViewById(R.id.signupButton)
         loginTextView = findViewById(R.id.loginTextView)
         profileImageView = findViewById(R.id.profileImageView) // Adicione o ImageView no seu layout
@@ -89,14 +94,15 @@ class SignupClientActivity : AppCompatActivity() {
         signUpButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
+            val phone = phoneEditText.text.toString().trim()
             val confirmPassword = confirmPasswordEditText.text.toString().trim()
             val name = nameEditText.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty()) {
+            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty() && phone.isNotEmpty()) {
 
                 if (password == confirmPassword) {
                     progressDialog.show() // Mostrar progresso
-                    createUser(email, password, name)
+                    createUser(email, password, name, phone)
                 } else {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
@@ -113,6 +119,40 @@ class SignupClientActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyPhoneMask(editText: EditText) {
+        editText.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            private val mask = "(##) #####-####"
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isUpdating) return
+                isUpdating = true
+
+                val unmasked = s.toString().replace("[^\\d]".toRegex(), "")
+                val masked = StringBuilder()
+                var i = 0
+
+                for (char in mask) {
+                    if (char != '#' && unmasked.length > i) {
+                        masked.append(char)
+                    } else if (i < unmasked.length) {
+                        masked.append(unmasked[i])
+                        i++
+                    }
+                }
+
+                editText.setText(masked.toString())
+                editText.setSelection(masked.length)
+                isUpdating = false
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+
     private fun setupProgressDialog() {
         val builder = AlertDialog.Builder(this)
         val inflater = LayoutInflater.from(this)
@@ -128,37 +168,44 @@ class SignupClientActivity : AppCompatActivity() {
         getContent.launch(intent)
     }
 
-    private fun createUser(email: String, password: String, name: String) {
+    private fun createUser(email: String, password: String, name: String, phone: String) {
         progressDialog.show() // Mostrar progresso ao iniciar a criação do usuário
 
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
+        // Obter o Android ID
+        val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
 
-                    val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+        // Verifica se o Android ID já está registrado
+        checkIfAndroidIdExists(androidId) { exists ->
+            if (exists) {
+                progressDialog.dismiss() // Fechar progresso
+                Toast.makeText(
+                    this,
+                    "Este dispositivo já está registrado. Redirecionando para login.",
+                    Toast.LENGTH_SHORT
+                ).show()
 
-                    // Obter o Android ID
-                    val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
+                // Redireciona para a tela de login
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                finish()
+            } else {
+                // Prossegue com a criação do usuário no Firebase Authentication
+                auth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(this) { task ->
+                        if (task.isSuccessful) {
+                            val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-                    // Criação do HashMap com dados do usuário
-                    val userData: HashMap<String, Any> = hashMapOf(
-                        "userId" to userId,
-                        "email" to email,
-                        "name" to name,
-                        "isActive" to true,
-                        "type" to "client",
-                        "androidId" to androidId // Adiciona o Android ID aqui
-                    )
+                            // Criação do HashMap com dados do usuário
+                            val userData: HashMap<String, Any> = hashMapOf(
+                                "userId" to userId,
+                                "email" to email,
+                                "name" to name,
+                                "phoneCliente" to phone,
+                                "isActive" to true,
+                                "type" to "client",
+                                "androidId" to androidId // Adiciona o Android ID aqui
+                            )
 
-                    // Verifica se o Android ID já está registrado
-                    checkIfAndroidIdExists(androidId) { exists ->
-                        if (exists) {
-                            Toast.makeText(
-                                this,
-                                "Este dispositivo já está registrado.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
                             // Fazer upload da imagem de perfil se houver
                             imageUri?.let {
                                 uploadProfileImage(it, userId, userData)
@@ -168,26 +215,26 @@ class SignupClientActivity : AppCompatActivity() {
                                     saveFCMToken(userId) // Salva o token após salvar o usuário
                                 }
                             }
+                        } else {
+                            progressDialog.dismiss() // Fechar progresso em caso de erro
+                            val exception = task.exception
+                            if (exception is FirebaseAuthWeakPasswordException) {
+                                Toast.makeText(
+                                    this,
+                                    "A senha é muito fraca. Por favor, escolha uma senha mais forte.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    "Falha ao cadastrar. Tente novamente.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
                     }
-                } else {
-                    progressDialog.dismiss() // Fechar progresso em caso de erro
-                    val exception = task.exception
-                    if (exception is FirebaseAuthWeakPasswordException) {
-                        Toast.makeText(
-                            this,
-                            "A senha é muito fraca. Por favor, escolha uma senha mais forte.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        Toast.makeText(
-                            this,
-                            "Falha ao cadastrar. Tente novamente.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
             }
+        }
     }
 
     private fun checkIfAndroidIdExists(androidId: String, callback: (Boolean) -> Unit) {
@@ -196,14 +243,30 @@ class SignupClientActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 if (!result.isEmpty) {
-                    callback(true) // Android ID já existe
+                    // Caso o Android ID já exista, exiba uma mensagem e redirecione para login
+                    progressDialog.dismiss() // Esconde o diálogo de progresso
+                    Toast.makeText(
+                        this,
+                        "Este dispositivo já está registrado. Redirecionando para login.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    // Redireciona para a tela de login
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                    finish()
                 } else {
-                    callback(false) // Android ID não encontrado, pode registrar
+                    callback(false) // Prossegue com o registro
                 }
             }
             .addOnFailureListener { e ->
                 Log.e("Firebase", "Erro ao verificar Android ID: ${e.message}")
-                callback(false)
+                progressDialog.dismiss() // Esconde o diálogo de progresso
+                Toast.makeText(
+                    this,
+                    "Erro ao verificar dispositivo. Tente novamente.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 

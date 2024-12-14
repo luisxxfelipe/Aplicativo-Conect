@@ -21,7 +21,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Nome do Serviço -->
+            <!-- Contêiner Principal -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -35,6 +35,7 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <!-- Nome do Serviço -->
                     <TextView
                         android:id="@+id/textViewServiceName"
                         android:layout_width="wrap_content"
@@ -48,26 +49,12 @@
                         android:id="@+id/editTextServiceName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
                         android:hint="Digite o nome do serviço"
                         android:inputType="text"
                         android:padding="12dp" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
 
-            <!-- Preço -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
+                    <!-- Preço -->
                     <TextView
                         android:id="@+id/textViewPrice"
                         android:layout_width="wrap_content"
@@ -81,8 +68,27 @@
                         android:id="@+id/editTextPrice"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
                         android:hint="Digite o preço do serviço"
                         android:inputType="numberDecimal"
+                        android:padding="12dp" />
+
+                    <!-- Duração do Serviço -->
+                    <TextView
+                        android:id="@+id/textViewDuration"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="Duração do Serviço (em minutos)"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/editTextDuration"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Digite a duração média do serviço"
+                        android:inputType="number"
                         android:padding="12dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -125,7 +131,7 @@
         android:strokeColor="@color/roxo"
         android:text="Salvar Serviços"
         android:textColor="@android:color/white"
-        app:cornerRadius="12dp"
+        app:cornerRadius="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

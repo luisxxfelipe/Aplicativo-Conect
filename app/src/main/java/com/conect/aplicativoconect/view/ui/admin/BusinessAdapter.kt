@@ -28,6 +28,7 @@ class BusinessAdapter(
         val businessImage: ImageView = itemView.findViewById(R.id.businessImage)
         val ratingTextView: TextView = itemView.findViewById(R.id.businessAverageRating)
         val bookButton: Button = itemView.findViewById(R.id.bookButton)
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BusinessViewHolder {

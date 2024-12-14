@@ -76,7 +76,8 @@ class AddBookingActivity : AppCompatActivity() {
                         companyName = document.getString("name") // Obter o nome da empresa
                         loadServicesAndOperatingHours() // Carrega os serviços e horários
                     } else {
-                        Toast.makeText(this, "Nenhuma empresa encontrada.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Nenhuma empresa encontrada.", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
                 .addOnFailureListener { exception ->
@@ -96,27 +97,36 @@ class AddBookingActivity : AppCompatActivity() {
                 .get()
                 .addOnSuccessListener { document ->
                     // Carregar serviços
-                    val services = document.get("services") as? List<Map<String, Any>> ?: emptyList()
+                    val services =
+                        document.get("services") as? List<Map<String, Any>> ?: emptyList()
                     if (services.isNotEmpty()) {
                         servicesMap.clear() // Certifique-se de limpar o mapa antes de adicionar novos itens
                         services.forEach { service ->
-                            val serviceName = service["serviceName"] as? String ?: "Serviço Desconhecido"
+                            val serviceName =
+                                service["serviceName"] as? String ?: "Serviço Desconhecido"
                             val price = (service["price"] as? Number)?.toDouble() ?: 0.0
                             servicesMap[serviceName] = price
                         }
                         setupServiceSpinner(servicesMap.keys.toList()) // Configura o spinner com os serviços
                     } else {
-                        Toast.makeText(this, "Nenhum serviço encontrado.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Nenhum serviço encontrado.", Toast.LENGTH_SHORT)
+                            .show()
                     }
 
                     // Carregar horários de funcionamento
                     val operatingHoursMap = document.get("operatingHours") as? Map<String, String>
-                    val openingTime = operatingHoursMap?.get("opening")?.split(":")?.get(0)?.toInt() ?: 9
-                    val closingTime = operatingHoursMap?.get("closing")?.split(":")?.get(0)?.toInt() ?: 18
+                    val openingTime =
+                        operatingHoursMap?.get("opening")?.split(":")?.get(0)?.toInt() ?: 9
+                    val closingTime =
+                        operatingHoursMap?.get("closing")?.split(":")?.get(0)?.toInt() ?: 18
                     operatingHours = Pair(openingTime, closingTime)
                 }
                 .addOnFailureListener { exception ->
-                    Toast.makeText(this, "Erro ao carregar dados: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Erro ao carregar dados: ${exception.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         } ?: Toast.makeText(this, "ID da empresa não encontrado.", Toast.LENGTH_SHORT).show()
     }
