@@ -108,9 +108,6 @@ class AddBookingActivity : AppCompatActivity() {
                             servicesMap[serviceName] = price
                         }
                         setupServiceSpinner(servicesMap.keys.toList()) // Configura o spinner com os serviços
-                    } else {
-                        Toast.makeText(this, "Nenhum serviço encontrado.", Toast.LENGTH_SHORT)
-                            .show()
                     }
 
                     // Carregar horários de funcionamento

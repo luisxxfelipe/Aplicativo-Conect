@@ -2,6 +2,7 @@ package com.conect.aplicativoconect.view.ui.admin
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -121,6 +122,9 @@ class AddServiceFragment : Fragment() {
         addedServices.add(Triple(ServiceType(serviceName), price, duration))
         updateAddedServicesRecyclerView()
 
+        // Recalcular a média e salvar no Firestore
+        updateAverageDuration()
+
         // Limpar os campos
         editTextServiceName.text.clear()
         editTextPrice.text.clear()
@@ -143,8 +147,54 @@ class AddServiceFragment : Fragment() {
     private fun removeService(position: Int) {
         addedServices.removeAt(position)
         updateAddedServicesRecyclerView()
+
+        // Recalcular a média e salvar no Firestore
+        updateAverageDuration()
+
         updateUI()
     }
+
+    private fun updateAverageDuration() {
+        if (addedServices.isEmpty()) {
+            saveAverageDuration(0.0)
+            return
+        }
+
+        // Calcular a média de duração dos serviços
+        val totalDuration = addedServices.sumOf { it.third }
+        val averageDuration = totalDuration.toDouble() / addedServices.size
+
+        // Salvar a média no Firestore
+        saveAverageDuration(averageDuration)
+    }
+
+    private fun saveAverageDuration(averageDuration: Double) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        val businessRef = firestore.collection("business").document(userId)
+
+        // Atualiza ou cria o campo `averageDuration` no documento
+        businessRef.update("averageDuration", averageDuration)
+            .addOnSuccessListener {
+                Log.d("AddServiceFragment", "Média de duração atualizada: $averageDuration")
+            }
+            .addOnFailureListener { e ->
+                Log.e("AddServiceFragment", "Erro ao atualizar a média de duração: ${e.message}")
+
+                // Caso o documento não exista, cria-o com o campo `averageDuration`
+                businessRef.set(mapOf("averageDuration" to averageDuration))
+                    .addOnSuccessListener {
+                        Log.d(
+                            "AddServiceFragment",
+                            "Documento criado com média de duração: $averageDuration"
+                        )
+                    }
+                    .addOnFailureListener { error ->
+                        Log.e("AddServiceFragment", "Erro ao criar documento: ${error.message}")
+                    }
+            }
+    }
+
 
     private fun saveServices() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid

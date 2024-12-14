@@ -110,13 +110,6 @@ class AddServiceDialogFragment : DialogFragment() {
                             val price = (service["price"] as? Number)?.toDouble() ?: 0.0
                             "Serviço: $serviceName, Preço: R$ $price"
                         }
-                    } else {
-                        // Lista de serviços está vazia
-                        Toast.makeText(
-                            requireContext(),
-                            "Nenhum serviço encontrado.",
-                            Toast.LENGTH_SHORT
-                        ).show()
                     }
                 } else {
                     Toast.makeText(requireContext(), "Empresa não encontrada.", Toast.LENGTH_SHORT)

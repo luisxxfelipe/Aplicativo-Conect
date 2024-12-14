@@ -10,7 +10,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Service
 import com.google.firebase.auth.FirebaseAuth
@@ -43,6 +42,8 @@ class SelecionarHorarioActivity : AppCompatActivity() {
     private var selectedDate: String? = null
     private lateinit var operatingHours: Map<String, Any>
 
+    private var workingDays: List<String> = emptyList()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_selecionar_horario)
@@ -51,6 +52,9 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         firestore = FirebaseFirestore.getInstance()
         companyId = intent.getStringExtra("companyId") ?: ""
         selectedService = intent.getSerializableExtra("selectedService") as Service
+
+        // Fetch operating hours and average duration
+        fetchOperatingHoursAndAverageDuration()
 
         emptyStateImage = findViewById(R.id.emptyStateImage)
         emptyStateText = findViewById(R.id.emptyStateText)
@@ -63,18 +67,16 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         summaryDate = findViewById(R.id.summaryDate)
         summaryHour = findViewById(R.id.summaryHour)
         summaryPrice = findViewById(R.id.summaryPrice)
-        appointmentSummaryLayout = findViewById(R.id.appointmentSummaryLayout) // Initialize here
+        appointmentSummaryLayout = findViewById(R.id.appointmentSummaryLayout)
 
         buttonAdjustDate.visibility = View.GONE
         buttonAgendar.visibility = View.GONE
         summaryTitle.visibility = View.GONE
-        appointmentSummaryLayout.visibility = View.GONE // Ensure it's initially hidden
+        appointmentSummaryLayout.visibility = View.GONE
 
         buttonPickDate.setOnClickListener { openDatePicker() }
         buttonAdjustDate.setOnClickListener { openDatePicker() }
         buttonAgendar.setOnClickListener { scheduleAppointment() }
-
-        fetchOperatingHours()
     }
 
     private fun openDatePicker() {
@@ -90,20 +92,21 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 val selectedCalendar = Calendar.getInstance()
                 selectedCalendar.set(year, month, dayOfMonth)
 
-                // Verifica se a data selecionada está dentro do limite de 3 semanas
-                if (selectedCalendar.after(maxDateCalendar)) {
-                    Toast.makeText(
-                        this,
-                        "Não é possível agendar com mais de 3 semanas de antecedência.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@DatePickerDialog
+                // Verifica se o dia selecionado está nos dias trabalhados
+                val dayOfWeek = selectedCalendar.getDisplayName(
+                    Calendar.DAY_OF_WEEK,
+                    Calendar.LONG,
+                    Locale.getDefault()
+                )
+                if (workingDays.contains(dayOfWeek)) {
+                    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    selectedDate = dateFormat.format(selectedCalendar.time)
+                    buttonPickDate.text = "Ajustar Data"
+                    fetchExistingBookings(selectedDate!!)
+                } else {
+                    Toast.makeText(this, "A empresa não trabalha neste dia.", Toast.LENGTH_SHORT)
+                        .show()
                 }
-
-                val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                selectedDate = dateFormat.format(selectedCalendar.time)
-                buttonPickDate.text = "Ajustar Data"
-                fetchExistingBookings(selectedDate!!)
 
             },
             calendar.get(Calendar.YEAR),
@@ -116,33 +119,24 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         // Configura a data máxima para 3 semanas a partir de hoje
         datePickerDialog.datePicker.maxDate = maxDateCalendar.timeInMillis
 
-        // Aqui, você personaliza os botões após a exibição do DatePickerDialog
-        datePickerDialog.setOnShowListener {
-            val buttonOk = datePickerDialog.getButton(DatePickerDialog.BUTTON_POSITIVE)
-            val buttonCancel = datePickerDialog.getButton(DatePickerDialog.BUTTON_NEGATIVE)
+        // Personalizar o DatePicker para desativar os dias não trabalhados
+        datePickerDialog.datePicker.setOnDateChangedListener { _, year, month, dayOfMonth ->
+            val selectedCalendar = Calendar.getInstance()
+            selectedCalendar.set(year, month, dayOfMonth)
 
-            // Defina a cor do texto do botão "OK" para roxo
-            buttonOk.setTextColor(ContextCompat.getColor(this, R.color.roxo))
-
-            // Defina a cor do texto do botão "Cancelar" para branco ou outra cor, conforme necessário
-            buttonCancel.setTextColor(ContextCompat.getColor(this, android.R.color.white))
+            val dayOfWeek = selectedCalendar.getDisplayName(
+                Calendar.DAY_OF_WEEK,
+                Calendar.LONG,
+                Locale.getDefault()
+            )
+            if (!workingDays.contains(dayOfWeek)) {
+                Toast.makeText(this, "A empresa não trabalha neste dia.", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        // Exibe o DatePickerDialog
         datePickerDialog.show()
     }
 
-
-    private fun fetchOperatingHours() {
-        firestore.collection("business").document(companyId).get()
-            .addOnSuccessListener { documentSnapshot ->
-                operatingHours = documentSnapshot.get("operatingHours") as Map<String, Any>
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao buscar horários: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
-            }
-    }
 
     private fun fetchExistingBookings(date: String) {
         firestore.collection("bookings")
@@ -167,24 +161,84 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         return querySnapshot.documents.mapNotNull { document -> document.getString("hour") }
     }
 
+    private fun fetchOperatingHoursAndAverageDuration() {
+        firestore.collection("business").document(companyId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                operatingHours = documentSnapshot.get("operatingHours") as Map<String, Any>
+                workingDays =
+                    documentSnapshot.get("operatingHours.days") as? List<String> ?: emptyList()
+                val averageDuration = documentSnapshot.getDouble("averageDuration") ?: 30.0
+                selectedService.duration = averageDuration.toInt()
+            }
+    }
+
     private fun generateAvailableHours(bookedHours: List<String>): List<String> {
         val openingTime = operatingHours["opening"] as? String ?: "06:00"
         val closingTime = operatingHours["closing"] as? String ?: "18:00"
         val lunchStart = "12:00"
         val lunchEnd = "13:00"
-        val serviceDuration = selectedService.duration ?: 30 // Duração em minutos
+        val serviceDuration = selectedService.duration ?: 30 // Utilizar averageDuration
 
         val availableSlots = mutableListOf<String>()
 
-        // Horários antes do almoço
-        availableSlots.addAll(
-            generateTimeSlotsDynamic(openingTime, lunchStart, serviceDuration, bookedHours)
+        // Obter data atual e selecionada
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val currentDateTime = Calendar.getInstance()
+        val currentDate = dateFormat.format(currentDateTime.time)
+        val selectedCalendar = Calendar.getInstance()
+        selectedCalendar.time = dateFormat.parse(selectedDate!!)
+        val selectedDayOfWeek = selectedCalendar.getDisplayName(
+            Calendar.DAY_OF_WEEK,
+            Calendar.LONG,
+            Locale.getDefault()
         )
 
-        // Horários após o almoço
-        availableSlots.addAll(
-            generateTimeSlotsDynamic(lunchEnd, closingTime, serviceDuration, bookedHours)
-        )
+        // Validar se o dia selecionado está nos dias trabalhados
+        if (!workingDays.contains(selectedDayOfWeek)) {
+            Toast.makeText(this, "A empresa não trabalha no dia selecionado.", Toast.LENGTH_SHORT)
+                .show()
+            return availableSlots // Retorna vazio
+        }
+
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val currentTime = timeFormat.format(currentDateTime.time)
+
+        // Filtrar horários com base na data selecionada
+        if (selectedDate == currentDate) {
+            // Para hoje, excluir horários passados
+            availableSlots.addAll(
+                generateTimeSlotsDynamic(
+                    openingTime,
+                    lunchStart,
+                    serviceDuration,
+                    bookedHours,
+                    currentTime
+                )
+            )
+            availableSlots.addAll(
+                generateTimeSlotsDynamic(
+                    lunchEnd,
+                    closingTime,
+                    serviceDuration,
+                    bookedHours,
+                    currentTime
+                )
+            )
+        } else {
+            // Para dias futuros, exibir todos os horários disponíveis
+            availableSlots.addAll(
+                generateTimeSlotsDynamic(
+                    openingTime,
+                    lunchStart,
+                    serviceDuration,
+                    bookedHours,
+                    null
+                )
+            )
+            availableSlots.addAll(
+                generateTimeSlotsDynamic(lunchEnd, closingTime, serviceDuration, bookedHours, null)
+            )
+        }
 
         return availableSlots
     }
@@ -193,19 +247,27 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         start: String,
         end: String,
         duration: Int,
-        bookedHours: List<String>
+        bookedHours: List<String>,
+        currentTime: String?
     ): List<String> {
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val slots = mutableListOf<String>()
 
         var current = timeFormat.parse(start)
         val endTime = timeFormat.parse(end)
+        val now = if (currentTime != null) timeFormat.parse(currentTime) else null
 
         while (current.before(endTime)) {
             val formattedSlot = timeFormat.format(current)
 
-            // Verifica se o bloco atual está livre
-            if (!isSlotOverlapping(formattedSlot, duration, bookedHours, timeFormat)) {
+            // Verifica se o bloco atual está livre e, se necessário, se está no futuro
+            if ((now == null || current.after(now)) && !isSlotOverlapping(
+                    formattedSlot,
+                    duration,
+                    bookedHours,
+                    timeFormat
+                )
+            ) {
                 slots.add(formattedSlot)
             }
 
@@ -218,6 +280,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
 
         return slots
     }
+
 
     // Função para verificar sobreposição de horários
     private fun isSlotOverlapping(
