@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.data.model.OperatingHours
@@ -36,22 +37,29 @@ class BusinessAdapter(
     }
 
     override fun onBindViewHolder(holder: BusinessViewHolder, position: Int) {
-        val business = getItem(position) // Usamos getItem() em vez de acessar diretamente a lista
+        val business = getItem(position)
+
+        // Atualiza o nome e a categoria
         holder.businessName.text = business.name
         holder.businessCategory.text = business.serviceType
+
+        // Formata e atualiza o horário de funcionamento
         holder.operatingHours.text = formatOperatingHours(business.operatingHours)
 
-        Glide.with(context)
-            .load(business.imageUrl)
-            .placeholder(R.drawable.foto_perfil_generica)
-            .into(holder.businessImage)
+        // Configura a imagem do negócio com Glide
+        loadImage(business.imageUrl, holder.businessImage)
 
-        holder.ratingTextView.text =
-            business.averageRating.let { String.format("%.1f", it) }
+        // Formata e exibe a avaliação média
+        holder.ratingTextView.text = formatAverageRating(business.averageRating.toFloat())
 
-        holder.bookButton.setOnClickListener {
-            onBusinessClick(business)
-        }
+
+        // Configura o botão de agendamento
+        holder.bookButton.setOnClickListener { onBusinessClick(business) }
+    }
+
+    override fun submitList(list: List<Business>?) {
+        // Remove a lógica redundante e permite que o `DiffUtil` cuide das atualizações.
+        super.submitList(list?.toList())
     }
 
     private fun formatOperatingHours(operatingHours: OperatingHours?): String {
@@ -59,13 +67,37 @@ class BusinessAdapter(
         val closing = operatingHours?.closing ?: "N/A"
         return "$opening - $closing"
     }
+
+    private fun formatAverageRating(rating: Float?): String {
+        return if (rating != null) {
+            String.format("%.1f", rating)
+        } else {
+            "N/A"
+        }
+    }
+
+    private fun loadImage(imageUrl: String?, imageView: ImageView) {
+        if (!imageUrl.isNullOrBlank()) {
+            Glide.with(context)
+                .load(imageUrl)
+                .thumbnail(0.1f) // Pré-visualização enquanto a imagem principal carrega
+                .override(300, 300) // Limita o tamanho da imagem carregada
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .placeholder(R.drawable.foto_perfil_generica) // Placeholder durante o carregamento
+                .error(R.drawable.foto_perfil_generica) // Imagem de fallback em caso de erro
+                .into(imageView)
+        } else {
+            imageView.setImageResource(R.drawable.foto_perfil_generica) // Fallback padrão
+        }
+    }
 }
 
 // Criação do DiffUtil.ItemCallback para comparar os itens
 class BusinessDiffCallback : DiffUtil.ItemCallback<Business>() {
     override fun areItemsTheSame(oldItem: Business, newItem: Business): Boolean {
-        // Comparação de ID (ou outro campo único) para garantir que estamos lidando com o mesmo item
-        return oldItem.cpf == newItem.cpf  // Usando CPF como identificador único
+        // Comparação de ID para garantir que estamos lidando com o mesmo item
+        return oldItem.cpf == newItem.cpf
     }
 
     override fun areContentsTheSame(oldItem: Business, newItem: Business): Boolean {

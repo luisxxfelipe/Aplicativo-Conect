@@ -1,18 +1,27 @@
 package com.conect.aplicativoconect.view.ui.client
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.conect.aplicativoconect.R
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class EmpresaDetalhesActivity : AppCompatActivity() {
 
@@ -126,7 +135,7 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
             }
 
             override fun onTabReselected(tab: TabLayout.Tab?) {
-                // Esse método é chamado quando a aba é re-selecionada
+                // Esse metodo é chamado quando a aba é re-selecionada
                 // Podemos manter as configurações de texto e indicador aqui, se necessário
             }
         })
@@ -163,51 +172,62 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
 
 
     private fun fetchCompanyDetails(companyId: String) {
-        firestore.collection("business").document(companyId).get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    // Obtém os dados da empresa
-                    val companyName = document.getString("name") ?: ""
-                    val companyDescription = document.getString("description") ?: ""
-                    val companyImageUrl = document.getString("imageUrl")
-                    val profileImageUrl = document.getString("imageUrl")
-                    val operatingHoursMap = document.get("operatingHours") as? Map<String, String>
-                    val opening = operatingHoursMap?.get("opening") ?: "N/A"
-                    val closing = operatingHoursMap?.get("closing") ?: "N/A"
-                    val operatingHours = "Horário: $opening - $closing"
-                    val category = document.getString("serviceType") ?: "Categoria não informada"
-
-                    // Atualiza as views com os dados da empresa
-                    findViewById<TextView>(R.id.companyName).text = companyName
-                    findViewById<TextView>(R.id.companyDescription).text = companyDescription
-                    findViewById<TextView>(R.id.companyOperatingHours).text = operatingHours
-                    findViewById<TextView>(R.id.companyCategory).text = category
-
-                    // Carregar imagens usando Glide
-                    val companyImageView = findViewById<ImageView>(R.id.companyImage)
-                    val profileImageView = findViewById<ImageView>(R.id.companyProfileImage)
-                    loadImage(companyImageUrl, companyImageView)
-                    loadImage(profileImageUrl, profileImageView)
-                } else {
-                    finish()  // Fechar se o documento não existir
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val document = firestore.collection("business").document(companyId).get().await()
+                withContext(Dispatchers.Main) {
+                    if (document.exists()) {
+                        updateUIWithCompanyDetails(document)
+                    } else {
+                        Toast.makeText(this@EmpresaDetalhesActivity, "Empresa não encontrada", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("EmpresaDetalhesActivity", "Erro ao carregar empresa: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@EmpresaDetalhesActivity, "Erro ao carregar dados", Toast.LENGTH_SHORT).show()
+                    finish()
                 }
             }
-            .addOnFailureListener { e ->
-                finish()  // Fechar em caso de erro
-            }
-    }
-
-    private fun loadImage(imageUrl: String?, imageView: ImageView) {
-        if (!imageUrl.isNullOrEmpty()) {
-            Glide.with(this)
-                .load(imageUrl)
-                .thumbnail(0.1f)
-                .override(300, 300)
-                .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(imageView)
-        } else {
-            imageView.setImageResource(R.drawable.foto_perfil_generica)
         }
     }
+
+    private fun updateUIWithCompanyDetails(document: DocumentSnapshot) {
+        val companyName = document.getString("name") ?: "Nome não disponível"
+        val companyDescription = document.getString("description") ?: "Descrição não disponível"
+        val profileImageUrl = document.getString("imageUrl")
+        val operatingHoursMap = document.get("operatingHours") as? Map<String, String>
+        val opening = operatingHoursMap?.get("opening") ?: "N/A"
+        val closing = operatingHoursMap?.get("closing") ?: "N/A"
+        val operatingHours = "Horário: $opening - $closing"
+        val category = document.getString("serviceType") ?: "Categoria não informada"
+
+        findViewById<TextView>(R.id.companyName).text = companyName
+        findViewById<TextView>(R.id.companyDescription).apply {
+            text = companyDescription
+            gravity = android.view.Gravity.CENTER // Centraliza o texto
+        }
+        findViewById<TextView>(R.id.companyOperatingHours).text = operatingHours
+        findViewById<TextView>(R.id.companyCategory).text = category
+
+        val profileImageView = findViewById<ImageView>(R.id.companyProfileImage)
+        loadImage(profileImageUrl, profileImageView)
+    }
+
+
+    private fun loadImage(imageUrl: String?, imageView: ImageView) {
+        if (!imageUrl.isNullOrBlank()) {
+            Glide.with(this)
+                .load(imageUrl)
+                .override(500, 500) // Define um limite para a resolução da imagem
+                .centerCrop() // Ajusta a imagem ao centro
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC) // Usa cache automático
+                .error(R.drawable.foto_perfil_generica) // Define imagem padrão em caso de erro
+                .into(imageView)
+        } else {
+            imageView.setImageResource(R.drawable.foto_perfil_generica) // Fallback direto
+        }
+    }
+
 }

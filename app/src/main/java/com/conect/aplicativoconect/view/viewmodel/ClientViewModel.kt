@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -17,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 class ClientViewModel : ViewModel() {
@@ -41,41 +43,43 @@ class ClientViewModel : ViewModel() {
 
     // Carrega dados do usuário
     fun loadUserData(userId: String) {
-        firestore.collection("users").document(userId)
-            .get()
-            .addOnSuccessListener { document ->
-                _userName.value = document.getString("name")
-                _userImage.value = document.getString("imageUrl")
-                _userEmail.value = document.getString("email")
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val document = firestore.collection("users").document(userId).get().await()
+                withContext(Dispatchers.Main) {
+                    _userName.value = document.getString("name")
+                    _userImage.value = document.getString("imageUrl")
+                    _userEmail.value = document.getString("email")
+                }
+            } catch (e: Exception) {
+                Log.e("ClientViewModel", "Error loading user data", e)
             }
-            .addOnFailureListener { e ->
-            }
+        }
     }
+
 
     // Carrega agendamentos futuros do usuário
     fun fetchUserBookings(userId: String) {
-        val currentTimestamp = System.currentTimeMillis()
-        Log.d(
-            "ClientViewModel",
-            "Fetching bookings for userId: $userId with timestamp >= $currentTimestamp"
-        )
+        viewModelScope.launch {
+            try {
+                val currentTimestamp = System.currentTimeMillis()
+                val querySnapshot = firestore.collection("bookings")
+                    .whereEqualTo("userId", userId)
+                    .whereGreaterThanOrEqualTo("timestamp", currentTimestamp)
+                    .orderBy("timestamp", Query.Direction.ASCENDING)
+                    .get()
+                    .await()
 
-        firestore.collection("bookings")
-            .whereEqualTo("userId", userId)
-            .whereGreaterThanOrEqualTo("timestamp", currentTimestamp)
-            .orderBy("timestamp", Query.Direction.ASCENDING)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
                 val bookings = querySnapshot.documents.mapNotNull {
                     it.toObject(Booking::class.java)?.apply { id = it.id }
                 }
-                Log.d("ClientViewModel", "Fetched ${bookings.size} bookings")
-                _todayBookings.value = bookings // Atualiza LiveData mesmo que vazio
-            }
-            .addOnFailureListener { e ->
+
+                _todayBookings.value = bookings
+            } catch (e: Exception) {
                 Log.e("ClientViewModel", "Error fetching bookings: ${e.message}")
-                _todayBookings.value = emptyList() // Define lista vazia em caso de erro
+                _todayBookings.value = emptyList()
             }
+        }
     }
 
 
@@ -98,29 +102,27 @@ class ClientViewModel : ViewModel() {
 
     // Função para cancelar o agendamento
     fun cancelBooking(booking: Booking, context: Context) {
-        // Envia a notificação antes de deletar
-        sendBookingNotification(
-            context,
-            booking.id!!,
-            "Agendamento Cancelado",
-            "Olá, o agendamento de ${booking.name} foi cancelado!"
-        )
-
-        // Aguarda 3 segundos antes de deletar o agendamento
         CoroutineScope(Dispatchers.IO).launch {
-            delay(3000) // Aguarda 3 segundos
-            withContext(Dispatchers.Main) {
-                firestore.collection("bookings").document(booking.id!!)
-                    .delete()
-                    .addOnSuccessListener {
-                        _refreshBookings.value = true
-                    }
-                    .addOnFailureListener { e ->
-                    }
+            try {
+                sendBookingNotification(
+                    context,
+                    booking.id!!,
+                    "Agendamento Cancelado",
+                    "Olá, o agendamento de ${booking.name} foi cancelado!"
+                )
+
+                delay(3000) // Aguarda 3 segundos
+
+                firestore.collection("bookings").document(booking.id!!).delete().await()
+
+                withContext(Dispatchers.Main) {
+                    _refreshBookings.value = true
+                }
+            } catch (e: Exception) {
+                Log.e("ClientViewModel", "Error canceling booking: ${e.message}")
             }
         }
     }
-
 
     // Função para enviar notificações
     private fun sendBookingNotification(
@@ -129,32 +131,29 @@ class ClientViewModel : ViewModel() {
         title: String,
         message: String
     ) {
-        firestore.collection("bookings").document(bookingId)
-            .get()
-            .addOnSuccessListener { bookingDocument ->
-                val companyId =
-                    bookingDocument.getString("companyId") ?: return@addOnSuccessListener
-                fetchBusinessToken(companyId) { adminToken ->
-                    if (adminToken != null) {
-                        sendFCMNotification(context, adminToken, title, message)
-                    }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val bookingDocument = firestore.collection("bookings").document(bookingId).get().await()
+                val companyId = bookingDocument.getString("companyId") ?: return@launch
+
+                val adminToken = fetchBusinessToken(companyId)
+                adminToken?.let {
+                    sendFCMNotification(context, it, title, message)
                 }
+            } catch (e: Exception) {
+                Log.e("ClientViewModel", "Error sending booking notification: ${e.message}")
             }
-            .addOnFailureListener { e ->
-            }
+        }
     }
 
-    // Função para buscar o token do administrador
-    private fun fetchBusinessToken(companyId: String, callback: (String?) -> Unit) {
-        firestore.collection("business").document(companyId)
-            .get()
-            .addOnSuccessListener { document ->
-                val token = document.getString("fcmToken")
-                callback(token)
-            }
-            .addOnFailureListener { e ->
-                callback(null)
-            }
+    private suspend fun fetchBusinessToken(companyId: String): String? {
+        return try {
+            val document = firestore.collection("business").document(companyId).get().await()
+            document.getString("fcmToken")
+        } catch (e: Exception) {
+            Log.e("ClientViewModel", "Error fetching business token: ${e.message}")
+            null
+        }
     }
 
     // Função para enviar a notificação FCM
@@ -221,31 +220,39 @@ class ClientViewModel : ViewModel() {
         service: Int
     ) {
         if (bookingId == null) return
-        val ratingData = hashMapOf(
-            "quality" to quality,
-            "punctuality" to punctuality,
-            "service" to service,
-            "timestamp" to System.currentTimeMillis()
-        )
 
-        firestore.collection("bookings").document(bookingId)
-            .update("rating", ratingData)
-            .addOnSuccessListener {
-                firestore.collection("bookings").document(bookingId).get()
-                    .addOnSuccessListener { bookingSnapshot ->
-                        val companyId = bookingSnapshot.getString("companyId")
-                        if (!companyId.isNullOrEmpty()) {
-                            updateBusinessRating(companyId, (quality + punctuality + service) / 3.0)
-                        }
-                    }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val ratingData = hashMapOf(
+                    "quality" to quality,
+                    "punctuality" to punctuality,
+                    "service" to service,
+                    "timestamp" to System.currentTimeMillis()
+                )
+
+                firestore.collection("bookings").document(bookingId)
+                    .update("rating", ratingData).await()
+
+                val bookingSnapshot = firestore.collection("bookings").document(bookingId).get().await()
+                val companyId = bookingSnapshot.getString("companyId")
+
+                companyId?.let {
+                    val averageRating = (quality + punctuality + service) / 3.0
+                    updateBusinessRating(it, averageRating)
+                }
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Avaliação salva com sucesso!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Erro ao salvar avaliação", Toast.LENGTH_SHORT).show()
+                }
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(context, "Erro ao salvar avaliação", Toast.LENGTH_SHORT).show()
-            }
+        }
     }
 
-    // Atualização da média de avaliação da empresa
-    private fun updateBusinessRating(companyId: String, newRating: Double) {
+    private suspend fun updateBusinessRating(companyId: String, newRating: Double) {
         val businessRef = firestore.collection("business").document(companyId)
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(businessRef)
@@ -258,8 +265,7 @@ class ClientViewModel : ViewModel() {
 
             transaction.update(businessRef, "averageRating", updatedAverageRating)
             transaction.update(businessRef, "ratingCount", updatedRatingCount)
-        }.addOnSuccessListener {
-        }.addOnFailureListener { e ->
-        }
+        }.await()
     }
+
 }

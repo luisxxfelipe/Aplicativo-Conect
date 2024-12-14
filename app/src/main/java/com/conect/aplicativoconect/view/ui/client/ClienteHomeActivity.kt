@@ -4,8 +4,6 @@ import android.app.Dialog
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +15,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
@@ -26,6 +25,11 @@ import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class ClienteHomeActivity : AppCompatActivity() {
 
@@ -42,12 +46,7 @@ class ClienteHomeActivity : AppCompatActivity() {
         firestore = FirebaseFirestore.getInstance()
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
 
-        // Verificação de autenticação
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser == null) {
-            redirectToLogin() // Redireciona para tela de login se o usuário não estiver autenticado
-            return
-        }
+        checkAuthentication()
 
         isFromSignup = intent.getBooleanExtra("FROM_SIGNUP", false)
         setupLoadingDialog()
@@ -55,37 +54,20 @@ class ClienteHomeActivity : AppCompatActivity() {
             showLoadingDialogWithDelay()
         }
 
+
         // Configurar o título inicial do menu
         updateActionBarTitle(R.id.navigation_home)
 
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.navigation_home -> {
-                    updateActionBarTitle(R.id.navigation_home)
-                    loadFragment(ClienteHomeFragment())
-                    true
-                }
-
-                R.id.navigation_appointments -> {
-                    updateActionBarTitle(R.id.navigation_appointments)
-                    loadFragment(BookingFragment())
-                    true
-                }
-
-                R.id.navigation_profile -> {
-                    updateActionBarTitle(R.id.navigation_profile)
-                    loadFragment(ClienteProfileFragment())
-                    true
-                }
-
-                R.id.navigation_logout -> {
-                    showLogoutConfirmationDialog()
-                    true
-                }
-
-                else -> false
+                R.id.navigation_home -> loadFragment(ClienteHomeFragment())
+                R.id.navigation_appointments -> loadFragment(BookingFragment())
+                R.id.navigation_profile -> loadFragment(ClienteProfileFragment())
+                R.id.navigation_logout -> showLogoutConfirmationDialog()
             }
+            true
         }
+
 
         loadFragment(ClienteHomeFragment())
         fetchUserName()
@@ -144,10 +126,10 @@ class ClienteHomeActivity : AppCompatActivity() {
 
     private fun showLoadingDialogWithDelay() {
         showLoadingDialog()
-        // Keep the dialog open for 3 seconds (3000 milliseconds)
-        Handler(Looper.getMainLooper()).postDelayed({
+        lifecycleScope.launch {
+            delay(3000) // Aguarda 3 segundos
             hideLoadingDialog()
-        }, 3000)
+        }
     }
 
     private fun showLoadingDialog() {
@@ -158,54 +140,48 @@ class ClienteHomeActivity : AppCompatActivity() {
         loadingDialog?.dismiss()
     }
 
-    private fun loadFragment(fragment: Fragment, userName: String? = null) {
-        // Definindo o bundle, se necessário
-        if (fragment is ClienteHomeFragment) {
-            val bundle = Bundle()
-            bundle.putString("userName", userName)
-            fragment.arguments = bundle
+    private fun loadFragment(fragment: Fragment, args: Bundle? = null) {
+        args?.let { fragment.arguments = it }
+
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        val existingFragment = supportFragmentManager.findFragmentByTag(fragment.javaClass.simpleName)
+
+        supportFragmentManager.fragments.forEach { frag ->
+            fragmentTransaction.hide(frag)
         }
 
-        val transaction = supportFragmentManager.beginTransaction()
-
-        // Verifique se o fragmento atual é o que está sendo mostrado
-        val isFragmentBackNavigation = supportFragmentManager.backStackEntryCount > 0
-
-        // Se estiver voltando, adicione animação de transição
-        if (isFragmentBackNavigation) {
-            transaction.setCustomAnimations(
-                android.R.anim.slide_in_left,  // Novo fragmento entrando da esquerda
-                android.R.anim.slide_out_right // Fragmento atual saindo para a direita
-            )
+        if (existingFragment != null) {
+            fragmentTransaction.show(existingFragment)
         } else {
-            // Caso contrário, não faz animação (navegação para frente)
-            transaction.setCustomAnimations(0, 0)
+            fragmentTransaction.add(R.id.fragment_container, fragment, fragment.javaClass.simpleName)
         }
 
-        // Substitui o fragmento
-        transaction.replace(R.id.fragment_container, fragment)
-            .commit()
-
-        Log.d("ClientHomeActivity", "Fragment ${fragment.javaClass.simpleName} carregado.")
+        fragmentTransaction.commit()
     }
 
     private fun fetchUserName() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.email?.let { userEmail ->
-            firestore.collection("users").whereEqualTo("email", userEmail)
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    if (!querySnapshot.isEmpty) {
-                        val userName =
-                            querySnapshot.documents[0].getString("name") ?: "Nome não encontrado"
-                        clientViewModel.loadUserData(user.uid)
-                        loadFragment(ClienteHomeFragment(), userName)
-                        fetchTodayBookings(user.uid)
-                    }
+        lifecycleScope.launch {
+            try {
+                val user = FirebaseAuth.getInstance().currentUser ?: return@launch
+                val snapshot = withContext(Dispatchers.IO) {
+                    firestore.collection("users").whereEqualTo("email", user.email).get().await()
                 }
-                .addOnFailureListener { e ->
-                    Log.w("ClientHomeActivity", "Erro ao buscar nome do usuário", e)
+                if (!snapshot.isEmpty) {
+                    val userName = snapshot.documents[0].getString("name") ?: "Nome não encontrado"
+                    clientViewModel.loadUserData(user.uid)
+
+                    // Configura os argumentos para o fragmento
+                    val args = Bundle()
+                    args.putString("userName", userName)
+
+                    // Chama o fragmento com os argumentos
+                    loadFragment(ClienteHomeFragment(), args)
+
+                    fetchTodayBookings(user.uid)
                 }
+            } catch (e: Exception) {
+                Log.w("ClientHomeActivity", "Erro ao buscar nome do usuário", e)
+            }
         }
     }
 
@@ -229,21 +205,15 @@ class ClienteHomeActivity : AppCompatActivity() {
 
             if (!::clientBookingAdapter.isInitialized) {
                 clientBookingAdapter = ClientBookingAdapter(
-                    context = this,  // Aqui você está passando o contexto correto
-                    bookings = bookings,
+                    context = this,
+                    bookings = bookings.toMutableList(), // Passa uma lista mutável
                     onConfirmClick = { booking ->
-                        clientViewModel.confirmBooking(
-                            booking,
-                            this
-                        )
-                    }, // Passando o contexto
+                        clientViewModel.confirmBooking(booking, this)
+                    },
                     onCancelClick = { booking ->
-                        clientViewModel.cancelBooking(
-                            booking,
-                            this
-                        )
-                    }, // Passando o contexto
-                    onEmptyList = { showNoBookingsMessage() }  // Mantido apenas a funcionalidade de "empty list"
+                        clientViewModel.cancelBooking(booking, this)
+                    },
+                    onEmptyList = { showNoBookingsMessage() }
                 )
                 recyclerView?.layoutManager = LinearLayoutManager(this)
                 recyclerView?.adapter = clientBookingAdapter
@@ -252,7 +222,6 @@ class ClienteHomeActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private fun showNoBookingsMessage() {
         findViewById<TextView>(R.id.noBookingsMessage)?.visibility = View.VISIBLE
@@ -279,11 +248,25 @@ class ClienteHomeActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    private fun checkAuthentication() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            redirectToLogin()
+        }
+    }
+
     private fun logout() {
         FirebaseAuth.getInstance().signOut()
+        clearLocalCache() // Limpa o cache local
+
         val intent = Intent(this, WelcomeActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
+
+    private fun clearLocalCache() {
+        getSharedPreferences("business_cache", MODE_PRIVATE).edit().clear().apply()
+    }
+
 }

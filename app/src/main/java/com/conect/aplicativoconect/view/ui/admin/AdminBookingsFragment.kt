@@ -14,6 +14,7 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.view.data.model.Booking
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,24 +64,19 @@ class AdminBookingsFragment : Fragment() {
     }
 
     private fun loadBookings() {
-        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+            Log.e("AdminBookingsFragment", "Usuário não autenticado.")
+            return
+        }
+
+        Log.d("AdminBookingsFragment", "Buscando agendamentos para o UID: $currentUserUid")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val businessSnapshot = firestore.collection("business")
-                    .whereEqualTo("ownerId", currentUserUid)
-                    .get()
-                    .await()
-
-                val businessId = businessSnapshot.documents.firstOrNull()?.id
-
-                if (businessId.isNullOrEmpty()) {
-                    withContext(Dispatchers.Main) { showEmptyMessage(true) }
-                    return@launch
-                }
-
+                // Consulta diretamente na coleção 'bookings' usando o currentUserUid como companyId
                 val bookingsSnapshot = firestore.collection("bookings")
-                    .whereEqualTo("companyId", businessId)
+                    .whereEqualTo("companyId", currentUserUid) // Usando diretamente o UID do usuário logado
+                    .orderBy("timestamp", Query.Direction.ASCENDING) // Ordena por timestamp
                     .get()
                     .await()
 
@@ -88,29 +84,29 @@ class AdminBookingsFragment : Fragment() {
                     val booking = document.toObject(Booking::class.java)
                     booking?.id = document.id
                     booking
-                }.sortedWith(compareByDescending<Booking> {
-                    isFutureBooking(it) // Novos agendamentos primeiro
-                }.thenBy {
-                    parseDateTime(it.date ?: "", it.hour) // Ordenação por data/hora
-                })
+                }
+
+                Log.d("AdminBookingsFragment", "Agendamentos encontrados: ${bookings.size}")
 
                 withContext(Dispatchers.Main) {
                     if (bookings.isEmpty()) {
                         showEmptyMessage(true)
                     } else {
                         bookingsAdapter.updateData(bookings)
-                        bookingsTitle.visibility = View.VISIBLE
                         bookingsRecyclerView.visibility = View.VISIBLE
+                        bookingsTitle.visibility = View.VISIBLE
                         showEmptyMessage(false)
                     }
                 }
             } catch (e: Exception) {
+                Log.e("AdminBookingsFragment", "Erro ao carregar agendamentos: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     showEmptyMessage(true)
                 }
             }
         }
     }
+
 
     private fun isFutureBooking(booking: Booking): Boolean {
         val currentDateTime = Calendar.getInstance().time

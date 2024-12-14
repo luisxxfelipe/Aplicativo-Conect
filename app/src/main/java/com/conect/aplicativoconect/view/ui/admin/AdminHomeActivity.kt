@@ -57,13 +57,9 @@ class AdminHomeActivity : AppCompatActivity() {
                         companyId = document.id
                         val endDate = document.getTimestamp("endDate")
                         val isActive = document.getBoolean("isActive") ?: false
-                        Log.d("SubscriptionCheck", "isActive: $isActive, endDate: $endDate")
+                        val isTrialActive = document.getBoolean("isTrialActive") ?: false
 
                         if (endDate == null) {
-                            Log.d(
-                                "SubscriptionCheck",
-                                "End date is missing for subscription ID: $companyId"
-                            )
                             Toast.makeText(
                                 this,
                                 "Data de término da assinatura ausente. Verifique no Firebase.",
@@ -72,21 +68,44 @@ class AdminHomeActivity : AppCompatActivity() {
                             return@addOnSuccessListener
                         }
 
-                        // Verifica se a assinatura está ativa e se falta pouco para expirar
-                        if (!isActive || daysUntil(endDate) <= 2) {
-                            showSubscriptionExpiryAlert(endDate) // Exibe alerta de expiração se necessário
+                        // Verifique o período de teste ou assinatura ativa
+                        if (isTrialActive) {
+                            val daysLeftInTrial = daysUntil(endDate)
+                            if (daysLeftInTrial > 0) {
+                                Toast.makeText(
+                                    this,
+                                    "Você está no período de teste. Dias restantes: $daysLeftInTrial",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                return@addOnSuccessListener
+                            } else {
+                                // Período de teste expirado
+                                firestore.collection("subscriptions").document(companyId!!)
+                                    .update("isTrialActive", false)
+                                Toast.makeText(
+                                    this,
+                                    "Seu período de teste expirou. Por favor, adquira uma assinatura.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                startActivity(Intent(this, PaymentActivity::class.java))
+                                finish()
+                            }
                         }
 
-                        // Se assinatura estiver expirada ou não ativa, podemos redirecionar o usuário
+                        // Verifique se a assinatura está ativa
                         if (!isActive) {
                             Toast.makeText(
                                 this,
                                 "Sua assinatura expirou. Por favor, renove sua assinatura.",
                                 Toast.LENGTH_LONG
                             ).show()
-                            // Redirecionar para a tela de pagamento ou renovação da assinatura
                             startActivity(Intent(this, PaymentActivity::class.java))
                             finish()
+                        } else {
+                            val daysUntilExpiry = daysUntil(endDate)
+                            if (daysUntilExpiry <= 2) {
+                                showSubscriptionExpiryAlert(endDate)
+                            }
                         }
 
                     } else {
@@ -102,6 +121,7 @@ class AdminHomeActivity : AppCompatActivity() {
                 }
         }
     }
+
 
 
     private fun daysUntil(endDate: Timestamp): Long {
@@ -147,9 +167,6 @@ class AdminHomeActivity : AppCompatActivity() {
 
             // Atualizando a contagem de alertas diários
             sharedPreferences.edit().putInt("dailyAlertCount", dailyAlertCount + 1).apply()
-            Log.d("SubscriptionCheck", "Alert shown, count updated to: ${dailyAlertCount + 1}")
-        } else {
-            Log.d("SubscriptionCheck", "Alert not shown due to daily limit.")
         }
     }
 
@@ -228,9 +245,12 @@ class AdminHomeActivity : AppCompatActivity() {
     }
 
     private fun showAddServiceDialog() {
-        val dialog = AddServiceDialogFragment()
-        val args = Bundle().apply { putString("companyId", companyId) }
-        dialog.arguments = args
+
+        val dialog = AddServiceDialogFragment().apply {
+            arguments = Bundle().apply {
+                putString("companyId", companyId)
+            }
+        }
         dialog.show(supportFragmentManager, "AddServiceDialog")
     }
 

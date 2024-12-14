@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
@@ -259,9 +260,13 @@ class BookingAdapter(
     }
 
     fun updateData(newBookings: List<Booking>) {
+        val diffCallback = BookingDiffCallback(bookings, newBookings)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+
         bookings = newBookings
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
+
 
     override fun getItemCount(): Int = bookings.size
 

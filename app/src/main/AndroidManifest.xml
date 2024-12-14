@@ -2,6 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permissões -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -130,7 +132,7 @@
 
         <!-- Activity para gerenciamento do resultado do pagamento -->
         <activity
-            android:name=".view.ui.PaymentResultActivity"
+            android:name=".view.data.PaymentResultActivity"
             android:exported="true"
             tools:ignore="Instantiatable">
             <intent-filter>

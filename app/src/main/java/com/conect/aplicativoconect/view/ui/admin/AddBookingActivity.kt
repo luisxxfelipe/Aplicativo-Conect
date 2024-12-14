@@ -68,59 +68,59 @@ class AddBookingActivity : AppCompatActivity() {
     private fun fetchCompanyId() {
         val user = FirebaseAuth.getInstance().currentUser
         user?.uid?.let { userId ->
-            FirebaseFirestore.getInstance().collection("business").whereEqualTo("ownerId", userId)
+            FirebaseFirestore.getInstance().collection("business").document(userId)
                 .get()
-                .addOnSuccessListener { documents ->
-                    if (documents.isEmpty) {
-                        Toast.makeText(this, "Nenhuma empresa encontrada.", Toast.LENGTH_SHORT)
-                            .show()
-                        return@addOnSuccessListener
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        companyId = document.id
+                        companyName = document.getString("name") // Obter o nome da empresa
+                        loadServicesAndOperatingHours() // Carrega os serviços e horários
+                    } else {
+                        Toast.makeText(this, "Nenhuma empresa encontrada.", Toast.LENGTH_SHORT).show()
                     }
-                    val businessDocument = documents.documents[0]
-                    companyId = businessDocument.id
-                    companyName = businessDocument.getString("name") // Obter o nome da empresa
-                    loadServicesAndOperatingHours() // Carrega os serviços e horários
                 }
                 .addOnFailureListener { exception ->
                     Toast.makeText(
                         this,
-                        "Erro ao buscar companyId: ${exception.message}",
+                        "Erro ao buscar empresa: ${exception.message}",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
         } ?: Toast.makeText(this, "Usuário não autenticado", Toast.LENGTH_SHORT).show()
     }
 
+
     private fun loadServicesAndOperatingHours() {
         companyId?.let { id ->
             FirebaseFirestore.getInstance().collection("business").document(id)
                 .get()
                 .addOnSuccessListener { document ->
-                    val services =
-                        document.get("services") as? List<Map<String, Any>> ?: emptyList()
-                    services.forEach { service ->
-                        val serviceName = service["serviceName"] as? String ?: ""
-                        val price = (service["price"] as? Number)?.toDouble() ?: 0.0
-                        servicesMap[serviceName] = price
+                    // Carregar serviços
+                    val services = document.get("services") as? List<Map<String, Any>> ?: emptyList()
+                    if (services.isNotEmpty()) {
+                        servicesMap.clear() // Certifique-se de limpar o mapa antes de adicionar novos itens
+                        services.forEach { service ->
+                            val serviceName = service["serviceName"] as? String ?: "Serviço Desconhecido"
+                            val price = (service["price"] as? Number)?.toDouble() ?: 0.0
+                            servicesMap[serviceName] = price
+                        }
+                        setupServiceSpinner(servicesMap.keys.toList()) // Configura o spinner com os serviços
+                    } else {
+                        Toast.makeText(this, "Nenhum serviço encontrado.", Toast.LENGTH_SHORT).show()
                     }
-                    setupServiceSpinner(servicesMap.keys.toList())
 
-                    // Obter horários de funcionamento do negócio
-                    val openingTime =
-                        (document.getString("opening")?.split(":")?.get(0)?.toInt()) ?: 9
-                    val closingTime =
-                        (document.getString("closing")?.split(":")?.get(0)?.toInt()) ?: 18
+                    // Carregar horários de funcionamento
+                    val operatingHoursMap = document.get("operatingHours") as? Map<String, String>
+                    val openingTime = operatingHoursMap?.get("opening")?.split(":")?.get(0)?.toInt() ?: 9
+                    val closingTime = operatingHoursMap?.get("closing")?.split(":")?.get(0)?.toInt() ?: 18
                     operatingHours = Pair(openingTime, closingTime)
                 }
-                .addOnFailureListener {
-                    Toast.makeText(
-                        this,
-                        "Erro ao carregar serviços e horários.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                .addOnFailureListener { exception ->
+                    Toast.makeText(this, "Erro ao carregar dados: ${exception.message}", Toast.LENGTH_SHORT).show()
                 }
-        }
+        } ?: Toast.makeText(this, "ID da empresa não encontrado.", Toast.LENGTH_SHORT).show()
     }
+
 
     private fun setupServiceSpinner(serviceNames: List<String>) {
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, serviceNames)

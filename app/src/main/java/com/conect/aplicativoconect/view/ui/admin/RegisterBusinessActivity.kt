@@ -5,8 +5,11 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
@@ -27,6 +30,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class RegisterBusinessActivity : AppCompatActivity(),
     OperatingHoursDialogFragment.OnHoursSelectedListener {
@@ -71,6 +79,24 @@ class RegisterBusinessActivity : AppCompatActivity(),
         operatingHoursInput = findViewById(R.id.operatingHoursInput)
         val phoneInput = findViewById<TextInputEditText>(R.id.phoneInput)
         val registerBusinessButton = findViewById<MaterialButton>(R.id.registerBusinessButton)
+
+        // Adicionando a máscara de telefone
+        phoneInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s != null) {
+                    // Verifica o comprimento da string e aplica a máscara
+                    val formatted = formatPhoneNumber(s.toString())
+                    if (s.toString() != formatted) {
+                        phoneInput.setText(formatted)
+                        phoneInput.setSelection(formatted.length)
+                    }
+                }
+            }
+        })
 
         // Referenciar o ImageView
         businessImageView = findViewById(R.id.businessImageView)
@@ -142,37 +168,66 @@ class RegisterBusinessActivity : AppCompatActivity(),
             val address = addressInput.text.toString().trim()
             val phone = phoneInput.text.toString().trim()
 
-            if (validateInputs(businessName, businessDescription, address, phone, email)) {
-                // Use a imagem padrão se imageUri for nulo
-                val finalImageUri =
-                    imageUri ?: Uri.parse("android.resource://${packageName}/drawable/default_img")
+            // Validação dos inputs
+            if (!validateInputs(businessName, businessDescription, address, phone, email)) return@setOnClickListener
 
-                // Verifique se selectedOperatingHours foi inicializado corretamente
-                if (!this::selectedOperatingHours.isInitialized) {
+            // Verifica se há uma imagem selecionada, caso contrário exibe mensagem
+            if (imageUri == null) {
+                Toast.makeText(this, "Por favor, selecione uma imagem para a empresa.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Exibe o progresso
+            progressDialog.show()
+
+            // Obtem coordenadas e registra a empresa
+            fetchCoordinatesAsync(address) { lat, lng, city ->
+                if (lat != null && lng != null && city != null) {
+                    registerBusiness(
+                        businessName = businessName,
+                        businessDescription = businessDescription,
+                        serviceType = selectedServiceType,
+                        address = address,
+                        latitude = lat,
+                        longitude = lng,
+                        city = city,
+                        operatingHours = selectedOperatingHours,
+                        phone = phone,
+                        imageUri = imageUri!!, // Certificamos que não será nulo
+                        email = email
+                    )
+                } else {
+                    progressDialog.dismiss()
                     Toast.makeText(
                         this,
-                        "Por favor, selecione o horário de funcionamento.",
+                        "Endereço inválido ou cidade não encontrada. Verifique o endereço e tente novamente.",
                         Toast.LENGTH_SHORT
                     ).show()
-                    return@setOnClickListener
                 }
-
-                progressDialog.show() // Mostrar o diálogo de progresso
-
-                // Registrar o negócio com os horários selecionados
-                registerBusiness(
-                    businessName,
-                    businessDescription,
-                    selectedServiceType,
-                    address,
-                    selectedOperatingHours, // Usar o horário selecionado pelo usuário
-                    phone,
-                    finalImageUri,
-                    email // Passando o email aqui
-                )
             }
         }
     }
+
+    private fun formatPhoneNumber(phone: String): String {
+        var cleanPhone = phone.replace("[^\\d]".toRegex(), "") // Remove tudo que não for número
+
+        // Aplica a máscara à medida que o número vai sendo digitado
+        return when {
+            cleanPhone.length <= 2 -> {
+                "($cleanPhone"
+            }
+            cleanPhone.length in 3..6 -> {
+                "(${cleanPhone.substring(0, 2)}) ${cleanPhone.substring(2)}"
+            }
+            cleanPhone.length in 7..10 -> {
+                "(${cleanPhone.substring(0, 2)}) ${cleanPhone.substring(2, 7)}-${cleanPhone.substring(7)}"
+            }
+            else -> {
+                "(${cleanPhone.substring(0, 2)}) ${cleanPhone.substring(2, 7)}-${cleanPhone.substring(7, 11)}"
+            }
+        }
+    }
+
 
     private fun setupProgressDialog() {
         val builder = AlertDialog.Builder(this)
@@ -233,6 +288,9 @@ class RegisterBusinessActivity : AppCompatActivity(),
         businessDescription: String,
         serviceType: String,
         address: String,
+        latitude: Double,
+        longitude: Double,
+        city: String, // Adicione o parâmetro de cidade
         operatingHours: OperatingHours,
         phone: String,
         imageUri: Uri,
@@ -240,71 +298,121 @@ class RegisterBusinessActivity : AppCompatActivity(),
     ) {
         val userId = auth.currentUser?.uid ?: return // UID do usuário autenticado
 
-        // Obter o token FCM
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val fcmToken = task.result
 
-                // Definir o caminho para salvar a imagem no Firebase Storage
                 val storageRef =
                     storage.reference.child("business_images/$userId/${imageUri.lastPathSegment}")
 
-                // Fazer o upload da imagem para o Firebase Storage
                 val uploadTask = storageRef.putFile(imageUri)
-                uploadTask.continueWithTask { uploadTask ->
-                    if (!uploadTask.isSuccessful) {
-                        uploadTask.exception?.let { throw it }
+                uploadTask.continueWithTask { task ->
+                    if (!task.isSuccessful) {
+                        task.exception?.let { throw it }
                     }
-                    storageRef.downloadUrl
-                }.addOnCompleteListener { uploadTask ->
+                    storageRef.downloadUrl // Obtém a URL do download
+                }.addOnCompleteListener { task ->
                     progressDialog.dismiss()
-                    if (uploadTask.isSuccessful) {
-                        val downloadUri = uploadTask.result
+                    if (task.isSuccessful) {
+                        val downloadUri = task.result // A URL correta está aqui
 
-                        // Dados para atualizar
-                        val businessUpdates = mapOf(
+                        val businessData = mapOf(
                             "name" to businessName,
                             "description" to businessDescription,
                             "serviceType" to serviceType,
                             "address" to address,
+                            "latitude" to latitude,
+                            "longitude" to longitude,
+                            "city" to city,
                             "phone" to phone,
                             "operatingHours" to operatingHours,
-                            "imageUrl" to downloadUri.toString(),
+                            "imageUrl" to downloadUri.toString(), // URL corrigida
                             "email" to email,
                             "fcmToken" to fcmToken
                         )
 
-                        // Usa `update` para preservar campos existentes
-                        firestore.collection("business").document(userId)
-                            .update(businessUpdates)
-                            .addOnSuccessListener {
-                                Toast.makeText(
-                                    this,
-                                    "Empresa cadastrada com sucesso!",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                val intent = Intent(this, AdminHomeActivity::class.java)
-                                intent.putExtra(
-                                    "FROM_REGISTER",
-                                    true
-                                ) // Passando a informação de que veio do cadastro
-                                startActivity(intent)
-                                finish()
+                        val businessRef = firestore.collection("business").document(userId)
+
+                        // Verifica se o documento de negócios já existe
+                        businessRef.get().addOnSuccessListener { documentSnapshot ->
+                            if (documentSnapshot.exists()) {
+                                // Documento existe, então atualiza os dados
+                                businessRef.update(businessData)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(
+                                            this,
+                                            "Empresa atualizada com sucesso!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        val intent = Intent(this, AdminHomeActivity::class.java)
+                                        intent.putExtra("FROM_REGISTER", true)
+                                        startActivity(intent)
+                                        finish()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            this,
+                                            "Erro ao atualizar: ${e.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                            } else {
+                                // Documento não existe, cria o novo
+                                businessRef.set(businessData)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(
+                                            this,
+                                            "Empresa cadastrada com sucesso!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        val intent = Intent(this, AdminHomeActivity::class.java)
+                                        intent.putExtra("FROM_REGISTER", true)
+                                        startActivity(intent)
+                                        finish()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            this,
+                                            "Erro ao cadastrar: ${e.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                             }
-                            .addOnFailureListener { e ->
-                                Toast.makeText(
-                                    this,
-                                    "Erro ao cadastrar: ${e.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+                        }.addOnFailureListener { e ->
+                            Toast.makeText(
+                                this,
+                                "Erro ao verificar dados da empresa: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     } else {
-                        Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(this, "Falha ao obter URL da imagem.", Toast.LENGTH_SHORT).show()
                     }
                 }
-            } else {
-                Toast.makeText(this, "Erro ao obter token FCM.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
+
+    private fun fetchCoordinatesAsync(address: String, callback: (Double?, Double?, String?) -> Unit) {
+        val geocoder = Geocoder(this, Locale.getDefault())
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val addresses = geocoder.getFromLocationName(address, 1)
+                withContext(Dispatchers.Main) {
+                    if (!addresses.isNullOrEmpty()) {
+                        val location = addresses[0]
+                        val cityName = location.locality ?: location.subAdminArea // Obtém o nome da cidade
+                        callback(location.latitude, location.longitude, cityName)
+                    } else {
+                        callback(null, null, null)
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    callback(null, null, null)
+                }
             }
         }
     }
@@ -331,13 +439,13 @@ class RegisterBusinessActivity : AppCompatActivity(),
         )
     }
 
-    override fun onHoursSelected(openingTime: String, closingTime: String) {
+    override fun onHoursSelected(opening: String, closing: String) {
         selectedOperatingHours = OperatingHours(
-            opening = openingTime,
-            closing = closingTime,
+            opening = opening,
+            closing = closing,
             days = listOf() // Atualize esta lista com os dias de funcionamento selecionados, se houver
         )
-        val operatingHoursText = "$openingTime - $closingTime"
+        val operatingHoursText = "$opening - $closing"
         operatingHoursInput.setText(operatingHoursText)
     }
 

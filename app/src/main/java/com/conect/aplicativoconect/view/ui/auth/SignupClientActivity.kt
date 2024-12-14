@@ -129,13 +129,12 @@ class SignupClientActivity : AppCompatActivity() {
     }
 
     private fun createUser(email: String, password: String, name: String) {
+        progressDialog.show() // Mostrar progresso ao iniciar a criação do usuário
+
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
-
-                // Fechar o progress dialog após o término da operação
-                progressDialog.dismiss()
-
                 if (task.isSuccessful) {
+
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
                     // Obter o Android ID
@@ -172,6 +171,7 @@ class SignupClientActivity : AppCompatActivity() {
                         }
                     }
                 } else {
+                    progressDialog.dismiss() // Fechar progresso em caso de erro
                     val exception = task.exception
                     if (exception is FirebaseAuthWeakPasswordException) {
                         Toast.makeText(

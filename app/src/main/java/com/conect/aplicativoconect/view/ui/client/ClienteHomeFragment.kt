@@ -1,18 +1,25 @@
 package com.conect.aplicativoconect.view.ui.client
 
 import CategoriesPagerAdapter
+import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RatingBar
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -22,10 +29,18 @@ import com.conect.aplicativoconect.view.data.model.Booking
 import com.conect.aplicativoconect.view.data.model.Business
 import com.conect.aplicativoconect.view.ui.admin.BusinessAdapter
 import com.conect.aplicativoconect.view.viewmodel.ClientViewModel
+import com.google.android.gms.location.LocationServices
+import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.util.Calendar
+import java.util.Locale
 
 class ClienteHomeFragment : Fragment() {
 
@@ -40,6 +55,9 @@ class ClienteHomeFragment : Fragment() {
     private val PAGE_SIZE = 4 // Número de itens por vez
     private var lastVisible: DocumentSnapshot? = null // Último documento carregado
     private var isLoading = false // Controle de carregamento
+    private val cacheKey = "business_cache"
+    private var currentCity: String? = null
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1
 
 
     override fun onCreateView(
@@ -56,24 +74,171 @@ class ClienteHomeFragment : Fragment() {
 
         firestore = FirebaseFirestore.getInstance()
 
-        setupAdapters()
-        fetchBusinesses()
+        setupAdapters() // Inicialize os adapters antes de qualquer uso
+
+        // Carregar dados do cache primeiro
+        val cachedBusinesses = loadCachedBusinesses()
+        if (cachedBusinesses.isNotEmpty()) {
+            updateBusinessAdapter(cachedBusinesses)
+        }
+
         setupSearchView()
 
-        // Mostra o loading até carregar os agendamentos
         binding.progressBar.visibility = View.VISIBLE
 
-        // Obtém o ID do usuário e inicia o carregamento dos agendamentos e dados do usuário
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         userId?.let {
             clientViewModel.loadUserData(it)
-            clientViewModel.fetchUserBookings(it)  // Carrega agendamentos via ViewModel
+            clientViewModel.fetchUserBookings(it)
+        }
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+        } else {
+            fetchUserLocation()
         }
 
         observeUserData()
     }
 
+
+    private fun cacheBusinesses(businesses: List<Business>) {
+        val sharedPreferences = requireContext().getSharedPreferences("business_cache", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putString("cached_businesses", Gson().toJson(businesses)).apply()
+    }
+
+    private fun loadCachedBusinesses(): List<Business> {
+        val sharedPreferences = requireContext().getSharedPreferences(cacheKey, Context.MODE_PRIVATE)
+        val cachedData = sharedPreferences.getString(cacheKey, null)
+
+        return if (!cachedData.isNullOrEmpty()) {
+            Gson().fromJson(cachedData, object : TypeToken<List<Business>>() {}.type)
+        } else {
+            emptyList()
+        }
+    }
+
+
+    private fun saveBusinessesToCache() {
+        val sharedPreferences = requireContext().getSharedPreferences(cacheKey, Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val json = Gson().toJson(businessList)
+        editor.putString(cacheKey, json).apply()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            fetchUserLocation()
+        } else {
+            // Mostra uma mensagem explicando a necessidade da permissão
+            AlertDialog.Builder(requireContext())
+                .setMessage("A permissão de localização é necessária para encontrar empresas próximas.")
+                .setPositiveButton("OK") { _, _ -> }
+                .create()
+                .show()
+        }
+    }
+
+    private fun fetchUserLocation() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.e("ClienteHomeFragment", "Permissão de localização não concedida.")
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+            return
+        }
+
+        val locationProvider = LocationServices.getFusedLocationProviderClient(requireContext())
+        locationProvider.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                Log.d("ClienteHomeFragment", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val city = getCityFromLocation(location.latitude, location.longitude)
+                    withContext(Dispatchers.Main) {
+                        if (city == "Cidade não encontrada" || city == "Sem nome de cidade") {
+                            Log.e("ClienteHomeFragment", "Não foi possível determinar a cidade.")
+                            showFallbackLocation(location.latitude, location.longitude)
+                        } else {
+                            currentCity = city
+                            Log.d("ClienteHomeFragment", "Cidade atual: $currentCity")
+                            fetchBusinessesByCity(city)
+                        }
+                    }
+                }
+            } else {
+                Log.e("ClienteHomeFragment", "Localização não disponível.")
+            }
+        }.addOnFailureListener {
+            Log.e("ClienteHomeFragment", "Erro ao obter localização: ${it.message}")
+        }
+    }
+
+    private fun showFallbackLocation(latitude: Double, longitude: Double) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Localização não encontrada")
+            .setMessage("Não foi possível determinar a cidade. Suas coordenadas são:\nLatitude: $latitude\nLongitude: $longitude")
+            .setPositiveButton("OK") { _, _ -> }
+            .show()
+    }
+
+
+
+    private fun getCityFromLocation(latitude: Double, longitude: Double): String {
+        return try {
+            val geocoder = Geocoder(requireContext(), Locale.getDefault())
+            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+            if (addresses != null && addresses.isNotEmpty()) {
+                val address = addresses[0]
+                val city = address.locality ?: address.subAdminArea ?: "Sem nome de cidade"
+                Log.d("ClienteHomeFragment", "Cidade encontrada: $city")
+                city
+            } else {
+                Log.e("ClienteHomeFragment", "Nenhuma cidade encontrada para as coordenadas.")
+                "Cidade não encontrada"
+            }
+        } catch (e: Exception) {
+            Log.e("ClienteHomeFragment", "Erro no Geocoder: ${e.message}")
+            "Erro ao buscar cidade"
+        }
+    }
+
+    private fun fetchBusinessesByCity(city: String) {
+        if (isLoading) return
+        isLoading = true
+
+        val normalizedCity = city.trim().lowercase(Locale.getDefault())
+        Log.d("ClienteHomeFragment", "Buscando negócios para a cidade normalizada: $normalizedCity")
+
+        firestore.collection("business")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val businesses = querySnapshot.toObjects(Business::class.java)
+                    .filter { business ->
+                        val businessCityNormalized = business.city.trim().lowercase(Locale.getDefault())
+                        businessCityNormalized == normalizedCity
+                    }
+
+                Log.d("ClienteHomeFragment", "Negócios encontrados para $normalizedCity: ${businesses.size}")
+                businessList.clear()
+                businessList.addAll(businesses)
+                saveBusinessesToCache()
+                businessAdapter.submitList(businessList)
+            }
+            .addOnFailureListener {
+                Log.e("ClienteHomeFragment", "Erro ao buscar empresas: ${it.message}")
+            }
+            .addOnCompleteListener {
+                isLoading = false
+            }
+    }
+
+
     private fun setupAdapters() {
+        // Inicialize o adapter
+        businessAdapter = BusinessAdapter(requireContext()) { business ->
+            fetchBusinessIdAndOpenDetails(business.name)
+        }
+
         val categories = listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem")
         _binding?.categoriesRecyclerView?.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
@@ -88,57 +253,55 @@ class ClienteHomeFragment : Fragment() {
                 }
             }
 
-        businessAdapter = BusinessAdapter(requireContext()) { business ->
-            fetchBusinessIdAndOpenDetails(business.name)
-        }
+        _binding?.establishmentsRecyclerView?.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            setHasFixedSize(true) // Aqui você informa que o tamanho do RecyclerView não muda
+            adapter = businessAdapter
 
-        _binding?.establishmentsRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
-        _binding?.establishmentsRecyclerView?.adapter = businessAdapter
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val totalItemCount = layoutManager.itemCount
+                    val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
-        _binding?.establishmentsRecyclerView?.addOnScrollListener(object :
-            RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                val totalItemCount = layoutManager.itemCount
-                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
-
-                if (totalItemCount <= lastVisibleItemPosition + 4 && !isLoading) {
-                    fetchBusinesses()
+                    if (totalItemCount <= lastVisibleItemPosition + 4 && !isLoading) {
+                        fetchBusinesses()
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 
 
-    private fun fetchBusinesses() {
-        if (isLoading) return  // Evita múltiplas requisições simultâneas
+    private fun fetchBusinesses(city: String? = currentCity) {
+        if (isLoading) return
 
-        isLoading = true  // Inicia o carregamento
-        var query = firestore.collection("business")
-            .limit(PAGE_SIZE.toLong())  // Aumente para um número maior
-
-        // Se já carregamos algum item, usamos startAfter para continuar de onde paramos
-        lastVisible?.let {
-            query = query.startAfter(it)
-        }
-
-        // Inicia a consulta
-        query.get()
-            .addOnSuccessListener { querySnapshot ->
-                if (isAdded && _binding != null) {
-                    if (!querySnapshot.isEmpty) {
-                        val businesses = querySnapshot.toObjects(Business::class.java)
-                        businessList.addAll(businesses)  // Adiciona os novos estabelecimentos à lista
-                        lastVisible = querySnapshot.documents.last()  // Atualiza o último documento
-                        updateBusinessAdapter(businessList)  // Atualiza o adaptador com a nova lista
-                    }
+        isLoading = true
+        lifecycleScope.launch {
+            try {
+                val businesses = withContext(Dispatchers.IO) {
+                    val query = firestore.collection("business").limit(PAGE_SIZE.toLong())
+                    if (city != null) query.whereEqualTo("city", city)
+                    lastVisible?.let { query.startAfter(it) }
+                    query.get().await().toObjects(Business::class.java)
                 }
-                isLoading = false  // Finaliza o carregamento
+
+                if (businesses.isNotEmpty()) {
+                    val uniqueBusinesses = businesses.filter { newBusiness ->
+                        businessList.none { it.ownerId == newBusiness.ownerId }
+                    }
+                    businessList.addAll(uniqueBusinesses)
+                    lastVisible = businesses.lastOrNull()?.let { it as DocumentSnapshot }
+                    updateBusinessAdapter(businessList)
+                    cacheBusinesses(businessList)
+                }
+            } catch (e: Exception) {
+                Log.e("ClienteHomeFragment", "Erro ao buscar empresas: ${e.message}")
+            } finally {
+                isLoading = false
             }
-            .addOnFailureListener { e ->
-                isLoading = false  // Finaliza o carregamento em caso de erro
-            }
+        }
     }
 
 
@@ -162,17 +325,7 @@ class ClienteHomeFragment : Fragment() {
             binding.todayBookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
             binding.todayBookingsRecyclerView.adapter = clientBookingAdapter
         } else {
-            clientBookingAdapter.updateBookings(bookings) // Certifique-se de que este método está no adapter
-        }
-    }
-
-
-    private fun showDefaultView() {
-        binding.apply {
-            todayAgendaCardView.visibility = View.VISIBLE  // Mostra agendamentos
-            categoriesRecyclerView.visibility = View.VISIBLE  // Mostra categorias
-            establishmentsRecyclerView.visibility = View.VISIBLE  // Mostra estabelecimentos
-            categoriesTitle.visibility = View.VISIBLE  // Mostra o título "Categorias"
+            clientBookingAdapter.updateBookings(bookings) // Certifique-se de que este metodo está no adapter
         }
     }
 
@@ -274,11 +427,6 @@ class ClienteHomeFragment : Fragment() {
                 return true
             }
         })
-
-        binding.searchView.setOnCloseListener {
-            showDefaultView()
-            false
-        }
     }
 
     private fun filterBusinesses(query: String?) {
@@ -287,33 +435,17 @@ class ClienteHomeFragment : Fragment() {
         } else {
             businessList.filter { it.name.contains(query, ignoreCase = true) }
         }
-
-        updateBusinessAdapter(filteredList)
-
-        if (query.isNullOrEmpty()) {
-            showDefaultView()
-        } else {
-            showOnlyBusinesses()
-        }
-    }
-
-    private fun showOnlyBusinesses() {
-        _binding?.apply {
-            todayAgendaCardView.visibility = View.GONE
-            categoriesRecyclerView.visibility = View.GONE
-            categoriesTitle.visibility = View.GONE
-            establishmentsRecyclerView.visibility = View.VISIBLE
-        }
+        businessAdapter.submitList(filteredList)
     }
 
     private fun updateBusinessAdapter(filteredBusinesses: List<Business>) {
-        if (isAdded && _binding != null) {
-            // Verifica se a lista é diferente da anterior para evitar updates desnecessários
-            if (filteredBusinesses != businessAdapter.currentList) {
-                businessAdapter.submitList(filteredBusinesses)
-            }
+        Log.d("ClienteHomeFragment", "Atualizando adapter com ${filteredBusinesses.size} negócios")
+        if (::businessAdapter.isInitialized) {
+            businessAdapter.submitList(filteredBusinesses)
         }
     }
+
+
 
     private fun fetchBusinessIdAndOpenDetails(businessName: String) {
         firestore.collection("business")

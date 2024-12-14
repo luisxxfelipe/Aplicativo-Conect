@@ -13,10 +13,13 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.conect.aplicativoconect.R
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class AddServiceDialogFragment : DialogFragment() {
 
-    private var companyId: String? = null  // Adiciona variável para armazenar o ID da empresa
+    private lateinit var firestore: FirebaseFirestore
+    private var companyId: String? = null  // Variável para armazenar o ID da empresa
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
@@ -30,8 +33,18 @@ class AddServiceDialogFragment : DialogFragment() {
     ): View? {
         val view = inflater.inflate(R.layout.dialog_add_service, container, false)
 
-        // Obtém o companyId do argumento se estiver presente
-        companyId = arguments?.getString("companyId")
+        firestore = FirebaseFirestore.getInstance()
+
+        // Recupera o UID do usuário logado como companyId
+        companyId = FirebaseAuth.getInstance().currentUser?.uid
+        if (companyId.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Erro: Usuário não autenticado.", Toast.LENGTH_SHORT).show()
+            dismiss()
+            return null
+        }
+
+        // Buscar serviços da empresa
+        loadCompanyServices(companyId!!)
 
         // Configurar botões
         val addServiceButton: Button = view.findViewById(R.id.btn_adicionar_servicos)
@@ -39,7 +52,11 @@ class AddServiceDialogFragment : DialogFragment() {
         val btnPublicarFotos: Button = view.findViewById(R.id.btn_publicar_fotos)
 
         addServiceButton.setOnClickListener {
-            val fragment = AddServiceFragment()
+            val fragment = AddServiceFragment().apply {
+                arguments = Bundle().apply {
+                    putString("companyId", companyId) // Passa o companyId diretamente para o fragmento
+                }
+            }
             val transaction = requireActivity().supportFragmentManager.beginTransaction()
             transaction.replace(R.id.fragment_container, fragment)
             transaction.addToBackStack(null)
@@ -48,7 +65,11 @@ class AddServiceDialogFragment : DialogFragment() {
         }
 
         adjustHoursButton.setOnClickListener {
-            val fragment = OperatingHoursFragment()  // Use o nome correto da classe
+            val fragment = OperatingHoursFragment().apply {
+                arguments = Bundle().apply {
+                    putString("companyId", companyId) // Passa o companyId diretamente para o fragmento
+                }
+            }
             val transaction = requireActivity().supportFragmentManager.beginTransaction()
             transaction.replace(R.id.fragment_container, fragment)
             transaction.addToBackStack(null)
@@ -57,22 +78,52 @@ class AddServiceDialogFragment : DialogFragment() {
         }
 
         btnPublicarFotos.setOnClickListener {
-            if (companyId != null) {
-                val intent = Intent(requireContext(), PublishPhotoActivity::class.java).apply {
-                    putExtra("companyId", companyId)  // Passa o companyId para PublishPhotoActivity
-                }
-                startActivity(intent)
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "ID da empresa não encontrado.",
-                    Toast.LENGTH_SHORT
-                ).show()
+            val intent = Intent(requireContext(), PublishPhotoActivity::class.java).apply {
+                putExtra("companyId", companyId) // Passa o companyId diretamente para a atividade
             }
+            startActivity(intent)
             dismiss()
         }
 
         return view
+    }
+
+    private fun loadCompanyServices(companyId: String) {
+        firestore.collection("business").document(companyId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    // Recupera os serviços como uma lista de mapas
+                    val services = document.get("services") as? List<Map<String, Any>>
+                    if (!services.isNullOrEmpty()) {
+                        // Processa e exibe os serviços encontrados
+                        val serviceList = services.map { service ->
+                            val serviceName = service["serviceName"] as? String ?: "Serviço sem nome"
+                            val price = (service["price"] as? Number)?.toDouble() ?: 0.0
+                            "Serviço: $serviceName, Preço: R$ $price"
+                        }
+                        // Mostra os serviços carregados em um Toast ou adiciona à interface
+                        Toast.makeText(
+                            requireContext(),
+                            serviceList.joinToString("\n"),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        // Lista de serviços está vazia
+                        Toast.makeText(requireContext(), "Nenhum serviço encontrado.", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Empresa não encontrada.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { exception ->
+                // Trata erro ao carregar os dados
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao carregar serviços: ${exception.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
     }
 
     override fun onStart() {

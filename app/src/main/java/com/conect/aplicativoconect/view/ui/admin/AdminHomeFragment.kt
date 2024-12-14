@@ -114,38 +114,28 @@ class AdminHomeFragment : Fragment() {
     private fun loadBookings() {
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-        firestore.collection("business")
-            .whereEqualTo("ownerId", currentUserUid)
-            .get()
-            .addOnSuccessListener { businessSnapshot ->
-                val businessId =
-                    businessSnapshot.documents.firstOrNull()?.id ?: return@addOnSuccessListener
+        // Use um listener em tempo real
+        bookingListener = firestore.collection("bookings")
+            .whereEqualTo("companyId", currentUserUid)
+            .whereGreaterThanOrEqualTo("timestamp", System.currentTimeMillis())
+            .orderBy("timestamp", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("AdminHomeFragment", "Erro ao carregar agendamentos: ${error.message}")
+                    showErrorMessage("Erro ao carregar agendamentos.")
+                    return@addSnapshotListener
+                }
 
-                // Consulta para buscar todos os agendamentos futuros
-                firestore.collection("bookings")
-                    .whereEqualTo("companyId", businessId)
-                    .whereGreaterThanOrEqualTo("timestamp", System.currentTimeMillis())
-                    .orderBy("timestamp", Query.Direction.ASCENDING)
-                    .get()
-                    .addOnSuccessListener { querySnapshot ->
-                        val allBookings = querySnapshot.documents.mapNotNull { document ->
-                            document.toObject(Booking::class.java)?.apply { id = document.id }
-                        }
-
-                        // Processa os agendamentos em segundo plano
-                        Handler(Looper.getMainLooper()).post {
-                            processBookings(allBookings)
-                        }
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val allBookings = snapshot.documents.mapNotNull { document ->
+                        document.toObject(Booking::class.java)?.apply { id = document.id }
                     }
-                    .addOnFailureListener { e ->
-                        showErrorMessage("Erro ao carregar agendamentos.")
-                    }
-            }
-            .addOnFailureListener { e ->
-                showErrorMessage("Erro ao carregar dados da empresa.")
+                    processBookings(allBookings)
+                } else {
+                    showNoBookingsMessage(true)
+                }
             }
     }
-
 
     private fun setupWeeklyDateRange() {
         val calendar = Calendar.getInstance().apply {
@@ -330,28 +320,38 @@ class AdminHomeFragment : Fragment() {
 
     private fun loadBusinessName() {
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+            Log.e("AdminHomeFragment", "Usuário não autenticado.")
             binding.userNameBusiness.text = "Usuário não autenticado"
             setGreeting("Usuário") // Saudação mesmo que o usuário não esteja autenticado
             return
         }
 
+        Log.d("AdminHomeFragment", "Usuário autenticado com UID: $currentUserUid")
+
         firestore.collection("business")
-            .whereEqualTo("ownerId", currentUserUid)
+            .document(currentUserUid) // Acessa diretamente o documento com o UID como ID
             .get()
-            .addOnSuccessListener { documents ->
-                val business = documents.firstOrNull()?.toObject(Business::class.java)
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    setGreeting("Usuário")
+                    return@addOnSuccessListener
+                }
+
+                val business = document.toObject(Business::class.java)
                 val businessName = business?.name ?: "Nome não disponível"
 
-                binding.userNameBusiness.text = businessName  // Exibe o nome diretamente
-                setGreeting(businessName)  // Chama a saudação com o nome do negócio
+                Log.d("AdminHomeFragment", "Empresa encontrada: $businessName")
+                binding.userNameBusiness.text = businessName // Exibe o nome diretamente
+                setGreeting(businessName) // Chama a saudação com o nome do negócio
                 loadProfileImage(business?.imageUrl)
             }
             .addOnFailureListener { e ->
+                Log.e("AdminHomeFragment", "Erro ao carregar os dados da empresa: ${e.message}", e)
                 binding.userNameBusiness.text = "Erro ao carregar nome"
                 setGreeting("Usuário")
             }
-    }
 
+    }
 
     private fun loadProfileImage(imageUrl: String?) {
         imageUrl?.let {
