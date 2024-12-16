@@ -88,7 +88,7 @@ class EditProfileActivity : AppCompatActivity() {
                 if (document != null) {
                     editUserName.setText(document.getString("name"))
                     editUserEmail.setText(document.getString("email"))
-                    editUserPhone.setText(document.getString("phone"))
+                    editUserPhone.setText(document.getString("phoneCliente"))
 
                     val imageUrl = document.getString("imageUrl")
                     Glide.with(this)
@@ -165,7 +165,7 @@ class EditProfileActivity : AppCompatActivity() {
         val userData = mutableMapOf<String, Any>(
             "name" to name,
             "email" to email,
-            "phone" to phone
+            "phoneCliente" to phone
         )
         imageUrl?.let { userData["imageUrl"] = it }
 

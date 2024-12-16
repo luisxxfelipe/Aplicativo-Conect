@@ -171,105 +171,48 @@ class SignupClientActivity : AppCompatActivity() {
     private fun createUser(email: String, password: String, name: String, phone: String) {
         progressDialog.show() // Mostrar progresso ao iniciar a criação do usuário
 
-        // Obter o Android ID
-        val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-        // Verifica se o Android ID já está registrado
-        checkIfAndroidIdExists(androidId) { exists ->
-            if (exists) {
-                progressDialog.dismiss() // Fechar progresso
-                Toast.makeText(
-                    this,
-                    "Este dispositivo já está registrado. Redirecionando para login.",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    // Criação do HashMap com dados do usuário
+                    val userData: HashMap<String, Any> = hashMapOf(
+                        "userId" to userId,
+                        "email" to email,
+                        "name" to name,
+                        "phoneCliente" to phone,
+                        "isActive" to true,
+                        "type" to "client"
+                    )
 
-                // Redireciona para a tela de login
-                val intent = Intent(this, LoginActivity::class.java)
-                startActivity(intent)
-                finish()
-            } else {
-                // Prossegue com a criação do usuário no Firebase Authentication
-                auth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this) { task ->
-                        if (task.isSuccessful) {
-                            val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
-
-                            // Criação do HashMap com dados do usuário
-                            val userData: HashMap<String, Any> = hashMapOf(
-                                "userId" to userId,
-                                "email" to email,
-                                "name" to name,
-                                "phoneCliente" to phone,
-                                "isActive" to true,
-                                "type" to "client",
-                                "androidId" to androidId // Adiciona o Android ID aqui
-                            )
-
-                            // Fazer upload da imagem de perfil se houver
-                            imageUri?.let {
-                                uploadProfileImage(it, userId, userData)
-                            } ?: run {
-                                // Salva o usuário diretamente no Firestore e, após, o token
-                                saveUserToFirestore(userId, userData) {
-                                    saveFCMToken(userId) // Salva o token após salvar o usuário
-                                }
-                            }
-                        } else {
-                            progressDialog.dismiss() // Fechar progresso em caso de erro
-                            val exception = task.exception
-                            if (exception is FirebaseAuthWeakPasswordException) {
-                                Toast.makeText(
-                                    this,
-                                    "A senha é muito fraca. Por favor, escolha uma senha mais forte.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } else {
-                                Toast.makeText(
-                                    this,
-                                    "Falha ao cadastrar. Tente novamente.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+                    // Fazer upload da imagem de perfil se houver
+                    imageUri?.let {
+                        uploadProfileImage(it, userId, userData)
+                    } ?: run {
+                        saveUserToFirestore(userId, userData) {
+                            saveFCMToken(userId) // Salva o token após salvar o usuário
                         }
                     }
-            }
-        }
-    }
-
-    private fun checkIfAndroidIdExists(androidId: String, callback: (Boolean) -> Unit) {
-        db.collection("users")
-            .whereEqualTo("androidId", androidId)
-            .get()
-            .addOnSuccessListener { result ->
-                if (!result.isEmpty) {
-                    // Caso o Android ID já exista, exiba uma mensagem e redirecione para login
-                    progressDialog.dismiss() // Esconde o diálogo de progresso
-                    Toast.makeText(
-                        this,
-                        "Este dispositivo já está registrado. Redirecionando para login.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    // Redireciona para a tela de login
-                    val intent = Intent(this, LoginActivity::class.java)
-                    startActivity(intent)
-                    finish()
                 } else {
-                    callback(false) // Prossegue com o registro
+                    progressDialog.dismiss() // Fechar progresso em caso de erro
+                    val exception = task.exception
+                    if (exception is FirebaseAuthWeakPasswordException) {
+                        Toast.makeText(
+                            this,
+                            "A senha é muito fraca. Por favor, escolha uma senha mais forte.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "Falha ao cadastrar. Tente novamente.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
-            .addOnFailureListener { e ->
-                Log.e("Firebase", "Erro ao verificar Android ID: ${e.message}")
-                progressDialog.dismiss() // Esconde o diálogo de progresso
-                Toast.makeText(
-                    this,
-                    "Erro ao verificar dispositivo. Tente novamente.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
     }
-
 
     // Função para obter e salvar o token FCM
     private fun saveFCMToken(userId: String) {
@@ -364,5 +307,4 @@ class SignupClientActivity : AppCompatActivity() {
                 }
         }
     }
-
 }

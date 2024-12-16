@@ -269,7 +269,7 @@ class ClienteHomeFragment : Fragment() {
         }
 
         // Configura o RecyclerView de categorias
-        val categories = listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem")
+        val categories =  listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem", "Técnico de Informática", "Fotógrafo", "Depilação", "Desenvolvedor de sites")
         binding.categoriesRecyclerView.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.categoriesRecyclerView.adapter =

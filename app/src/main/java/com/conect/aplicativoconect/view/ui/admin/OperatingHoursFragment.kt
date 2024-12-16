@@ -38,16 +38,85 @@ class OperatingHoursFragment : Fragment() {
         timePickerClose = view.findViewById(R.id.timePickerClose)
         saveHoursButton = view.findViewById(R.id.saveHoursButton)
 
+        // Configurar o TimePicker no formato 24 horas
+        timePickerOpen.setIs24HourView(true)
+        timePickerClose.setIs24HourView(true)
+
         // Inicializar Firestore e FirebaseAuth
         firestore = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
 
+        // Configuração dos botões de dias da semana
+        setupDayButtons(view)
+
+        // Carregar horários registrados
+        loadOperatingHours()
+
         saveHoursButton.setOnClickListener {
             saveOperatingHours()
         }
+    }
 
-        // Configuração dos botões de dias da semana
-        setupDayButtons(view)
+    private fun loadOperatingHours() {
+        val userId = auth.currentUser?.uid ?: return
+
+        firestore.collection("business")
+            .document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val operatingHours = document.get("operatingHours") as? Map<*, *>
+                    if (operatingHours != null) {
+                        // Configurar horários de abertura e fechamento
+                        val opening = (operatingHours["opening"] as? String)?.split(":") ?: listOf("7", "00")
+                        val closing = (operatingHours["closing"] as? String)?.split(":") ?: listOf("19", "00")
+
+                        timePickerOpen.hour = opening[0].toInt()
+                        timePickerOpen.minute = opening[1].toInt()
+                        timePickerClose.hour = closing[0].toInt()
+                        timePickerClose.minute = closing[1].toInt()
+
+                        // Configurar dias da semana
+                        val days = operatingHours["days"] as? List<*>
+                        if (days != null) {
+                            selectedDays.clear()
+                            selectedDays.addAll(days.filterIsInstance<String>())
+
+                            // Atualizar aparência dos botões de dias
+                            updateDayButtons()
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Erro ao carregar horários: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateDayButtons() {
+        val dayButtons = mapOf(
+            "Monday" to view?.findViewById<Button>(R.id.buttonMonday),
+            "Tuesday" to view?.findViewById<Button>(R.id.buttonTuesday),
+            "Wednesday" to view?.findViewById<Button>(R.id.buttonWednesday),
+            "Thursday" to view?.findViewById<Button>(R.id.buttonThursday),
+            "Friday" to view?.findViewById<Button>(R.id.buttonFriday),
+            "Saturday" to view?.findViewById<Button>(R.id.buttonSaturday),
+            "Sunday" to view?.findViewById<Button>(R.id.buttonSunday)
+        )
+
+        dayButtons.forEach { (day, button) ->
+            button?.let {
+                if (selectedDays.contains(day)) {
+                    // Quando selecionado: fundo azul e texto branco
+                    button.setBackgroundColor(resources.getColor(R.color.orange))
+                    button.setTextColor(resources.getColor(R.color.white))
+                } else {
+                    // Quando não selecionado: fundo cinza e texto preto
+                    button.setBackgroundColor(resources.getColor(R.color.cinza_claro))
+                    button.setTextColor(resources.getColor(R.color.cinza_escuro))
+                }
+            }
+        }
     }
 
     private fun setupDayButtons(view: View) {
@@ -72,14 +141,11 @@ class OperatingHoursFragment : Fragment() {
         if (selectedDays.contains(day)) {
             // Desmarcar o dia
             selectedDays.remove(day)
-            button.setBackgroundResource(R.drawable.button_default)
-            button.setTextColor(resources.getColor(R.color.black))
         } else {
             // Marcar o dia
             selectedDays.add(day)
-            button.setBackgroundResource(R.drawable.button_selected)
-            button.setTextColor(resources.getColor(R.color.white))
         }
+        updateDayButtons() // Atualizar aparência de todos os botões
     }
 
     private fun saveOperatingHours() {
@@ -113,7 +179,6 @@ class OperatingHoursFragment : Fragment() {
                     .show()
             }
     }
-
 
     private fun redirectToHome() {
         val intent = Intent(activity, AdminHomeActivity::class.java)

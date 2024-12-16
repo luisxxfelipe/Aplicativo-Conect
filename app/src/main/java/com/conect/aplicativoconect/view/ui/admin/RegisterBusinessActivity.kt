@@ -104,7 +104,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
 
         // Configurar o Spinner com opções de serviços
         val serviceTypes =
-            listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem")
+            listOf("Cabeleireiro", "Manicure", "Estética", "Barbeiro", "Massagem", "Técnico de Informática", "Fotógrafo", "Depilação", "Desenvolvedor de sites")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, serviceTypes)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         serviceTypeSpinner.adapter = adapter
@@ -120,7 +120,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
-                selectedServiceType = ""
+                selectedServiceType = "Cabeleireiro"
             }
         }
 
@@ -368,10 +368,14 @@ class RegisterBusinessActivity : AppCompatActivity(),
                                             "Empresa atualizada com sucesso!",
                                             Toast.LENGTH_SHORT
                                         ).show()
-                                        val intent = Intent(this, AdminHomeActivity::class.java)
-                                        intent.putExtra("FROM_REGISTER", true)
-                                        startActivity(intent)
-                                        finish()
+
+                                        // Exibe o popup antes de redirecionar
+                                        showWelcomeDialog {
+                                            val intent = Intent(this, AdminHomeActivity::class.java)
+                                            intent.putExtra("FROM_REGISTER", true)
+                                            startActivity(intent)
+                                            finish()
+                                        }
                                     }
                                     .addOnFailureListener { e ->
                                         Toast.makeText(
@@ -380,7 +384,8 @@ class RegisterBusinessActivity : AppCompatActivity(),
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     }
-                            } else {
+                            }
+                            else {
                                 // Documento não existe, cria o novo
                                 businessRef.set(businessData)
                                     .addOnSuccessListener {
@@ -445,6 +450,27 @@ class RegisterBusinessActivity : AppCompatActivity(),
         }
     }
 
+    private fun showWelcomeDialog(onDismiss: () -> Unit) {
+        val builder = AlertDialog.Builder(this)
+        val dialog = builder.setTitle("Parabéns por começar a usar o Conectex")
+            .setMessage(
+                "Como responsável pelo estabelecimento, você terá 1 mês gratuito para explorar todas as funcionalidades. Após esse período, será cobrado R$ 25,00 por mês para continuar o uso. Lembre-se: para os clientes, " +
+                        "o uso do app é totalmente gratuito! Aproveite e conte com a gente para ajudar seu negócio a crescer!"
+            )
+            .setPositiveButton("Continuar") { dialog, _ ->
+                dialog.dismiss()
+                onDismiss() // Chama a função passada após o fechamento
+            }
+            .create()
+
+        dialog.setOnShowListener {
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            positiveButton.setTextColor(ContextCompat.getColor(this, R.color.roxo))
+        }
+
+        dialog.setCancelable(false) // Evita que o usuário feche o popup clicando fora
+        dialog.show()
+    }
 
     private fun openGallery() {
         val intent = Intent(Intent.ACTION_PICK)
