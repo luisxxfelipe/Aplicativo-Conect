@@ -71,8 +71,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="@android:color/transparent"
-                android:inputType="textEmailAddress" />
+                android:inputType="textEmailAddress"
+                android:focusable="false"
+                android:cursorVisible="false"
+                android:longClickable="false" />
         </com.google.android.material.textfield.TextInputLayout>
+
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"

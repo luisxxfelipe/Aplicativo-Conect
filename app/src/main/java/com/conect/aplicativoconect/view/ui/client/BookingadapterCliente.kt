@@ -106,19 +106,16 @@ class ClientBookingAdapter(
         holder.rateButton.setOnClickListener { onRateClick(booking) }
     }
 
-
     // Função para abrir o WhatsApp
     private fun openWhatsApp(phoneNumber: String?, message: String) {
         if (!phoneNumber.isNullOrEmpty()) {
             val uri = Uri.parse("https://wa.me/$phoneNumber?text=${Uri.encode(message)}")
             val intent = Intent(Intent.ACTION_VIEW, uri)
             intent.setPackage("com.whatsapp")
-
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
             }
-        } else {
         }
     }
 

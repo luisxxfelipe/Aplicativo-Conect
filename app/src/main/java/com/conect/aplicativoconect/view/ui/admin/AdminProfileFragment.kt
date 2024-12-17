@@ -34,41 +34,48 @@ class AdminProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicializando o ViewModel
+        // Inicializa o ViewModel
         adminViewModel = ViewModelProvider(this).get(AdminViewModel::class.java)
         firestore = FirebaseFirestore.getInstance()
 
-        // Observar o nome do administrador
+        // Observar nome e email do administrador
         adminViewModel.adminName.observe(viewLifecycleOwner) { name ->
             binding.userNameAdmin.text = name ?: "Nome não disponível"
         }
 
-        // Observar o e-mail do administrador
         adminViewModel.adminEmail.observe(viewLifecycleOwner) { email ->
             binding.userEmailAdmin.text = email ?: "Email não disponível"
         }
 
-        // Carregar a imagem de perfil do administrador do Firestore
+        // Observar endereço
+        adminViewModel.address.observe(viewLifecycleOwner) { address ->
+            binding.address.text = address ?: "Endereço não disponível"
+        }
+
+        // Observar horário de funcionamento
+        adminViewModel.operatingHours.observe(viewLifecycleOwner) { hours ->
+            binding.horarioFuncionamento.text = hours ?: "Horário não disponível"
+        }
+
+        // Carregar imagem de perfil
         loadProfileImage()
 
-        // Carregar os dados do administrador do Firestore
+        // Carregar dados do administrador do Firestore
         adminViewModel.loadAdminData()
 
+        // Configuração dos botões
         binding.dadospessoais.setOnClickListener {
             val intent = Intent(requireContext(), EditBusinessProfileActivity::class.java)
             startActivity(intent)
         }
 
-        // Redireciona para o WhatsApp
         binding.helpButtonAdmin.setOnClickListener {
             val message = "Olá, preciso de ajuda com o aplicativo."
             val url = "https://wa.me/5535984478656?text=${Uri.encode(message)}"
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse(url)
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(intent)
         }
 
-        // Redireciona para a tela de política de privacidade
         binding.aboutpolicy.setOnClickListener {
             val intent = Intent(requireContext(), PolicyActivity::class.java)
             startActivity(intent)
@@ -83,27 +90,22 @@ class AdminProfileFragment : Fragment() {
     }
 
     private fun loadProfileImage() {
-        val userId =
-            FirebaseAuth.getInstance().currentUser?.uid ?: return // Obtendo o ID do usuário
-
-        // Recuperar a URL da imagem de perfil do Firestore
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         firestore.collection("business")
             .document(userId)
             .get()
             .addOnSuccessListener { document ->
-                if (document != null) {
-                    val imageUrl = document.getString("imageUrl")
-                    if (!imageUrl.isNullOrEmpty()) {
-                        // Usar Glide para carregar a imagem de perfil na CircleImageView
-                        Glide.with(this)
-                            .load(imageUrl) // Carregar a URL diretamente
-                            .placeholder(R.drawable.foto_perfil_generica) // Imagem de placeholder enquanto carrega
-                            .error(R.drawable.foto_perfil_generica) // Imagem de erro, caso falhe
-                            .into(binding.profileImageAdmin)
-                    }
+                val imageUrl = document.getString("imageUrl")
+                if (!imageUrl.isNullOrEmpty()) {
+                    Glide.with(this)
+                        .load(imageUrl)
+                        .placeholder(R.drawable.foto_perfil_generica)
+                        .error(R.drawable.foto_perfil_generica)
+                        .into(binding.profileImageAdmin)
                 }
             }
-            .addOnFailureListener { exception ->
+            .addOnFailureListener {
+                // Tratar falha ao carregar imagem
             }
     }
 

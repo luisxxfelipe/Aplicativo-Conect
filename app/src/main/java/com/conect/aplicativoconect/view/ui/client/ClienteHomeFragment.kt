@@ -32,12 +32,15 @@ import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.internal.Util.parseDateTime
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 class ClienteHomeFragment : Fragment() {
@@ -401,12 +404,20 @@ class ClienteHomeFragment : Fragment() {
 
         // Observa os agendamentos
         clientViewModel.todayBookings.observe(viewLifecycleOwner) { bookings ->
-            binding.progressBar.visibility = View.GONE // Esconde o loading
-            if (bookings.isNotEmpty()) {
-                setupClientBookingAdapter(bookings)
-                showNoBookingsMessage(false) // Oculta mensagem de "nenhum agendamento"
+            binding.progressBar.visibility = View.GONE
+            val currentTime = Calendar.getInstance().time
+
+            // Filtra apenas agendamentos futuros ou do dia atual
+            val upcomingBookings = bookings.filter { booking ->
+                val bookingDateTime = convertToDate(booking.date, booking.hour)
+                bookingDateTime?.after(currentTime) ?: false
+            }
+
+            if (upcomingBookings.isNotEmpty()) {
+                setupClientBookingAdapter(upcomingBookings)
+                showNoBookingsMessage(false)
             } else {
-                showNoBookingsMessage(true) // Exibe mensagem e imagem
+                showNoBookingsMessage(true)
             }
         }
 
@@ -418,6 +429,17 @@ class ClienteHomeFragment : Fragment() {
         }
     }
 
+    private fun convertToDate(date: String?, hour: String?): Date? {
+        if (date == null || hour == null) return null
+        return try {
+            val dateTimeString = "$date $hour" // Combina data e hora
+            val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            format.parse(dateTimeString)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
     private fun filterBusinessesByCategory(category: String) {
         if (selectedCategory == category) {

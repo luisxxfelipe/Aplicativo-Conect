@@ -46,6 +46,18 @@ class EditBusinessProfileActivity : AppCompatActivity() {
         editBusinessPhone = findViewById(R.id.editBusinessPhone)
         saveBusinessProfileButton = findViewById(R.id.saveBusinessProfileButton)
 
+        // Bloquear o campo de e-mail
+        editBusinessEmail.isFocusable = false
+        editBusinessEmail.isCursorVisible = false
+        editBusinessEmail.setOnTouchListener { _, _ ->
+            Toast.makeText(
+                this,
+                "O e-mail não pode ser modificado.",
+                Toast.LENGTH_SHORT
+            ).show()
+            true // Consome o evento e impede qualquer interação
+        }
+
         loadBusinessProfile()
         applyCpfMask()
         applyPhoneMask()
@@ -58,6 +70,7 @@ class EditBusinessProfileActivity : AppCompatActivity() {
             saveBusinessProfile()
         }
     }
+
 
     private fun applyCpfMask() {
         editBusinessCpf.addTextChangedListener(object : TextWatcher {

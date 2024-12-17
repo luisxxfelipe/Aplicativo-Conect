@@ -30,8 +30,14 @@ class AdminViewModel : ViewModel() {
     private val _adminEmail = MutableLiveData<String>() // E-mail do administrador
     val adminEmail: LiveData<String> get() = _adminEmail
 
-    private val _companyId = MutableLiveData<String>() // Adicionando o companyId
+    private val _companyId = MutableLiveData<String>() // ID da empresa
     val companyId: LiveData<String> get() = _companyId
+
+    private val _address = MutableLiveData<String>() // Endereço da empresa
+    val address: LiveData<String> get() = _address
+
+    private val _operatingHours = MutableLiveData<String>() // Horário de funcionamento
+    val operatingHours: LiveData<String> get() = _operatingHours
 
     private val firestore: FirebaseFirestore = Firebase.firestore
 
@@ -68,36 +74,55 @@ class AdminViewModel : ViewModel() {
         _companyId.value = id
     }
 
+    fun setAddress(addr: String) {
+        _address.value = addr
+    }
+
+    fun setOperatingHours(hours: String) {
+        _operatingHours.value = hours
+    }
+
     // Metodo para carregar dados do administrador
     fun loadAdminData() {
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        firestore.collection("business") // Nome da coleção no Firestore
-            .document(currentUserUid) // Use o UID do usuário autenticado
+        firestore.collection("business")
+            .document(currentUserUid)
             .get()
             .addOnSuccessListener { document ->
                 if (document != null) {
-                    val name = document.getString("name") // Campo 'name' no Firestore
-                    val email = document.getString("email") // Campo 'email' no Firestore
-                    val companyId =
-                        document.getString("companyId") // Campo 'companyId' no Firestore
+                    val name = document.getString("name") ?: "Nome não disponível"
+                    val email = document.getString("email") ?: "Email não disponível"
+                    val companyId = document.getString("companyId") ?: "ID não disponível"
+                    val address = document.getString("address") ?: "Endereço não disponível"
 
-                    setBusinessName(name ?: "Nome não disponível")
-                    setAdminName(name ?: "Nome não disponível")
-                    setAdminEmail(email ?: "Email não disponível")
-                    setCompanyId(
-                        companyId ?: "ID da empresa não disponível"
-                    ) // Armazena o companyId
+                    // Horário de funcionamento
+                    val operatingHoursMap = document.get("operatingHours") as? Map<*, *>
+                    val opening = operatingHoursMap?.get("opening") as? String ?: "00:00"
+                    val closing = operatingHoursMap?.get("closing") as? String ?: "00:00"
+
+                    val operatingHours = "$opening - $closing"
+
+                    // Atualiza os LiveData
+                    setBusinessName(name)
+                    setAdminName(name)
+                    setAdminEmail(email)
+                    setCompanyId(companyId)
+                    setAddress(address)
+                    setOperatingHours(operatingHours)
                 } else {
                     setAdminName("Nome não disponível")
                     setAdminEmail("Email não disponível")
-                    setCompanyId("ID da empresa não disponível")
+                    setCompanyId("ID não disponível")
+                    setAddress("Endereço não disponível")
+                    setOperatingHours("Horário não disponível")
                 }
             }
-            .addOnFailureListener { exception ->
-                // Tratar erro
+            .addOnFailureListener {
                 setAdminName("Erro ao carregar nome")
                 setAdminEmail("Erro ao carregar email")
-                setCompanyId("Erro ao carregar ID da empresa")
+                setCompanyId("Erro ao carregar ID")
+                setAddress("Erro ao carregar endereço")
+                setOperatingHours("Erro ao carregar horários")
             }
     }
 }

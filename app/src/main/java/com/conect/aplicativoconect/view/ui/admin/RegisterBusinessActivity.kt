@@ -272,39 +272,42 @@ class RegisterBusinessActivity : AppCompatActivity(),
         phone: String,
         email: String
     ): Boolean {
-        return when {
-            businessName.isEmpty() -> {
-                Toast.makeText(this, "Por favor, insira o nome da empresa.", Toast.LENGTH_SHORT)
-                    .show()
-                false
-            }
+        var isValid = true
 
-            businessDescription.isEmpty() -> {
-                Toast.makeText(
-                    this,
-                    "Por favor, insira a descrição da empresa.",
-                    Toast.LENGTH_SHORT
-                ).show()
-                false
-            }
-
-            address.isEmpty() -> {
-                Toast.makeText(this, "Por favor, insira o endereço.", Toast.LENGTH_SHORT).show()
-                false
-            }
-
-            phone.isEmpty() -> {
-                Toast.makeText(this, "Por favor, insira o telefone.", Toast.LENGTH_SHORT).show()
-                false
-            }
-
-            email.isEmpty() -> {
-                Toast.makeText(this, "Por favor, insira o email.", Toast.LENGTH_SHORT).show()
-                false
-            }
-
-            else -> true
+        if (businessName.isEmpty()) {
+            findViewById<TextInputEditText>(R.id.nameUser).error = "Campo obrigatório"
+            isValid = false
+        } else {
+            findViewById<TextInputEditText>(R.id.nameUser).error = null
         }
+
+        if (businessDescription.isEmpty()) {
+            findViewById<TextInputEditText>(R.id.businessDescriptionInput).error = "Campo obrigatório"
+            isValid = false
+        } else {
+            findViewById<TextInputEditText>(R.id.businessDescriptionInput).error = null
+        }
+
+        if (address.isEmpty()) {
+            findViewById<TextInputEditText>(R.id.addressInput).error = "Campo obrigatório"
+            isValid = false
+        } else {
+            findViewById<TextInputEditText>(R.id.addressInput).error = null
+        }
+
+        if (phone.isEmpty()) {
+            findViewById<TextInputEditText>(R.id.phoneInput).error = "Campo obrigatório"
+            isValid = false
+        } else {
+            findViewById<TextInputEditText>(R.id.phoneInput).error = null
+        }
+
+        if (email.isEmpty()) {
+            Toast.makeText(this, "E-mail é obrigatório!", Toast.LENGTH_SHORT).show()
+            isValid = false
+        }
+
+        return isValid
     }
 
     private fun registerBusiness(
