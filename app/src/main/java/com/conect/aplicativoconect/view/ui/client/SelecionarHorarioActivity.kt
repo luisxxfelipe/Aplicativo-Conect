@@ -84,7 +84,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
 
         // Calcula a data máxima permitida (3 semanas a partir da data atual)
         val maxDateCalendar = Calendar.getInstance()
-        maxDateCalendar.add(Calendar.WEEK_OF_YEAR, 3) // Adiciona 3 semanas
+        maxDateCalendar.add(Calendar.WEEK_OF_YEAR, 3)
 
         val datePickerDialog = DatePickerDialog(
             this,
@@ -92,48 +92,29 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 val selectedCalendar = Calendar.getInstance()
                 selectedCalendar.set(year, month, dayOfMonth)
 
-                // Verifica se o dia selecionado está nos dias trabalhados
+                // Obtenha o nome do dia da semana no idioma local
                 val dayOfWeek = selectedCalendar.getDisplayName(
                     Calendar.DAY_OF_WEEK,
                     Calendar.LONG,
                     Locale.getDefault()
                 )
-                if (workingDays.contains(dayOfWeek)) {
+
+                if (workingDays.contains(dayOfWeek)) { // Verifica se o dia está nos dias trabalhados
                     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                     selectedDate = dateFormat.format(selectedCalendar.time)
                     buttonPickDate.text = "Ajustar Data"
                     fetchExistingBookings(selectedDate!!)
                 } else {
-                    Toast.makeText(this, "A empresa não trabalha neste dia.", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(this, "A empresa não trabalha neste dia.", Toast.LENGTH_SHORT).show()
                 }
-
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
 
-        // Configura a data mínima para hoje
         datePickerDialog.datePicker.minDate = calendar.timeInMillis
-        // Configura a data máxima para 3 semanas a partir de hoje
         datePickerDialog.datePicker.maxDate = maxDateCalendar.timeInMillis
-
-        // Personalizar o DatePicker para desativar os dias não trabalhados
-        datePickerDialog.datePicker.setOnDateChangedListener { _, year, month, dayOfMonth ->
-            val selectedCalendar = Calendar.getInstance()
-            selectedCalendar.set(year, month, dayOfMonth)
-
-            val dayOfWeek = selectedCalendar.getDisplayName(
-                Calendar.DAY_OF_WEEK,
-                Calendar.LONG,
-                Locale.getDefault()
-            )
-            if (!workingDays.contains(dayOfWeek)) {
-                Toast.makeText(this, "A empresa não trabalha neste dia.", Toast.LENGTH_SHORT).show()
-            }
-        }
-
         datePickerDialog.show()
     }
 
@@ -165,12 +146,34 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         firestore.collection("business").document(companyId).get()
             .addOnSuccessListener { documentSnapshot ->
                 operatingHours = documentSnapshot.get("operatingHours") as Map<String, Any>
-                workingDays =
-                    documentSnapshot.get("operatingHours.days") as? List<String> ?: emptyList()
+
+                val daysInEnglish = documentSnapshot.get("operatingHours.days") as? List<String> ?: emptyList()
+
+                // Converte os dias para o idioma local, se necessário
+                workingDays = convertDaysToLocale(daysInEnglish)
+
                 val averageDuration = documentSnapshot.getDouble("averageDuration") ?: 30.0
                 selectedService.duration = averageDuration.toInt()
             }
     }
+
+    private fun convertDaysToLocale(daysInEnglish: List<String>): List<String> {
+        val currentLanguage = Locale.getDefault().language // Verifica o idioma local
+        if (currentLanguage == "pt") { // Se o idioma local for português
+            val daysMap = mapOf(
+                "Monday" to "segunda-feira",
+                "Tuesday" to "terça-feira",
+                "Wednesday" to "quarta-feira",
+                "Thursday" to "quinta-feira",
+                "Friday" to "sexta-feira",
+                "Saturday" to "sábado",
+                "Sunday" to "domingo"
+            )
+            return daysInEnglish.map { daysMap[it] ?: it } // Converte para português
+        }
+        return daysInEnglish // Retorna em inglês se o idioma local não for português
+    }
+
 
     private fun generateAvailableHours(bookedHours: List<String>): List<String> {
         val openingTime = operatingHours["opening"] as? String ?: "06:00"
