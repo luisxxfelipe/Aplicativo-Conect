@@ -1,39 +1,20 @@
 pluginManagement {
-
     repositories {
-
         google()
-
         mavenCentral()
-
-        gradlePluginPortal() // Necessário para plugins Gradle
-
-        maven { url "https://artifactory.mercadolibre.com/artifactory/mobile" } // Repositório Mercado Pago
-
+        gradlePluginPortal()
+        maven { url "https://artifactory.mercadolibre.com/artifactory/mobile" }  // Oficial para SDK Mercado Pago v8
     }
-
 }
-
-
 
 dependencyResolutionManagement {
-
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-
     repositories {
-
         google()
-
         mavenCentral()
-
-        maven { url "https://artifactory.mercadolibre.com/artifactory/mobile" } // Repositório Mercado Pago
-
+        maven { url "https://artifactory.mercadolibre.com/artifactory/mobile" }  // Prático para deps
     }
-
 }
 
-
-
 rootProject.name = "AplicativoConect"
-
 include ':app'

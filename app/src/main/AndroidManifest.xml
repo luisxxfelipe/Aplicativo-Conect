@@ -1,5 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Permissões -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -13,7 +12,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
-        android:name=".view.ConectApplication"
+        android:name=".ui.activities.ConectApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_logo_app"
         android:label="ConecteX"
@@ -32,7 +31,7 @@
 
         <!-- FCM Service -->
         <service
-            android:name=".view.ui.MyFirebaseMessagingService"
+            android:name=".core.services.MyFirebaseMessagingService"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
@@ -41,21 +40,7 @@
 
         <!-- Firebase Instance ID Receiver -->
         <receiver
-            android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
-            android:exported="true"
-            android:permission="android.permission.WAKE_LOCK"
-            tools:replace="android:permission">
-            <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-
-                <category android:name="com.conect.aplicativoconect" />
-            </intent-filter>
-        </receiver>
-
-        <!-- BootReceiver para iniciar o WorkManager após o boot -->
-        <receiver
-            android:name=".view.data.BootReceiver"
+            android:name=".data.repositories.BootReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
@@ -65,7 +50,7 @@
 
         <!-- Atividades do aplicativo -->
         <activity
-            android:name=".view.ui.SplashActivity"
+            android:name=".ui.activities.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -75,98 +60,56 @@
 
         <!-- Atividades do aplicativo -->
         <activity
-            android:name=".view.ui.WelcomeActivity"
+            android:name=".ui.activities.WelcomeActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.auth.RoleSelectionActivity"
+            android:name=".ui.activities.RoleSelectionActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.auth.LoginActivity"
+            android:name=".ui.activities.LoginActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.auth.SignupClientActivity"
+            android:name=".ui.activities.SignupClientActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.auth.SignupBusinessActivity"
+            android:name=".ui.activities.SignupBusinessActivity"
             android:exported="true" />
         <activity
-            android:name=".view.data.repository.ForgotPasswordActivity"
+            android:name=".ui.activities.ForgotPasswordActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.client.ClienteHomeActivity"
+            android:name=".ui.activities.ClienteHomeActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.admin.AdminHomeActivity"
+            android:name=".ui.activities.AdminHomeActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.admin.RegisterBusinessActivity"
+            android:name=".ui.activities.RegisterBusinessActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.client.EmpresaDetalhesActivity"
+            android:name=".ui.activities.EmpresaDetalhesActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.client.SelecionarHorarioActivity"
+            android:name=".ui.activities.SelecionarHorarioActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.admin.AddBookingActivity"
+            android:name=".ui.activities.AddBookingActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.admin.AdminSettingsFragment"
-            android:exported="true"
-            tools:ignore="Instantiatable" />
-        <activity
-            android:name=".view.ui.admin.PublishPhotoActivity"
+            android:name=".ui.activities.PublishPhotoActivity"
             android:exported="true" />
 
 
         <!-- EditProfileActivity e EditBusinessProfileActivity -->
         <activity
-            android:name=".view.ui.client.EditProfileActivity"
+            android:name=".ui.activities.EditProfileActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.admin.EditBusinessProfileActivity"
+            android:name=".ui.activities.EditBusinessProfileActivity"
             android:exported="true" />
         <activity
-            android:name=".view.ui.PolicyActivity"
+            android:name=".ui.activities.PolicyActivity"
             android:exported="true" />
-
-        <!-- Activity para gerenciamento do resultado do pagamento -->
-        <activity
-            android:name=".view.data.PaymentResultActivity"
-            android:exported="true"
-            tools:ignore="Instantiatable">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="success"
-                    android:scheme="conectapp" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="failure"
-                    android:scheme="conectapp" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="pending"
-                    android:scheme="conectapp" />
-            </intent-filter>
-        </activity>
-
 
         <meta-data
             android:name="preloaded_fonts"
