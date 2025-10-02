@@ -6,8 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.conect.aplicativoconect.ui.viewmodels.CompanyViewModel
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.data.models.Service
 import com.conect.aplicativoconect.ui.adapters.ServicesAdapter
@@ -16,15 +19,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 class ServicesFragment : Fragment() {
 
     private lateinit var companyId: String
-    private lateinit var firestore: FirebaseFirestore
     private lateinit var servicesRecyclerView: RecyclerView
+    private val companyViewModel: CompanyViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             companyId = it.getString("companyId") ?: ""
         }
-        firestore = FirebaseFirestore.getInstance()
     }
 
     override fun onCreateView(
@@ -35,32 +37,29 @@ class ServicesFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_services, container, false)
         servicesRecyclerView = view.findViewById(R.id.servicesRecyclerView)
         servicesRecyclerView.layoutManager = GridLayoutManager(context, 2)
-        fetchServices()
+        
+        setupObservers()
+        if (companyId.isNotEmpty()) {
+            companyViewModel.loadServices(companyId)
+        }
+        
         return view
     }
 
-    private fun fetchServices() {
-        firestore.collection("business").document(companyId)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val services =
-                        document.get("services") as? List<Map<String, Any>> ?: emptyList()
-                    val serviceList = services.mapNotNull { serviceMap ->
-                        val name = serviceMap["serviceName"] as? String
-                        val price = (serviceMap["price"] as? Number)?.toDouble()
-                        if (name != null && price != null) {
-                            Service(name, price)
-                        } else null
-                    }
-                    setupAdapter(serviceList)
-                } else {
-                    Toast.makeText(context, "Serviços não encontrados", Toast.LENGTH_SHORT).show()
-                }
+    private fun setupObservers() {
+        companyViewModel.services.observe(viewLifecycleOwner) { services ->
+            setupAdapter(services)
+        }
+        
+        companyViewModel.isLoading.observe(viewLifecycleOwner) { _ ->
+            // TODO: Implementar loading indicator se necessário
+        }
+        
+        companyViewModel.error.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener {
-                Toast.makeText(context, "Erro ao carregar serviços", Toast.LENGTH_SHORT).show()
-            }
+        }
     }
 
     private fun setupAdapter(serviceList: List<Service>) {

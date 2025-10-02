@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RatingBar
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -30,11 +31,11 @@ import com.conect.aplicativoconect.ui.adapters.CategoriesPagerAdapter
 import com.conect.aplicativoconect.ui.adapters.ClientBookingAdapter
 import com.conect.aplicativoconect.ui.viewmodels.ClientViewModel
 import com.google.android.gms.location.LocationServices
-import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -52,6 +53,17 @@ class ClienteHomeFragment : Fragment() {
     private lateinit var businessAdapter: BusinessAdapter
     private lateinit var clientBookingAdapter: ClientBookingAdapter
     private val businessList = mutableListOf<Business>()
+    
+    // ActivityResultLauncher para permissions
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            fetchUserLocation(false)
+        } else {
+            Log.d("ClienteHomeFragment", "Permissão de localização negada")
+        }
+    }
     private val clientViewModel: ClientViewModel by activityViewModels()
     private var selectedCategory: String? = null
     private val PAGE_SIZE = 4 // Número de itens por vez
@@ -102,10 +114,7 @@ class ClienteHomeFragment : Fragment() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            requestPermissions(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
             fetchUserLocation(forceUpdate) // Passa a flag para forçar a atualização
         }
@@ -142,24 +151,7 @@ class ClienteHomeFragment : Fragment() {
         editor.putString(cacheKey, json).apply()
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            fetchUserLocation()
-        } else {
-            // Mostra uma mensagem explicando a necessidade da permissão
-            AlertDialog.Builder(requireContext())
-                .setMessage("A permissão de localização é necessária para encontrar empresas próximas.")
-                .setPositiveButton("OK") { _, _ -> }
-                .create()
-                .show()
-        }
-    }
+
 
     private fun fetchUserLocation(forceUpdate: Boolean = false) {
         if (ContextCompat.checkSelfPermission(
@@ -168,10 +160,7 @@ class ClienteHomeFragment : Fragment() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.e("ClienteHomeFragment", "Permissão de localização não concedida.")
-            requestPermissions(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             return
         }
 
@@ -216,6 +205,7 @@ class ClienteHomeFragment : Fragment() {
     private fun getCityFromLocation(latitude: Double, longitude: Double): String {
         return try {
             val geocoder = Geocoder(requireContext(), Locale.getDefault())
+            @Suppress("DEPRECATION")
             val addresses = geocoder.getFromLocation(latitude, longitude, 1)
             if (addresses != null && addresses.isNotEmpty()) {
                 val address = addresses[0]
@@ -306,7 +296,7 @@ class ClienteHomeFragment : Fragment() {
                         businessList.none { it.ownerId == newBusiness.ownerId }
                     }
                     businessList.addAll(uniqueBusinesses)
-                    lastVisible = businesses.lastOrNull()?.let { it as DocumentSnapshot }
+                    // Note: lastVisible precisa ser obtido da query original, não dos objetos Business
                     updateBusinessAdapter(businessList)
                     cacheBusinesses(businessList)
                 }

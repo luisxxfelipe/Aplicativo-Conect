@@ -84,6 +84,10 @@
             android:name=".ui.activities.AdminHomeActivity"
             android:exported="true" />
         <activity
+            android:name=".ui.activities.PaymentActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
+        <activity
             android:name=".ui.activities.RegisterBusinessActivity"
             android:exported="true" />
         <activity

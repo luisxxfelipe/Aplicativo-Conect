@@ -2,8 +2,9 @@ package com.conect.aplicativoconect.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import android.view.MotionEvent
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
@@ -41,9 +42,10 @@ class RoleSelectionActivity : AppCompatActivity() {
             if (event.action == MotionEvent.ACTION_UP) {
                 view.performClick()
                 updateCardAppearance(clientCard, clientIcon, clientText)
-                Handler(Looper.getMainLooper()).postDelayed({
+                lifecycleScope.launch {
+                    delay(300)
                     navigateToLogin("client")
-                }, 300)
+                }
             }
             clientCard.startAnimation(scaleDown)
             true
@@ -54,9 +56,10 @@ class RoleSelectionActivity : AppCompatActivity() {
             if (event.action == MotionEvent.ACTION_UP) {
                 view.performClick()
                 updateCardAppearance(businessCard, businessIcon, businessText)
-                Handler(Looper.getMainLooper()).postDelayed({
+                lifecycleScope.launch {
+                    delay(300)
                     navigateToLogin("business")
-                }, 300)
+                }
             }
             businessCard.startAnimation(scaleDown)
             true

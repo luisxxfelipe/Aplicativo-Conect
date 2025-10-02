@@ -3,22 +3,14 @@ package com.conect.aplicativoconect.ui.adapters
 import androidx.recyclerview.widget.DiffUtil
 import com.conect.aplicativoconect.data.models.Business
 
-class BusinessDiffCallback(
-    private val oldList: List<Business>,
-    private val newList: List<Business>
-) : DiffUtil.Callback() {
-
-    override fun getOldListSize(): Int = oldList.size
-
-    override fun getNewListSize(): Int = newList.size
-
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        // Verifica se o id do item é o mesmo
-        return oldList[oldItemPosition].name == newList[newItemPosition].name
+class BusinessDiffCallback : DiffUtil.ItemCallback<Business>() {
+    override fun areItemsTheSame(oldItem: Business, newItem: Business): Boolean {
+        // Comparação de ID para garantir que estamos lidando com o mesmo item
+        return oldItem.cpf == newItem.cpf
     }
 
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        // Verifica se o conteúdo do item é o mesmo
-        return oldList[oldItemPosition] == newList[newItemPosition]
+    override fun areContentsTheSame(oldItem: Business, newItem: Business): Boolean {
+        // Verificação de igualdade dos dados do item
+        return oldItem == newItem
     }
 }

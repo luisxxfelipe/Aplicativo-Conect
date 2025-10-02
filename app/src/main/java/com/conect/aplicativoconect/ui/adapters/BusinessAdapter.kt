@@ -81,7 +81,6 @@ class BusinessAdapter(
         if (!imageUrl.isNullOrBlank()) {
             Glide.with(context)
                 .load(imageUrl)
-                .thumbnail(0.1f) // Pré-visualização enquanto a imagem principal carrega
                 .override(300, 300) // Limita o tamanho da imagem carregada
                 .centerCrop()
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -94,15 +93,4 @@ class BusinessAdapter(
     }
 }
 
-// Criação do DiffUtil.ItemCallback para comparar os itens
-class BusinessDiffCallback : DiffUtil.ItemCallback<Business>() {
-    override fun areItemsTheSame(oldItem: Business, newItem: Business): Boolean {
-        // Comparação de ID para garantir que estamos lidando com o mesmo item
-        return oldItem.cpf == newItem.cpf
-    }
-
-    override fun areContentsTheSame(oldItem: Business, newItem: Business): Boolean {
-        // Verificação de igualdade dos dados do item
-        return oldItem == newItem
-    }
-}
+// BusinessDiffCallback movido para arquivo separado - BusinessDiffCallback.kt

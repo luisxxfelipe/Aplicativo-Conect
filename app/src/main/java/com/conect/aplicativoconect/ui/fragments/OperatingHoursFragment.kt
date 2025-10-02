@@ -8,20 +8,23 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TimePicker
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.ui.activities.AdminHomeActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
+import com.conect.aplicativoconect.data.repositories.CompanyRepository
+import com.conect.aplicativoconect.ui.viewmodels.CompanyViewModel
 
 class OperatingHoursFragment : Fragment() {
 
     private lateinit var timePickerOpen: TimePicker
     private lateinit var timePickerClose: TimePicker
     private lateinit var saveHoursButton: Button
-    private lateinit var firestore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
+    private val companyViewModel: CompanyViewModel by activityViewModels()
 
     private val selectedDays = mutableSetOf<String>()
 
@@ -43,55 +46,54 @@ class OperatingHoursFragment : Fragment() {
         timePickerOpen.setIs24HourView(true)
         timePickerClose.setIs24HourView(true)
 
-        // Inicializar Firestore e FirebaseAuth
-        firestore = FirebaseFirestore.getInstance()
+        // Inicializar FirebaseAuth
         auth = FirebaseAuth.getInstance()
 
         // Configuração dos botões de dias da semana
         setupDayButtons(view)
 
+        // Setup observers
+        setupObservers()
+        
         // Carregar horários registrados
-        loadOperatingHours()
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            companyViewModel.loadOperatingHours(userId)
+        }
 
         saveHoursButton.setOnClickListener {
             saveOperatingHours()
         }
     }
 
-    private fun loadOperatingHours() {
-        val userId = auth.currentUser?.uid ?: return
-
-        firestore.collection("business")
-            .document(userId)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val operatingHours = document.get("operatingHours") as? Map<*, *>
-                    if (operatingHours != null) {
-                        // Configurar horários de abertura e fechamento
-                        val opening = (operatingHours["opening"] as? String)?.split(":") ?: listOf("7", "00")
-                        val closing = (operatingHours["closing"] as? String)?.split(":") ?: listOf("19", "00")
-
-                        timePickerOpen.hour = opening[0].toInt()
-                        timePickerOpen.minute = opening[1].toInt()
-                        timePickerClose.hour = closing[0].toInt()
-                        timePickerClose.minute = closing[1].toInt()
-
-                        // Configurar dias da semana
-                        val days = operatingHours["days"] as? List<*>
-                        if (days != null) {
-                            selectedDays.clear()
-                            selectedDays.addAll(days.filterIsInstance<String>())
-
-                            // Atualizar aparência dos botões de dias
-                            updateDayButtons()
-                        }
-                    }
+    private fun setupObservers() {
+        companyViewModel.operatingHours.observe(viewLifecycleOwner) { operatingHours ->
+            operatingHours?.let {
+                // Configurar horários de abertura e fechamento
+                val opening = it.opening.split(":").let { parts ->
+                    parts[0].toIntOrNull() to parts.getOrNull(1)?.toIntOrNull()
                 }
+                val closing = it.closing.split(":").let { parts ->
+                    parts[0].toIntOrNull() to parts.getOrNull(1)?.toIntOrNull()
+                }
+
+                timePickerOpen.hour = opening.first ?: 7
+                timePickerOpen.minute = opening.second ?: 0
+                timePickerClose.hour = closing.first ?: 19
+                timePickerClose.minute = closing.second ?: 0
+
+                // Configurar dias da semana
+                selectedDays.clear()
+                selectedDays.addAll(it.days)
+                updateDayButtons()
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(context, "Erro ao carregar horários: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+        
+        companyViewModel.error.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             }
+        }
     }
 
     private fun updateDayButtons() {
@@ -109,12 +111,12 @@ class OperatingHoursFragment : Fragment() {
             button?.let {
                 if (selectedDays.contains(day)) {
                     // Quando selecionado: fundo azul e texto branco
-                    button.setBackgroundColor(resources.getColor(R.color.orange))
-                    button.setTextColor(resources.getColor(R.color.white))
+                    button.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.orange))
+                    button.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
                 } else {
                     // Quando não selecionado: fundo cinza e texto preto
-                    button.setBackgroundColor(resources.getColor(R.color.cinza_claro))
-                    button.setTextColor(resources.getColor(R.color.cinza_escuro))
+                    button.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.cinza_claro))
+                    button.setTextColor(ContextCompat.getColor(requireContext(), R.color.cinza_escuro))
                 }
             }
         }
@@ -138,7 +140,7 @@ class OperatingHoursFragment : Fragment() {
         }
     }
 
-    private fun toggleDaySelection(day: String, button: Button) {
+    private fun toggleDaySelection(day: String, @Suppress("UNUSED_PARAMETER") button: Button) {
         if (selectedDays.contains(day)) {
             // Desmarcar o dia
             selectedDays.remove(day)
@@ -160,25 +162,23 @@ class OperatingHoursFragment : Fragment() {
             Toast.LENGTH_SHORT
         ).show()
 
-        // Lógica para salvar os horários no Firestore
-        val hours = hashMapOf(
-            "opening" to openingHour,
-            "closing" to closingHour,
-            "days" to selectedDays.toList() // Adicionando os dias selecionados
+        // Criar objeto OperatingHours
+        val operatingHours = CompanyRepository.OperatingHours(
+            opening = openingHour,
+            closing = closingHour,
+            days = selectedDays.toList()
         )
 
-        // Aqui usamos o mesmo userId para atualizar o documento correspondente
-        firestore.collection("business")
-            .document(userId) // Use o ID do usuário como identificador
-            .set(mapOf("operatingHours" to hours), SetOptions.merge())
-            .addOnSuccessListener {
+        // Salvar usando o ViewModel
+        companyViewModel.saveOperatingHours(userId, operatingHours)
+        
+        // Observer para success será chamado automaticamente
+        companyViewModel.operatingHours.observe(viewLifecycleOwner) { savedHours ->
+            if (savedHours != null && savedHours == operatingHours) {
                 Toast.makeText(context, "Horários salvos com sucesso!", Toast.LENGTH_SHORT).show()
                 redirectToHome()
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(context, "Erro ao salvar horários: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
-            }
+        }
     }
 
     private fun redirectToHome() {

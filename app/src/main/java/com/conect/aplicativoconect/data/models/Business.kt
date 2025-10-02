@@ -8,6 +8,7 @@ data class OperatingHours(
 )
 
 data class Business(
+    var id: String = "",               // ID do documento no Firestore
     val name: String = "",
     val cpf: String = "",
     val businessName: String = "",
@@ -29,23 +30,24 @@ data class Business(
 ) {
     // Construtor padrão para o Firestore
     constructor() : this(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        0.0,
-        0.0,
-        "",
-        OperatingHours(),
-        "",
-        "",
-        "",
-        true,
-        listOf(),
-        0.0,
-        0
+        "",     // id
+        "",     // name
+        "",     // cpf
+        "",     // businessName
+        "",     // description
+        "",     // serviceType
+        "",     // address
+        "",     // city
+        0.0,    // latitude
+        0.0,    // longitude
+        "",     // phone
+        OperatingHours(), // operatingHours
+        "",     // imageUrl
+        "",     // ownerId
+        "",     // email
+        true,   // isActive
+        listOf(), // services
+        0.0,    // averageRating
+        0       // ratingCount
     )
 }

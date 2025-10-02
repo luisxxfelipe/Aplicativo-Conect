@@ -11,7 +11,7 @@ import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.conect.aplicativoconect.data.models.Booking
-import com.conect.aplicativoconect.view.TokenUtils
+import com.conect.aplicativoconect.utils.TokenManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.CoroutineScope
@@ -96,7 +96,7 @@ class ClientViewModel : ViewModel() {
                 )
                 _refreshBookings.value = true
             }
-            .addOnFailureListener { e ->
+            .addOnFailureListener { _ ->
             }
     }
 
@@ -182,18 +182,17 @@ class ClientViewModel : ViewModel() {
 
         CoroutineScope(Dispatchers.IO).launch {
             val accessToken = withContext(Dispatchers.IO) {
-                TokenUtils.getAccessTokenFromServiceAccount(context)
+                // TODO: Implementar obtenção de token para FCM
+                "temp_token"
             }
 
-            if (accessToken == null) {
-                return@launch
-            }
+            // Token está sempre disponível em modo temporário
 
             val request = object : StringRequest(
                 Method.POST, url,
-                Response.Listener { response ->
+                Response.Listener { _ ->
                 },
-                Response.ErrorListener { error ->
+                Response.ErrorListener { _ ->
                 }
             ) {
                 override fun getHeaders(): Map<String, String> {

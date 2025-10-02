@@ -6,8 +6,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.conect.aplicativoconect.ui.viewmodels.CompanyViewModel
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.ui.adapters.ReviewsAdapter
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,16 +18,15 @@ import com.google.firebase.firestore.FirebaseFirestore
 class ReviewsFragment : Fragment() {
 
     private lateinit var companyId: String
-    private lateinit var firestore: FirebaseFirestore
     private lateinit var reviewsRecyclerView: RecyclerView
     private lateinit var reviewsAdapter: ReviewsAdapter
+    private val companyViewModel: CompanyViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             companyId = it.getString("companyId") ?: ""
         }
-        firestore = FirebaseFirestore.getInstance()
     }
 
 
@@ -44,42 +46,20 @@ class ReviewsFragment : Fragment() {
         reviewsAdapter = ReviewsAdapter()
         reviewsRecyclerView.adapter = reviewsAdapter
 
-        fetchReviews()
+        setupObservers()
+        if (companyId.isNotEmpty()) {
+            companyViewModel.loadReviews(companyId)
+        }
     }
 
-    private fun fetchReviews() {
-        firestore.collection("bookings")
-            .whereEqualTo("companyId", companyId)
-            .whereNotEqualTo("rating", null)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (querySnapshot.isEmpty) {
-                    Log.d("fetchReviews", "Nenhuma avaliação encontrada para companyId: $companyId")
-                } else {
-                    val reviews = querySnapshot.documents.mapNotNull { document ->
-                        val rating = document.get("rating") as? Map<*, *>
-                        val name = document.getString("name") ?: "Cliente"
-                        val comment = rating?.get("comment") as? String ?: ""
-                        val quality = rating?.get("quality") as? Long ?: 0L
-                        val punctuality = rating?.get("punctuality") as? Long ?: 0L
-                        val service = rating?.get("service") as? Long ?: 0L
-                        ReviewItem(name, comment, quality, punctuality, service)
-                    }
-                    reviewsAdapter.submitList(reviews)
-                }
-            }
-            .addOnFailureListener { e ->
-            }
+    private fun setupObservers() {
+        companyViewModel.reviews.observe(viewLifecycleOwner) { reviews ->
+            reviewsAdapter.submitList(reviews)
+        }
     }
 
 
-    data class ReviewItem(
-        val name: String,
-        val comment: String,
-        val quality: Long,
-        val punctuality: Long,
-        val service: Long
-    )
+
 
     companion object {
         fun newInstance(companyId: String): ReviewsFragment {

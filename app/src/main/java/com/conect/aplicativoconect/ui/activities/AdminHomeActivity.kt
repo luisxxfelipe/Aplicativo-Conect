@@ -18,18 +18,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.ui.fragments.AddServiceDialogFragment
 import com.conect.aplicativoconect.ui.fragments.AdminBookingsFragment
 import com.conect.aplicativoconect.ui.fragments.AdminHomeFragment
 import com.conect.aplicativoconect.ui.fragments.AdminProfileFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.androidbrowserhelper.playbilling.provider.PaymentActivity
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.takusemba.spotlight.Spotlight
-import com.takusemba.spotlight.shape.Circle
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -60,90 +60,8 @@ class AdminHomeActivity : AppCompatActivity() {
         // Verifique se veio de RegisterBusiness
         val fromRegisterBusiness = intent.getBooleanExtra("FROM_REGISTER", false)
         if (fromRegisterBusiness) {
-            showAddServiceTooltip()
-        }
-    }
-
-    private fun showAddServiceTooltip() {
-        val addServiceButton = findViewById<View>(R.id.navigation_add_service)
-
-        // Garante que o layout foi desenhado antes de calcular as coordenadas
-        addServiceButton.doOnPreDraw {
-            // Calcula a posição do botão
-            val location = IntArray(2)
-            addServiceButton.getLocationOnScreen(location)
-            val anchorX = location[0] + addServiceButton.width / 2f
-            val anchorY = location[1] + addServiceButton.height / 2f - 50f // Ajuste vertical
-
-            // Criação do overlay
-            val overlayContainer = FrameLayout(this).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
-                )
-            }
-
-            // Título (texto principal)
-            val titleText = TextView(this).apply {
-                text = "Adicione seus serviços"
-                setTextColor(Color.WHITE)
-                textSize = 35f
-                gravity = Gravity.CENTER
-                setPadding(20, 50, 20, 0)
-            }
-
-            // Descrição (texto secundário)
-            val descriptionText = TextView(this).apply {
-                text =
-                    "\n\n\n\n\n\nClique aqui para cadastrar os serviços oferecidos pelo seu estabelecimento."
-                setTextColor(Color.LTGRAY)
-                textSize = 20f
-                gravity = Gravity.CENTER
-                setPadding(20, 10, 20, 0)
-            }
-
-            // Adiciona os componentes ao container
-            overlayContainer.addView(titleText)
-            overlayContainer.addView(descriptionText)
-
-            // Criação do Target
-            val target = com.takusemba.spotlight.Target.Builder()
-                .setAnchor(anchorX, anchorY) // Define a posição exata no menu inferior
-                .setShape(Circle(150f)) // Raio do círculo de destaque
-                .setOverlay(overlayContainer) // Define o overlay configurado
-                .setOnTargetListener(object : com.takusemba.spotlight.OnTargetListener {
-                    override fun onStarted() {
-                    }
-
-                    override fun onEnded() {
-                    }
-                })
-                .build()
-
-            // Criação do Spotlight
-            val spotlight = Spotlight.Builder(this)
-                .setTargets(target) // Adiciona o target configurado
-                .setContainer(findViewById(android.R.id.content)) // Define o container raiz
-                .setDuration(1000L) // Duração da animação de entrada
-                .setAnimation(DecelerateInterpolator(2f)) // Animação suave
-                .setOnSpotlightListener(object : com.takusemba.spotlight.OnSpotlightListener {
-                    override fun onStarted() {
-                        // Callback quando o Spotlight é iniciado
-                    }
-
-                    override fun onEnded() {
-                        // Callback quando o Spotlight termina
-                    }
-                })
-                .build()
-
-            // Inicia o Spotlight
-            spotlight.start()
-
-            // Auto-fechamento após 6 segundos
-            Handler(Looper.getMainLooper()).postDelayed({
-                spotlight.finish()
-            }, 6000)
+            // Tutorial removido temporariamente
+            // showAddServiceTooltip()
         }
     }
 
@@ -181,10 +99,11 @@ class AdminHomeActivity : AppCompatActivity() {
                                     .update("isTrialActive", false)
                                 Toast.makeText(
                                     this,
-                                    "Seu período de teste expirou. Por favor, adquira uma assinatura.",
+                                    "Seu período de teste expirou. Entre em contato para adquirir uma assinatura.",
                                     Toast.LENGTH_LONG
                                 ).show()
-                                startActivity(Intent(this, PaymentActivity::class.java))
+                                // TODO: Implementar tela de pagamento
+                                // startActivity(Intent(this, PaymentActivity::class.java))
                                 finish()
                             }
                         }
@@ -193,10 +112,11 @@ class AdminHomeActivity : AppCompatActivity() {
                         if (!isActive) {
                             Toast.makeText(
                                 this,
-                                "Sua assinatura expirou. Por favor, renove sua assinatura.",
+                                "Sua assinatura expirou. Entre em contato para renovar.",
                                 Toast.LENGTH_LONG
                             ).show()
-                            startActivity(Intent(this, PaymentActivity::class.java))
+                            // TODO: Implementar tela de pagamento
+                            // startActivity(Intent(this, PaymentActivity::class.java))
                             finish()
                         } else {
                             val daysUntilExpiry = daysUntil(endDate)

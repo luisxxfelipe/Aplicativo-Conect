@@ -7,7 +7,7 @@ import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
-import com.conect.aplicativoconect.ui.fragments.ReviewsFragment.ReviewItem
+import com.conect.aplicativoconect.ui.viewmodels.CompanyViewModel.ReviewItem
 
 class ReviewsAdapter : RecyclerView.Adapter<ReviewsAdapter.ReviewViewHolder>() {
 

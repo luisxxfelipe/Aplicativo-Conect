@@ -3,6 +3,7 @@ package com.conect.aplicativoconect.ui.activities
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -21,6 +22,14 @@ class EditProfileActivity : AppCompatActivity() {
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private var selectedPhotoUri: Uri? = null
+    
+    // Activity Result API para seleção de imagem
+    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            selectedPhotoUri = it
+            Glide.with(this).load(selectedPhotoUri).into(editProfileImage)
+        }
+    }
 
     private lateinit var editProfileImage: de.hdodenhof.circleimageview.CircleImageView
     private lateinit var editUserName: com.google.android.material.textfield.TextInputEditText
@@ -104,16 +113,7 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun selectPhotoFromGallery() {
-        val intent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
-        startActivityForResult(intent, 0)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 0 && resultCode == Activity.RESULT_OK && data != null) {
-            selectedPhotoUri = data.data
-            Glide.with(this).load(selectedPhotoUri).into(editProfileImage)
-        }
+        imagePickerLauncher.launch("image/*")
     }
 
     private fun saveUserProfile() {

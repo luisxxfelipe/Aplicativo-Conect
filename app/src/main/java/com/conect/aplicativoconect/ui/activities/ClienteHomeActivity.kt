@@ -190,24 +190,10 @@ class ClienteHomeActivity : AppCompatActivity() {
             noBookingsImage?.visibility = View.GONE
             recyclerView?.visibility = View.VISIBLE
 
-            if (!::clientBookingAdapter.isInitialized) {
-                clientBookingAdapter = ClientBookingAdapter(
-                    context = this,
-                    bookings = bookings.toMutableList(),
-                    onConfirmClick = { booking ->
-                        clientViewModel.confirmBooking(booking, this)
-                    },
-                    onCancelClick = { booking ->
-                        clientViewModel.cancelBooking(booking, this)
-                    },
-                    onEmptyList = { showNoBookingsMessage() },
-                    onCardClick = { companyId -> openCompanyDetails(companyId) } // Adiciona o clique no card
-                )
-                recyclerView?.layoutManager = LinearLayoutManager(this)
-                recyclerView?.adapter = clientBookingAdapter
-            } else {
-                clientBookingAdapter.updateData(bookings)
-            }
+            // clientBookingAdapter já está inicializado com by lazy - apenas configurar adapter e atualizar dados
+            recyclerView?.layoutManager = LinearLayoutManager(this)
+            recyclerView?.adapter = clientBookingAdapter
+            clientBookingAdapter.updateData(bookings)
         }
     }
 

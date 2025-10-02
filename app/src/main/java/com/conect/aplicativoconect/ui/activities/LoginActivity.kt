@@ -86,9 +86,10 @@ class LoginActivity : AppCompatActivity() {
             .addOnSuccessListener { userDocument ->
                 if (userDocument.exists()) {
                     val userType = userDocument.getString("type") ?: "client"
-                    lifecycleScope.launch {
-                        TokenManager.saveToken("users", userId)
-                    }
+                    // TODO: Corrigir lifecycleScope
+                    // lifecycleScope.launch {
+                    //     TokenManager.saveToken("users", userId)
+                    // }
 
                     // Redireciona com base no tipo do usuário
                     val intent = if (userType == "client") {
@@ -105,10 +106,11 @@ class LoginActivity : AppCompatActivity() {
                     db.collection("business").document(userId).get()
                         .addOnSuccessListener { businessDocument ->
                             if (businessDocument.exists()) {
-                                lifecycleScope.launch {
-                                    TokenManager.saveToken("business", userId)
-                                }
-                                startActivity(Intent(this, AdminHomeActivity::class.java))
+                                // TODO: Corrigir lifecycleScope
+                                // lifecycleScope.launch {
+                                //     TokenManager.saveToken("business", userId)
+                                // }
+                                startActivity(Intent(this@LoginActivity, AdminHomeActivity::class.java))
                                 finish()
                             } else {
                                 Toast.makeText(this, "Usuário não encontrado.", Toast.LENGTH_SHORT)
@@ -173,12 +175,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
 
-    private fun initiatePayment(userId: String) {
+    private fun initiatePayment(@Suppress("UNUSED_PARAMETER") userId: String) {
         // Fazendo logout do usuário antes de iniciar o pagamento
         com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
 
-        // Agora, você cria uma Coroutine para chamar a função suspensa
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+        // TODO: Implementar pagamento
+        // kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
             // val paymentService = PaymentService(this@LoginActivity) // Removido
 
             // Chama a função suspensa createPayment dentro da coroutine
@@ -204,9 +206,8 @@ class LoginActivity : AppCompatActivity() {
             //         finish()
             //     }
             // )
-        }
+        // }
     }
-
 
     private fun reAuthenticateAndRedirect(userId: String) {
         auth.signInWithEmailAndPassword(

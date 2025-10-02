@@ -19,16 +19,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.conect.aplicativoconect.data.repositories.BookingRepository
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.data.models.Booking
-import com.conect.aplicativoconect.ui.activities.EmpresaDetalhesActivity
-import com.conect.aplicativoconect.ui.adapters.ClientBookingAdapter
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.conect.aplicativoconect.ui.activities.EmpresaDetalhesActivity
+import com.conect.aplicativoconect.ui.adapters.ClientBookingAdapter
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -88,20 +89,16 @@ class BookingFragment : Fragment() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val bookings = bookingRepo.getUserBookings(userId)  // Mover query para repo
-                val bookings = bookingsSnapshot.documents.mapNotNull { document ->
-                    val booking = document.toObject(Booking::class.java)
-                    booking?.id = document.id
-                    booking
-                }.sortedWith(compareByDescending<Booking> {
+                val bookings = bookingRepo.getUserBookings(userId)  // Query através do repository
+                val sortedBookings = bookings.sortedWith(compareByDescending<Booking> {
                     parseDateTime(it.date ?: "", it.hour)
                 })
 
                 withContext(Dispatchers.Main) {
-                    if (bookings.isEmpty()) {
+                    if (sortedBookings.isEmpty()) {
                         showEmptyBookingsMessage(true)
                     } else {
-                        bookingsAdapter.updateData(bookings)
+                        bookingsAdapter.updateData(sortedBookings)
                         bookingsRecyclerView.visibility = View.VISIBLE
                         bookingsTitle.visibility = View.VISIBLE
                         showEmptyBookingsMessage(false)
@@ -140,24 +137,30 @@ class BookingFragment : Fragment() {
     }
 
     private fun confirmBooking(booking: Booking) {
-        bookingRepo.confirmBooking(booking.id!!)  // Via repo
-            .addOnSuccessListener {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                bookingRepo.confirmBooking(booking.id!!)  // Via repo
                 bookingRepo.sendNotification(
                     booking.id!!,
                     "Agendamento Confirmado",
                     "Mensagem"
                 )  // Via repo
-                Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT)
-                    .show()
-                loadBookings()
+                
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Agendamento confirmado.", Toast.LENGTH_SHORT)
+                        .show()
+                    loadBookings()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Erro ao confirmar agendamento.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(
-                    requireContext(),
-                    "Erro ao confirmar agendamento.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+        }
     }
 
 
@@ -245,7 +248,8 @@ class BookingFragment : Fragment() {
         CoroutineScope(Dispatchers.IO).launch {
             // Aqui dentro você pode usar withContext pois estamos dentro de uma corrotina
             val accessToken = withContext(Dispatchers.IO) {
-                context?.let { TokenUtils.getAccessTokenFromServiceAccount(it) }
+                // TODO: Implementar obtenção de token para FCM
+                "temp_token"
             }
 
             if (accessToken == null) {

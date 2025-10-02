@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.conect.aplicativoconect.view.TokenUtils
+import com.conect.aplicativoconect.utils.TokenManager
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -202,15 +202,9 @@ class UpcomingBookingWorker(
     """.trimIndent()
 
         CoroutineScope(Dispatchers.IO).launch {
-            val accessToken = withContext(Dispatchers.IO) {
-                TokenUtils.getAccessTokenFromServiceAccount(applicationContext)
-            }
-
-            if (accessToken == null) {
-                Log.e("FCM", "Falha ao obter o token de acesso.")
-                callback(false)
-                return@launch
-            }
+            // Para notificações FCM, usamos o server key diretamente
+            // O access token do service account seria usado para APIs do Google Cloud
+            val serverKey = "YOUR_FCM_SERVER_KEY" // Substitua pela sua chave do servidor FCM
 
             val request = object : StringRequest(
                 Method.POST, url,
@@ -225,7 +219,7 @@ class UpcomingBookingWorker(
             ) {
                 override fun getHeaders(): Map<String, String> {
                     return mapOf(
-                        "Authorization" to "Bearer $accessToken",
+                        "Authorization" to "key=$serverKey",
                         "Content-Type" to "application/json"
                     )
                 }

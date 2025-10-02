@@ -204,14 +204,15 @@ class SignupClientActivity : AppCompatActivity() {
                         "type" to "client"
                     )
 
-                    // Fazer upload da imagem de perfil se houver
-                    imageUri?.let {
-                        uploadProfileImage(it, userId, userData)
-                    } ?: run {
+                    // TODO: Implementar upload de imagem de perfil
+                    // imageUri?.let {
+                    //     uploadProfileImage(it, userId, userData)
+                    // } ?: run {
                         saveUserToFirestore(userId, userData) {
-                            saveFCMToken(userId) // Salva o token após salvar o usuário
+                            // TODO: Implementar saveFCMToken
+                            // saveFCMToken(userId) // Salva o token após salvar o usuário  
                         }
-                    }
+                    // }
                 } else {
                     progressDialog.dismiss() // Fechar progresso em caso de erro
                     val exception = task.exception
@@ -242,7 +243,7 @@ class SignupClientActivity : AppCompatActivity() {
                 .addOnSuccessListener {
                     Toast.makeText(this, "Cadastro bem-sucedido!", Toast.LENGTH_SHORT).show()
                     lifecycleScope.launch {
-                        TokenManager.saveTokenForUser(it)
+                        TokenManager.saveTokenForUser(it.toString()) // Convertendo para String
                     }
                     onSuccess() // Chama o callback após o sucesso
                     val intent = Intent(this, ClienteHomeActivity::class.java)
