@@ -344,26 +344,36 @@ class AdminHomeFragment : Fragment() {
                 val businessName = business?.name ?: "Nome não disponível"
 
                 Log.d("AdminHomeFragment", "Empresa encontrada: $businessName")
-                binding.userNameBusiness.text = businessName // Exibe o nome diretamente
-                setGreeting(businessName) // Chama a saudação com o nome do negócio
-                loadProfileImage(business?.imageUrl)
+                
+                // Verificar se o binding ainda está disponível
+                _binding?.let { binding ->
+                    binding.userNameBusiness.text = businessName // Exibe o nome diretamente
+                    setGreeting(businessName) // Chama a saudação com o nome do negócio
+                    loadProfileImage(business?.imageUrl)
+                }
             }
             .addOnFailureListener { e ->
                 Log.e("AdminHomeFragment", "Erro ao carregar os dados da empresa: ${e.message}", e)
-                binding.userNameBusiness.text = "Erro ao carregar nome"
-                setGreeting("Usuário")
+                // Verificar se o binding ainda está disponível
+                _binding?.let { binding ->
+                    binding.userNameBusiness.text = "Erro ao carregar nome"
+                    setGreeting("Usuário")
+                }
             }
 
     }
 
     private fun loadProfileImage(imageUrl: String?) {
-        imageUrl?.let {
-            Glide.with(this)
-                .load(it)
-                .placeholder(R.drawable.foto_perfil_generica)
-                .error(R.drawable.foto_perfil_generica)
-                .into(binding.userImage)
-        } ?: binding.userImage.setImageResource(R.drawable.foto_perfil_generica)
+        // Verificar se o binding ainda está disponível
+        _binding?.let { binding ->
+            imageUrl?.let {
+                Glide.with(this)
+                    .load(it)
+                    .placeholder(R.drawable.foto_perfil_generica)
+                    .error(R.drawable.foto_perfil_generica)
+                    .into(binding.userImage)
+            } ?: binding.userImage.setImageResource(R.drawable.foto_perfil_generica)
+        }
     }
 
     override fun onDestroyView() {

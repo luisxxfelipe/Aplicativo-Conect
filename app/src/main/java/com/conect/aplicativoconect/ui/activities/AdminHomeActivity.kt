@@ -99,11 +99,11 @@ class AdminHomeActivity : AppCompatActivity() {
                                     .update("isTrialActive", false)
                                 Toast.makeText(
                                     this,
-                                    "Seu período de teste expirou. Entre em contato para adquirir uma assinatura.",
+                                    "Seu período de teste expirou. Adquira uma assinatura para continuar.",
                                     Toast.LENGTH_LONG
                                 ).show()
-                                // TODO: Implementar tela de pagamento
-                                // startActivity(Intent(this, PaymentActivity::class.java))
+                                // Abrir tela de pagamento
+                                startActivity(Intent(this, PaymentActivity::class.java))
                                 finish()
                             }
                         }
@@ -112,11 +112,11 @@ class AdminHomeActivity : AppCompatActivity() {
                         if (!isActive) {
                             Toast.makeText(
                                 this,
-                                "Sua assinatura expirou. Entre em contato para renovar.",
+                                "Sua assinatura expirou. Renove para continuar usando o app.",
                                 Toast.LENGTH_LONG
                             ).show()
-                            // TODO: Implementar tela de pagamento
-                            // startActivity(Intent(this, PaymentActivity::class.java))
+                            // Abrir tela de pagamento
+                            startActivity(Intent(this, PaymentActivity::class.java))
                             finish()
                         } else {
                             val daysUntilExpiry = daysUntil(endDate)
@@ -128,9 +128,12 @@ class AdminHomeActivity : AppCompatActivity() {
                     } else {
                         Toast.makeText(
                             this,
-                            "Assinatura não encontrada para este usuário.",
+                            "Assinatura não encontrada. Configure sua assinatura para continuar.",
                             Toast.LENGTH_SHORT
                         ).show()
+                        // Usuário business sem assinatura - direcionar para PaymentActivity
+                        startActivity(Intent(this, PaymentActivity::class.java))
+                        finish()
                     }
                 }
                 .addOnFailureListener {
