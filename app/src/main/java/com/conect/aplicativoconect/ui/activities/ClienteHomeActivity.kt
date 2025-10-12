@@ -244,4 +244,18 @@ class ClienteHomeActivity : AppCompatActivity() {
         getSharedPreferences("business_cache", MODE_PRIVATE).edit().clear().apply()
     }
 
+    // Intercepta o botão voltar para evitar retorno indesejado à tela de seleção
+    override fun onBackPressed() {
+        // Mostrar dialog de confirmação para sair do app
+        AlertDialog.Builder(this)
+            .setTitle("Sair do Aplicativo")
+            .setMessage("Deseja realmente sair do Conectx?")
+            .setPositiveButton("Sim") { _, _ ->
+                // Fecha completamente o aplicativo
+                finishAffinity()
+            }
+            .setNegativeButton("Não", null)
+            .show()
+    }
+
 }

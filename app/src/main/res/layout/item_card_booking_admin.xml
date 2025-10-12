@@ -39,7 +39,7 @@
                     android:layout_height="80dp"
                     android:layout_marginEnd="16dp"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/foto_perfil_generica" />
+                    android:src="@drawable/ic_profile_default" />
 
                 <LinearLayout
                     android:layout_width="0dp"

@@ -161,7 +161,7 @@ class EditBusinessProfileActivity : AppCompatActivity() {
 
                     Glide.with(this)
                         .load(document.getString("imageUrl"))
-                        .placeholder(R.drawable.foto_perfil_generica)
+                        .placeholder(R.drawable.ic_profile_default)
                         .into(editBusinessImage)
                 }
             }

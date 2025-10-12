@@ -207,16 +207,22 @@ class PaymentActivity : AppCompatActivity() {
             .addOnSuccessListener { document ->
                 if (document.exists()) {
                     // É um business user
-                    startActivity(Intent(this, AdminHomeActivity::class.java))
+                    startActivity(Intent(this, AdminHomeActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
                 } else {
                     // É um cliente
-                    startActivity(Intent(this, ClienteHomeActivity::class.java))
+                    startActivity(Intent(this, ClienteHomeActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
                 }
                 finish()
             }
             .addOnFailureListener {
                 // Default para AdminHome se houver erro
-                startActivity(Intent(this, AdminHomeActivity::class.java))
+                startActivity(Intent(this, AdminHomeActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                })
                 finish()
             }
     }

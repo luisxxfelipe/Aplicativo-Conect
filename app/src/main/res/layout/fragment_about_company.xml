@@ -13,7 +13,7 @@
         android:layout_gravity="center"
         android:elevation="4dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/foto_perfil_generica" />
+        android:src="@drawable/ic_profile_default" />
 
     <!-- Nome da empresa -->
     <TextView

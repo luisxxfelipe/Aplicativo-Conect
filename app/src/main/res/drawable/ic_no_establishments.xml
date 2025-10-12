@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/cinza_escuro"
+    android:alpha="0.5">
+  
+  <!-- Ícone de loja/estabelecimento vazio -->
+  <path android:fillColor="@android:color/white"
+      android:pathData="M12,2L2,7V10C2,11.5 2.5,12.9 3.3,14L12,22L20.7,14C21.5,12.9 22,11.5 22,10V7L12,2Z"
+      android:strokeWidth="1.5"
+      android:strokeColor="@color/cinza_escuro"
+      android:fillAlpha="0.1"/>
+  
+  <!-- X para indicar "vazio" -->
+  <path android:fillColor="@color/cinza_escuro"
+      android:pathData="M8.5,8.5L15.5,15.5M15.5,8.5L8.5,15.5"
+      android:strokeWidth="2"
+      android:strokeColor="@color/cinza_escuro"
+      android:strokeLineCap="round"/>
+  
+</vector>

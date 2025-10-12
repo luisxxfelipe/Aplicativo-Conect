@@ -104,6 +104,7 @@ class LoginActivity : AppCompatActivity() {
                     // Usuário existe na collection "users" - sempre vai para ClienteHome
                     val intent = Intent(this, ClienteHomeActivity::class.java).apply {
                         putExtra("FORCE_UPDATE", true)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     }
                     startActivity(intent)
                     finish()
@@ -113,7 +114,9 @@ class LoginActivity : AppCompatActivity() {
                         .addOnSuccessListener { businessDocument ->
                             if (businessDocument.exists()) {
                                 // Usuário é business - vai para AdminHome
-                                startActivity(Intent(this@LoginActivity, AdminHomeActivity::class.java))
+                                startActivity(Intent(this@LoginActivity, AdminHomeActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                })
                                 finish()
                             } else {
                                 // Usuário não existe nem em "users" nem em "business"

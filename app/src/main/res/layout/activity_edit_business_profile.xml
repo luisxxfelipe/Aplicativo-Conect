@@ -21,7 +21,7 @@
             android:clickable="true"
             android:contentDescription="Foto do Negócio"
             android:focusable="true"
-            android:src="@drawable/foto_perfil_generica" />
+            android:src="@drawable/ic_profile_default" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"

@@ -16,7 +16,7 @@
         android:clickable="true"
         android:contentDescription="Imagem de Perfil"
         android:focusable="true"
-        android:src="@drawable/foto_perfil_generica"
+        android:src="@drawable/ic_profile_default"
         app:civ_border_color="@color/colorPrimary"
         app:civ_border_width="2dp" />
 

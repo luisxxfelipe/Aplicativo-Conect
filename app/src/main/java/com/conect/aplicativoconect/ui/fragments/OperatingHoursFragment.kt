@@ -183,6 +183,7 @@ class OperatingHoursFragment : Fragment() {
 
     private fun redirectToHome() {
         val intent = Intent(activity, AdminHomeActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         activity?.finish()
     }

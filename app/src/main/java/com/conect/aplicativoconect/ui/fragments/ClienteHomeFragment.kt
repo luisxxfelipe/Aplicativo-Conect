@@ -72,6 +72,96 @@ class ClienteHomeFragment : Fragment() {
     private val cacheKey = "business_cache"
     private var currentCity: String? = null
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
+    
+    // 🚀 OTIMIZAÇÃO: Cache inteligente de localização
+    private fun getCachedUserCity(): String? {
+        val prefs = requireContext().getSharedPreferences("location_cache", Context.MODE_PRIVATE)
+        val cachedCity = prefs.getString("user_city", null)
+        val cacheTime = prefs.getLong("cache_time", 0)
+        val now = System.currentTimeMillis()
+        
+        // Cache válido por 24 horas
+        return if (now - cacheTime < 24 * 60 * 60 * 1000) cachedCity else null
+    }
+    
+    private fun saveUserCity(city: String) {
+        val prefs = requireContext().getSharedPreferences("location_cache", Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString("user_city", city)
+            .putLong("cache_time", System.currentTimeMillis())
+            .apply()
+    }
+
+    // 🆕 NOVA FUNÇÃO: Solicitar localização para atualizar cache
+    private fun requestLocationForCacheUpdate(userId: String?) {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Sem permissão - carregar todos os estabelecimentos
+            Log.d("ClienteHomeFragment", "Sem permissão de localização, carregando todos os estabelecimentos")
+            currentCity = null
+            fetchBusinesses(null, true)
+        } else {
+            // Com permissão - buscar localização
+            fetchUserLocationAndUpdate(userId)
+        }
+    }
+
+    // 🆕 NOVA FUNÇÃO: Buscar localização e atualizar cache + Firebase
+    private fun fetchUserLocationAndUpdate(userId: String?) {
+        if (isLoading) return
+        
+        val locationProvider = LocationServices.getFusedLocationProviderClient(requireContext())
+        locationProvider.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val city = getCityFromLocation(location.latitude, location.longitude)
+                    withContext(Dispatchers.Main) {
+                        if (city != "Cidade não encontrada" && city != "Sem nome de cidade" && city != "Erro ao buscar cidade") {
+                            currentCity = city
+                            
+                            // Salvar no cache local
+                            saveUserCity(city)
+                            
+                            // Salvar no Firebase (novo campo)
+                            userId?.let { saveUserCityToFirebase(it, city) }
+                            
+                            // Carregar estabelecimentos
+                            fetchBusinesses(city, true)
+                            
+                            Log.d("ClienteHomeFragment", "Localização atualizada: $city")
+                        } else {
+                            // Falha na detecção - carregar todos
+                            currentCity = null
+                            fetchBusinesses(null, true)
+                        }
+                    }
+                }
+            } else {
+                // Localização indisponível - carregar todos
+                currentCity = null
+                fetchBusinesses(null, true)
+            }
+        }.addOnFailureListener { exception ->
+            // Erro - carregar todos os estabelecimentos
+            currentCity = null
+            fetchBusinesses(null, true)
+        }
+    }
+
+    // 🆕 NOVA FUNÇÃO: Salvar cidade no Firebase
+    private fun saveUserCityToFirebase(userId: String, city: String) {
+        firestore.collection("users").document(userId)
+            .update("city", city, "cityUpdatedAt", System.currentTimeMillis())
+            .addOnSuccessListener {
+                Log.d("ClienteHomeFragment", "Cidade salva no Firebase: $city")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("ClienteHomeFragment", "Erro ao salvar cidade no Firebase: ${exception.message}")
+            }
+    }
 
 
     override fun onCreateView(
@@ -94,6 +184,9 @@ class ClienteHomeFragment : Fragment() {
         val cachedBusinesses = loadCachedBusinesses()
         if (cachedBusinesses.isNotEmpty()) {
             updateBusinessAdapter(cachedBusinesses)
+        } else {
+            // 🎨 MOSTRAR estado vazio inicial se não há cache
+            showNoEstablishmentsMessage(true)
         }
 
         setupSearchView()
@@ -109,14 +202,17 @@ class ClienteHomeFragment : Fragment() {
         // Receber a flag para forçar atualização
         val forceUpdate = requireActivity().intent.getBooleanExtra("FORCE_UPDATE", false)
 
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        // 🚀 ESTRATÉGIA INTELIGENTE: Cache primeiro, renovação automática
+        val cachedCity = getCachedUserCity()
+        if (cachedCity != null && !forceUpdate) {
+            // Usar cache válido imediatamente 
+            currentCity = cachedCity
+            fetchBusinesses(cachedCity, true)
+            Log.d("ClienteHomeFragment", "Usando cidade do cache: $cachedCity")
         } else {
-            fetchUserLocation(forceUpdate) // Passa a flag para forçar a atualização
+            // Cache expirado ou forçar update - pedir localização
+            Log.d("ClienteHomeFragment", "Cache expirado, solicitando nova localização")
+            requestLocationForCacheUpdate(userId)
         }
 
 
@@ -147,42 +243,9 @@ class ClienteHomeFragment : Fragment() {
 
 
     private fun fetchUserLocation(forceUpdate: Boolean = false) {
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.e("ClienteHomeFragment", "Permissão de localização não concedida.")
-            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-            return
-        }
-
-        val locationProvider = LocationServices.getFusedLocationProviderClient(requireContext())
-        locationProvider.lastLocation.addOnSuccessListener { location ->
-            if (location != null) {
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val city = getCityFromLocation(location.latitude, location.longitude)
-                    withContext(Dispatchers.Main) {
-                        if (city == "Cidade não encontrada" || city == "Sem nome de cidade") {
-                            Log.e("ClienteHomeFragment", "Não foi possível determinar a cidade.")
-                            showFallbackLocation(location.latitude, location.longitude)
-                        } else {
-                            val isCityChanged = currentCity != city
-                            currentCity = city
-
-                            // Atualiza somente se a cidade mudou ou se a flag FORCE_UPDATE está ativa
-                            if (isCityChanged || forceUpdate) {
-                                fetchBusinessesByCity(city)
-                            }
-                        }
-                    }
-                }
-            } else {
-                Log.e("ClienteHomeFragment", "Localização não disponível.")
-            }
-        }.addOnFailureListener {
-            Log.e("ClienteHomeFragment", "Erro ao obter localização: ${it.message}")
-        }
+        // 🔄 FUNÇÃO LEGADA: Usar nova implementação
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        fetchUserLocationAndUpdate(userId)
     }
 
 
@@ -213,45 +276,7 @@ class ClienteHomeFragment : Fragment() {
         }
     }
 
-    private fun fetchBusinessesByCity(city: String) {
-        if (isLoading) return
-        isLoading = true
-
-        val normalizedCity = city.trim().lowercase(Locale.getDefault())
-
-        // ✅ OTIMIZAÇÃO: Query direta com filtro no Firestore + limite
-        val query = firestore.collection("business")
-            .whereEqualTo("city", normalizedCity)
-            .limit(PAGE_SIZE.toLong())
-
-        // Aplicar paginação se houver documento anterior
-        lastVisible?.let { query.startAfter(it) }
-
-        query.get()
-            .addOnSuccessListener { querySnapshot ->
-                val businesses = querySnapshot.toObjects(Business::class.java)
-                
-                // Atualizar lastVisible para próxima página
-                if (querySnapshot.documents.isNotEmpty()) {
-                    lastVisible = querySnapshot.documents.lastOrNull()
-                }
-
-                // Se é a primeira busca, limpar a lista
-                if (lastVisible == null) {
-                    businessList.clear()
-                }
-                
-                businessList.addAll(businesses)
-                cacheBusinesses() // ✅ OTIMIZADO: Usa função consolidada
-                updateBusinessAdapter(businessList)
-            }
-            .addOnFailureListener {
-                Log.e("ClienteHomeFragment", "Erro ao buscar empresas: ${it.message}")
-            }
-            .addOnCompleteListener {
-                isLoading = false
-            }
-    }
+    // ⚠️ REMOVIDO: fetchBusinessesByCity - usar apenas fetchBusinesses para evitar duplicação
 
     private fun setupAdapters() {
         // Inicializa o adapter
@@ -307,11 +332,13 @@ class ClienteHomeFragment : Fragment() {
             try {
                 val querySnapshot = withContext(Dispatchers.IO) {
                     var query = firestore.collection("business")
+                        .whereEqualTo("isActive", true) // 🚀 Filtro otimizado primeiro
                         .limit(PAGE_SIZE.toLong())
                     
                     // Aplicar filtro de cidade se especificado
                     city?.let { 
-                        query = query.whereEqualTo("city", it.trim().lowercase(Locale.getDefault()))
+                        val normalizedCity = it.trim().lowercase(Locale.getDefault())
+                        query = query.whereEqualTo("city", normalizedCity)
                     }
                     
                     // Aplicar paginação apenas se não for primeira carga
@@ -346,8 +373,20 @@ class ClienteHomeFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("ClienteHomeFragment", "Erro ao buscar empresas: ${e.message}")
+                
+                // 🔧 EXIBIR MENSAGEM DE ERRO personalizada
+                withContext(Dispatchers.Main) {
+                    if (businessList.isEmpty()) {
+                        showNoEstablishmentsMessage(true)
+                        binding.noEstablishmentsTitle.text = "Erro ao carregar estabelecimentos"
+                        binding.noEstablishmentsMessage.text = "Ocorreu um erro ao carregar os estabelecimentos.\nVerifique sua conexão e tente novamente."
+                    }
+                }
             } finally {
-                isLoading = false
+                withContext(Dispatchers.Main) {
+                    isLoading = false
+                    binding.progressBar.visibility = View.GONE
+                }
             }
         }
     }
@@ -429,11 +468,12 @@ class ClienteHomeFragment : Fragment() {
 
         clientViewModel.userImage.observe(viewLifecycleOwner) { imageUrl ->
             _binding?.let { binding ->
-                Glide.with(this)
-                    .load(imageUrl)
-                    .placeholder(R.drawable.foto_perfil_generica)
-                    .error(R.drawable.foto_perfil_generica)
-                    .into(binding.userImage)
+                // ⚡ FIX: Usar ImageHelper otimizado
+                com.conect.aplicativoconect.utils.ImageHelper.loadProfileImage(
+                    requireContext(), 
+                    imageUrl, 
+                    binding.userImage
+                )
             }
         }
 
@@ -490,9 +530,32 @@ class ClienteHomeFragment : Fragment() {
 
 
     private fun setupSearchView() {
+        // 🔧 MELHORIA: Configurar SearchView para ser mais acessível
+        binding.searchView.apply {
+            // Permitir clique em qualquer lugar da SearchView
+            setIconifiedByDefault(false)
+            isFocusable = true
+            isClickable = true
+            
+            // Expandir automaticamente quando tocada
+            setOnClickListener {
+                isIconified = false
+                requestFocus()
+            }
+            
+            // Melhorar acessibilidade
+            setOnQueryTextFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    isIconified = false
+                }
+            }
+        }
+        
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 filterBusinesses(query)
+                // 🔧 MELHORIA: Fechar teclado após busca
+                binding.searchView.clearFocus()
                 return true
             }
 
@@ -510,14 +573,25 @@ class ClienteHomeFragment : Fragment() {
             businessList.filter { it.name.contains(query, ignoreCase = true) }
         }
         businessAdapter.submitList(filteredList)
+        
+        // 🎨 CONTROLAR VISIBILIDADE na busca também
+        showNoEstablishmentsMessage(filteredList.isEmpty())
+        
+        // 🔧 MENSAGEM ESPECÍFICA para busca
+        if (filteredList.isEmpty() && !query.isNullOrEmpty()) {
+            binding.noEstablishmentsTitle.text = "Nenhum resultado encontrado"
+            binding.noEstablishmentsMessage.text = "Não encontramos estabelecimentos com o nome \"$query\".\nTente usar outras palavras-chave."
+        } else if (filteredList.isEmpty()) {
+            binding.noEstablishmentsTitle.text = "Nenhum estabelecimento encontrado"
+        }
     }
 
     private fun updateBusinessAdapter(filteredBusinesses: List<Business>) {
         if (::businessAdapter.isInitialized) {
             businessAdapter.submitList(ArrayList(filteredBusinesses)) // Nova instância
             binding.establishmentsRecyclerView.adapter = businessAdapter // Garante o vínculo
-        } else {
-            Log.e("ClienteHomeFragment", "Adapter não inicializado!")
+            
+            showNoEstablishmentsMessage(filteredBusinesses.isEmpty())
         }
     }
 
@@ -554,6 +628,24 @@ class ClienteHomeFragment : Fragment() {
         binding.noBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
         binding.noBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
         binding.todayBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+    }
+
+    // 🎨 NOVA FUNÇÃO: Controlar exibição de estabelecimentos vazios
+    private fun showNoEstablishmentsMessage(show: Boolean) {
+        if (_binding == null || !isAdded) return
+
+        binding.noEstablishmentsContainer.visibility = if (show) View.VISIBLE else View.GONE
+        binding.establishmentsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        
+        // 🔧 MENSAGEM DINÂMICA baseada na situação
+        if (show) {
+            val message = if (currentCity != null) {
+                "Não encontramos estabelecimentos em $currentCity."
+            } else {
+                "Não encontramos estabelecimentos na sua região."
+            }
+            binding.noEstablishmentsMessage.text = message
+        }
     }
 
 

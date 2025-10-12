@@ -44,19 +44,53 @@ class ClientViewModel : ViewModel() {
     private val _refreshBookings = MutableLiveData<Boolean>()
     val refreshBookings: LiveData<Boolean> get() = _refreshBookings
 
+    // 🔧 CONTROLE: Evitar múltiplas cargas simultâneas
+    private val loadingUsers = mutableSetOf<String>()
 
-    // Carrega dados do usuário
+    // ⚡ OTIMIZADO: Carrega dados do usuário com cache
     fun loadUserData(userId: String) {
+        // 🔧 PREVENIR: Múltiplas cargas simultâneas
+        if (loadingUsers.contains(userId)) {
+            Log.d("ClientViewModel", "Carregamento já em andamento para usuário: $userId")
+            return
+        }
+        // Verifica cache primeiro
+        userDataCache[userId]?.let { cachedData ->
+            _userName.value = cachedData["name"] as? String
+            // 🔧 FIX: Garantir que URL nula não seja passada do cache
+            val imageUrl = cachedData["imageUrl"] as? String
+            _userImage.value = if (imageUrl.isNullOrBlank() || imageUrl == "null") null else imageUrl
+            _userEmail.value = cachedData["email"] as? String
+            return
+        }
+
+        // 🔧 MARCAR: Carregamento iniciado
+        loadingUsers.add(userId)
+        
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val document = firestore.collection("users").document(userId).get().await()
+                val userData = mapOf(
+                    "name" to document.getString("name"),
+                    "imageUrl" to document.getString("imageUrl"),
+                    "email" to document.getString("email")
+                )
+                
+                // Armazenar no cache
+                userDataCache[userId] = userData
+                
                 withContext(Dispatchers.Main) {
-                    _userName.value = document.getString("name")
-                    _userImage.value = document.getString("imageUrl")
-                    _userEmail.value = document.getString("email")
+                    _userName.value = userData["name"] as? String
+                    // 🔧 FIX: Garantir que URL nula não seja passada
+                    val imageUrl = userData["imageUrl"] as? String
+                    _userImage.value = if (imageUrl.isNullOrBlank() || imageUrl == "null") null else imageUrl
+                    _userEmail.value = userData["email"] as? String
                 }
             } catch (e: Exception) {
                 Log.e("ClientViewModel", "Error loading user data", e)
+            } finally {
+                // 🔧 LIMPAR: Carregamento finalizado
+                loadingUsers.remove(userId)
             }
         }
     }

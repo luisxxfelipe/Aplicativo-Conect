@@ -85,7 +85,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Search View -->
+        <!-- 🔧 SEARCH VIEW OTIMIZADA -->
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="0dp"
@@ -93,7 +93,11 @@
             android:layout_marginTop="24dp"
             android:background="@drawable/search_view_background"
             android:iconifiedByDefault="false"
+            android:focusable="true"
+            android:clickable="true"
             android:queryHint="Pesquise um estabelecimento"
+            app:iconifiedByDefault="false"
+            app:submitBackground="@android:color/transparent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/headerCardView" />
@@ -211,5 +215,52 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/establishmentsTitle" />
+
+        <!-- 🎨 ESTADO VAZIO: Quando não há estabelecimentos -->
+        <LinearLayout
+            android:id="@+id/noEstablishmentsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingBottom="20dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/establishmentsTitle">
+
+            <ImageView
+                android:id="@+id/noEstablishmentsIcon"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginBottom="12dp"
+                android:src="@drawable/ic_search"
+                android:tint="@color/cinza"
+                android:alpha="0.7" />
+            
+            <TextView
+                android:id="@+id/noEstablishmentsTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="Nenhum estabelecimento encontrado"
+                android:textColor="@color/cinza_escuro"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/noEstablishmentsMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingHorizontal="24dp"
+                android:text="Não encontramos estabelecimentos na sua região.\nVerifique sua conexão ou tente novamente."
+                android:textColor="@color/cinza"
+                android:textSize="14sp"
+                android:lineSpacingExtra="2dp" />
+
+        </LinearLayout>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

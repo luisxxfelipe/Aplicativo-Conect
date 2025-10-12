@@ -53,7 +53,15 @@ class ClienteProfileFragment : Fragment() {
         // Observar a imagem do usuário
         clientViewModel.userImage.observe(viewLifecycleOwner) { imageUrl ->
             Log.d("ClienteProfileFragment", "Carregando imagem da URL: $imageUrl")
-            ImageHelper.loadProfileImage(requireContext(), imageUrl, binding.profileImageClient) // ✅ OTIMIZADO: Helper centralizado
+            
+            // 🔧 MELHORIA: Mostrar placeholder enquanto carrega
+            if (imageUrl.isNullOrBlank()) {
+                // Mostrar imagem padrão imediatamente se não há URL
+                binding.profileImageClient.setImageResource(R.drawable.ic_profile_default)
+            } else {
+                // 🔧 MELHORIA: Carregamento otimizado com placeholder de carregamento
+                ImageHelper.loadProfileImage(requireContext(), imageUrl, binding.profileImageClient)
+            }
         }
 
         // Observar o nome do usuário

@@ -256,10 +256,10 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
                 .override(500, 500) // Define um limite para a resolução da imagem
                 .centerCrop() // Ajusta a imagem ao centro
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC) // Usa cache automático
-                .error(R.drawable.foto_perfil_generica) // Define imagem padrão em caso de erro
+                .error(R.drawable.ic_profile_default) // Define imagem padrão em caso de erro
                 .into(imageView)
         } else {
-            imageView.setImageResource(R.drawable.foto_perfil_generica) // Fallback direto
+            imageView.setImageResource(R.drawable.ic_profile_default) // Fallback direto
         }
     }
 

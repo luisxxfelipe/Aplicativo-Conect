@@ -102,8 +102,8 @@ class EditProfileActivity : AppCompatActivity() {
                     val imageUrl = document.getString("imageUrl")
                     Glide.with(this)
                         .load(imageUrl)
-                        .placeholder(R.drawable.foto_perfil_generica)
-                        .error(R.drawable.foto_perfil_generica)
+                        .placeholder(R.drawable.ic_profile_default)
+                        .error(R.drawable.ic_profile_default)
                         .into(editProfileImage)
                 }
             }

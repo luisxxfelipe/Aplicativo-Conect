@@ -28,7 +28,7 @@ class SplashActivity : AppCompatActivity() {
         // Inicializar Firebase Auth e Firestore
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
-    paymentService = PaymentService(this)
+        paymentService = PaymentService(this)
 
         // ✅ OTIMIZADO: Navegação paralela e mais rápida
         lifecycleScope.launch {
@@ -56,7 +56,9 @@ class SplashActivity : AppCompatActivity() {
                         }
                         userDoc.exists() -> {
                             // Usuário é cliente - ir direto para home
-                            startActivity(Intent(this@SplashActivity, ClienteHomeActivity::class.java))
+                            startActivity(Intent(this@SplashActivity, ClienteHomeActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            })
                             finish()
                         }
                         else -> {
@@ -124,7 +126,9 @@ class SplashActivity : AppCompatActivity() {
         val lastPaymentId = subscriptionDoc.getString("paymentId")
         when {
             status == "active" && endDate != null && endDate.after(currentDate) -> {
-                startActivity(Intent(this@SplashActivity, AdminHomeActivity::class.java))
+                startActivity(Intent(this@SplashActivity, AdminHomeActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                })
                 finish()
             }
             status == "pending" -> {
@@ -140,16 +144,22 @@ class SplashActivity : AppCompatActivity() {
                             firestore.collection("subscriptions").document(subscriptionId)
                                 .set(update, SetOptions.merge())
                                 .addOnCompleteListener {
-                                    startActivity(Intent(this@SplashActivity, AdminHomeActivity::class.java))
+                                    startActivity(Intent(this@SplashActivity, AdminHomeActivity::class.java).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    })
                                     finish()
                                 }
                         } else {
-                            startActivity(Intent(this@SplashActivity, AdminHomeActivity::class.java))
+                            startActivity(Intent(this@SplashActivity, AdminHomeActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            })
                             finish()
                         }
                     }
                 } else {
-                    startActivity(Intent(this@SplashActivity, AdminHomeActivity::class.java))
+                    startActivity(Intent(this@SplashActivity, AdminHomeActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
                     finish()
                 }
             }

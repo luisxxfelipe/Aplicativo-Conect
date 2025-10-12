@@ -115,6 +115,12 @@ class SignupClientActivity : AppCompatActivity() {
                 passwordEditText.error = "Senha deve ter pelo menos 6 caracteres"
                 return@setOnClickListener
             }
+            
+            // 🔧 OBRIGATÓRIO: Verificar se foto foi selecionada
+            if (imageUri == null) {
+                Toast.makeText(this, "Por favor, selecione uma foto de perfil", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
 
             if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty() && phone.isNotEmpty()) {
 
@@ -204,12 +210,14 @@ class SignupClientActivity : AppCompatActivity() {
                         "type" to "client"
                     )
 
-                    // ✅ Upload de imagem implementado em EditProfileActivity
-                    // imageUri?.let {
-                    //     uploadProfileImage(it, userId, userData)
+                    // Fazer upload da imagem de perfil se houver
+                    imageUri?.let {
+                        uploadProfileImage(it, userId, userData)
+                    } ?: run {
                         saveUserToFirestore(userId, userData) {
                             // FCM token será implementado em versão futura
                         }
+                    }
                 } else {
                     progressDialog.dismiss() // Fechar progresso em caso de erro
                     val exception = task.exception
@@ -262,6 +270,7 @@ class SignupClientActivity : AppCompatActivity() {
                     onSuccess() // Chama o callback após o sucesso
                     val intent = Intent(this, ClienteHomeActivity::class.java)
                     intent.putExtra("FROM_SIGNUP", true) // Adicione o extra
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()
                 }
@@ -274,5 +283,39 @@ class SignupClientActivity : AppCompatActivity() {
                     ).show()
                 }
         }
+    }
+
+    private fun uploadProfileImage(
+        imageUri: android.net.Uri,
+        userId: String,
+        userData: HashMap<String, Any>
+    ) {
+        Log.d("SignupClient", "🖼️ Iniciando upload de imagem para usuário: $userId")
+        val storageRef = storage.reference.child("profileImages/$userId.jpg") // 🔧 Extensão específica
+        
+        storageRef.putFile(imageUri)
+            .addOnSuccessListener {
+                Log.d("SignupClient", "✅ Upload de imagem bem-sucedido")
+                storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                    Log.d("SignupClient", "🔗 URL da imagem: ${downloadUrl}")
+                    // Adicionar a URL da imagem aos dados do usuário
+                    userData["imageUrl"] = downloadUrl.toString()
+                    
+                    // Salvar no Firestore com a URL da imagem
+                    saveUserToFirestore(userId, userData) {
+                        // FCM token será implementado em versão futura
+                    }
+                }.addOnFailureListener { e ->
+                    Log.e("SignupClient", "❌ Erro ao obter URL da imagem: ${e.message}")
+                    // Continuar sem imagem
+                    saveUserToFirestore(userId, userData) { }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Upload", "❌ Erro ao fazer upload da imagem: ${e.message}")
+                Toast.makeText(this, "Erro no upload da imagem. Tente novamente.", Toast.LENGTH_LONG).show()
+                progressDialog.dismiss() // 🔧 Fechar dialog em caso de erro
+                return@addOnFailureListener // 🔧 NÃO continuar sem imagem obrigatória
+            }
     }
 }

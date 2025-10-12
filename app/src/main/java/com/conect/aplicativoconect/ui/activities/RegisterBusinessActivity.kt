@@ -377,6 +377,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
                                         showWelcomeDialog {
                                             val intent = Intent(this, AdminHomeActivity::class.java)
                                             intent.putExtra("FROM_REGISTER", true)
+                                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                             startActivity(intent)
                                             finish()
                                         }
@@ -400,6 +401,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
                                         ).show()
                                         val intent = Intent(this, AdminHomeActivity::class.java)
                                         intent.putExtra("FROM_REGISTER", true)
+                                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                         startActivity(intent)
                                         finish()
                                     }
