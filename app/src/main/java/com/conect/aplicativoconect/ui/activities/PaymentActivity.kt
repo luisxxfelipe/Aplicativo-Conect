@@ -2,9 +2,7 @@ package com.conect.aplicativoconect.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.core.services.PaymentService
@@ -20,20 +18,28 @@ class PaymentActivity : AppCompatActivity() {
     private lateinit var firestore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     
-    // ActivityResultLauncher para o checkout de pagamento
-    private val checkoutLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        handlePaymentResult(result.resultCode, result.data)
-    }
-    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
         binding = ActivityPaymentBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
         initializeComponents()
         setupUI()
+    }
+    
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleDeepLink(intent)
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        
+        // Processar deep link se tiver dados ou se a action for VIEW
+        if (intent?.data != null || intent?.action == Intent.ACTION_VIEW) {
+            handleDeepLink(intent)
+        }
     }
     
     private fun initializeComponents() {
@@ -66,6 +72,8 @@ class PaymentActivity : AppCompatActivity() {
         binding.textAnnualSaving.text = "Economize R$ ${(PaymentService.MONTHLY_PLAN_PRICE * 12 - PaymentService.ANNUAL_PLAN_PRICE).toInt()}"
     }
     
+
+    
     private fun startMonthlyPayment() {
         val userEmail = auth.currentUser?.email
         if (userEmail != null) {
@@ -73,8 +81,8 @@ class PaymentActivity : AppCompatActivity() {
             binding.buttonMonthlyPlan.text = "Processando..."
             
             paymentService.startMonthlySubscriptionCheckout(
-                userEmail = userEmail,
-                launcher = checkoutLauncher
+                activity = this,
+                userEmail = userEmail
             ) { error ->
                 showError(error)
                 resetButton(binding.buttonMonthlyPlan, "Plano Mensal - R$ ${PaymentService.MONTHLY_PLAN_PRICE}")
@@ -91,8 +99,8 @@ class PaymentActivity : AppCompatActivity() {
             binding.buttonAnnualPlan.text = "Processando..."
             
             paymentService.startAnnualSubscriptionCheckout(
-                userEmail = userEmail,
-                launcher = checkoutLauncher
+                activity = this,
+                userEmail = userEmail
             ) { error ->
                 showError(error)
                 resetButton(binding.buttonAnnualPlan, "Plano Anual - R$ ${PaymentService.ANNUAL_PLAN_PRICE}")
@@ -102,57 +110,92 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
     
-    private fun handlePaymentResult(resultCode: Int, data: Intent?) {
-        paymentService.handlePaymentResult(
-            resultCode = resultCode,
-            data = data,
+    private fun handleDeepLink(intent: Intent?) {
+        paymentService.handleDeepLinkResult(
+            intent = intent,
             onSuccess = { paymentId, status ->
+                
                 when (status) {
                     "approved" -> {
-                        updateSubscriptionStatus(paymentId, "active")
-                        showSuccess("Pagamento aprovado! Redirecionando...")
-                        navigateToHome()
+                        if (paymentId == null) {
+                            showError("Pagamento aprovado, mas sem ID. Tente atualizar mais tarde.")
+                        } else {
+                            updateSubscriptionStatus(paymentId, "active") { success, errorMsg ->
+                                if (success) {
+                                    showSuccess("Pagamento aprovado! Redirecionando...")
+                                    navigateToHome()
+                                } else {
+                                    showError("Pagamento ok, mas falhou ao salvar assinatura: $errorMsg")
+                                }
+                            }
+                        }
                     }
                     "pending" -> {
-                        updateSubscriptionStatus(paymentId, "pending")
-                        showSuccess("Pagamento pendente. Você será notificado quando for aprovado.")
-                        navigateToHome()
+                        if (paymentId == null) {
+                            showError("Pagamento pendente sem ID. Tente novamente.")
+                        } else {
+                            updateSubscriptionStatus(paymentId, "pending") { success, errorMsg ->
+                                if (success) {
+                                    showSuccess("Pagamento pendente. Você será notificado quando for aprovado.")
+                                    navigateToHome()
+                                } else {
+                                    showError("Falhou ao salvar status pendente: $errorMsg")
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        showError("Status de pagamento desconhecido: $status")
+                        resetButtons()
                     }
                 }
             },
             onError = { error ->
-                showError(error)
+                showError("Erro no pagamento: $error")
                 resetButtons()
             }
         )
     }
     
-    private fun updateSubscriptionStatus(paymentId: String, status: String) {
-        val userId = auth.currentUser?.uid ?: return
+    private fun updateSubscriptionStatus(paymentId: String, status: String, onComplete: (Boolean, String?) -> Unit = { _, _ -> }) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            onComplete(false, "Usuário não autenticado")
+            return
+        }
+        
+        // Determinar se é plano anual baseado no paymentId ou contexto
+        val isAnnual = paymentId.contains("annual") || 
+                      binding.buttonAnnualPlan.text.toString().contains("Processando")
         
         val subscriptionData = hashMapOf(
+            "ownerId" to userId,
             "status" to status,
             "paymentId" to paymentId,
+            "planType" to if (isAnnual) "annual" else "monthly",
             "startDate" to Date(),
-            "endDate" to getEndDate(),
+            "endDate" to getEndDate(isAnnual),
             "updatedAt" to Date()
         )
         
         firestore.collection("subscriptions")
             .document(userId)
-            .set(subscriptionData)
+            .set(subscriptionData, com.google.firebase.firestore.SetOptions.merge())
             .addOnSuccessListener {
-                Log.d("PaymentActivity", "Subscription updated successfully")
+                onComplete(true, null)
             }
             .addOnFailureListener { e ->
-                Log.e("PaymentActivity", "Error updating subscription", e)
+                onComplete(false, e.message)
             }
     }
     
-    private fun getEndDate(): Date {
+    private fun getEndDate(isAnnual: Boolean = false): Date {
         val calendar = Calendar.getInstance()
-        // Por padrão, adiciona 1 mês. Ajustar conforme o plano escolhido
-        calendar.add(Calendar.MONTH, 1)
+        if (isAnnual) {
+            calendar.add(Calendar.YEAR, 1)
+        } else {
+            calendar.add(Calendar.MONTH, 1)
+        }
         return calendar.time
     }
     
@@ -195,4 +238,6 @@ class PaymentActivity : AppCompatActivity() {
         resetButton(binding.buttonMonthlyPlan, "Plano Mensal - R$ ${PaymentService.MONTHLY_PLAN_PRICE}")
         resetButton(binding.buttonAnnualPlan, "Plano Anual - R$ ${PaymentService.ANNUAL_PLAN_PRICE}")
     }
+    
+
 }

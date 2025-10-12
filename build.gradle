@@ -9,23 +9,10 @@ buildscript {
 }
 
 plugins {
-    id 'com.android.application' version '8.5.2' apply false
-    id 'com.android.library' version '8.5.2' apply false
+    id 'com.android.application' version '8.7.2' apply false
+    id 'com.android.library' version '8.7.2' apply false
     id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
     id("com.google.devtools.ksp") version "1.8.20-1.0.10" apply false
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url "https://repo1.maven.org/maven2" }
-        // Repositório do Mercado Pago
-        maven {
-            url "https://artifacts.mercadolibre.com/repository/android-public"
-            content {
-                includeGroup "com.mercadopago"
-            }
-        }
-    }
-}
+

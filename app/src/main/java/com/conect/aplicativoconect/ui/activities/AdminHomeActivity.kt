@@ -47,7 +47,8 @@ class AdminHomeActivity : AppCompatActivity() {
 
         firestore = FirebaseFirestore.getInstance()
 
-        fetchCompanyIdAndCheckSubscription()
+        // Verificação de subscription já foi feita no SplashActivity
+        // fetchCompanyIdAndCheckSubscription()
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()

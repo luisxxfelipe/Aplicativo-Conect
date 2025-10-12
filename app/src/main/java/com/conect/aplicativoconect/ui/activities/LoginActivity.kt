@@ -91,13 +91,9 @@ class LoginActivity : AppCompatActivity() {
                     //     TokenManager.saveToken("users", userId)
                     // }
 
-                    // Redireciona com base no tipo do usuário
-                    val intent = if (userType == "client") {
-                        Intent(this, ClienteHomeActivity::class.java).apply {
-                            putExtra("FORCE_UPDATE", true) // Adiciona a flag aqui
-                        }
-                    } else {
-                        Intent(this, AdminHomeActivity::class.java)
+                    // Usuário existe na collection "users" - sempre vai para ClienteHome
+                    val intent = Intent(this, ClienteHomeActivity::class.java).apply {
+                        putExtra("FORCE_UPDATE", true)
                     }
                     startActivity(intent)
                     finish()
@@ -106,19 +102,19 @@ class LoginActivity : AppCompatActivity() {
                     db.collection("business").document(userId).get()
                         .addOnSuccessListener { businessDocument ->
                             if (businessDocument.exists()) {
-                                // TODO: Corrigir lifecycleScope
-                                // lifecycleScope.launch {
-                                //     TokenManager.saveToken("business", userId)
-                                // }
+                                // Usuário é business - vai para AdminHome
                                 startActivity(Intent(this@LoginActivity, AdminHomeActivity::class.java))
                                 finish()
                             } else {
-                                Toast.makeText(this, "Usuário não encontrado.", Toast.LENGTH_SHORT)
+                                // Usuário não existe nem em "users" nem em "business"
+                                // Redirecionar para tela de boas-vindas para escolher tipo
+                                Toast.makeText(this, "Complete seu cadastro para continuar.", Toast.LENGTH_SHORT)
                                     .show()
+                                startActivity(Intent(this@LoginActivity, WelcomeActivity::class.java))
+                                finish()
                             }
                         }
                         .addOnFailureListener { e ->
-                            Log.e("LoginActivity", "Erro ao buscar empresa: ", e)
                             Toast.makeText(
                                 this,
                                 "Erro ao recuperar dados do negócio.",
@@ -128,7 +124,6 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("LoginActivity", "Erro ao buscar usuário: ", e)
                 Toast.makeText(this, "Erro ao recuperar dados do usuário.", Toast.LENGTH_SHORT)
                     .show()
             }
@@ -245,16 +240,7 @@ class LoginActivity : AppCompatActivity() {
                     // Atualiza a assinatura com a nova data de expiração e define como ativa
                     db.collection("subscriptions").document(userId)
                         .update("endDate", newEndDate, "isActive", true)
-                        .addOnSuccessListener {
-                            Log.d("Subscription", "Assinatura renovada com sucesso.")
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("Subscription", "Erro ao renovar assinatura: ${e.message}")
-                        }
                 }
-            }
-            .addOnFailureListener { e ->
-                Log.e("Subscription", "Erro ao acessar assinatura: ${e.message}")
             }
     }
 
@@ -273,11 +259,9 @@ class LoginActivity : AppCompatActivity() {
                         db.collection("subscriptions").document(userId)
                             .update("isTrialActive", false, "isActive", false)
                             .addOnSuccessListener {
-                                Log.d("Subscription", "Período de teste expirado e atualizado.")
                                 callback(false)
                             }
                             .addOnFailureListener { e ->
-                                Log.e("Subscription", "Erro ao atualizar assinatura: ${e.message}")
                                 callback(false)
                             }
                     } else {
@@ -288,7 +272,6 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("SubscriptionCheck", "Erro ao verificar assinatura: ${e.message}")
                 callback(false)
             }
     }

@@ -7,13 +7,13 @@ plugins {
 
 android {
     namespace 'com.conect.aplicativoconect'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId "com.conect.aplicativoconect"
         minSdk 23
-        targetSdk 34
+        targetSdk 35
         versionCode 11
         versionName "11.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -28,12 +28,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '11'
+        jvmTarget = '17'
     }
 
     buildFeatures {
@@ -59,12 +59,7 @@ android {
     }
 }
 
-repositories {
-    google()
-    mavenCentral()
-    maven { url 'https://jitpack.io' }  // Para bibliotecas do GitHub
-    // maven { url "https://artifactory.mercadolibre.com/artifactory/mobile" }  // Mercado Pago removido
-}
+
 
 configurations.configureEach {
     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
@@ -76,7 +71,7 @@ configurations.configureEach {
 }
 
 dependencies {
-    // Android e Material
+    // Android e Material - versões atualizadas
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
@@ -98,8 +93,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:21.3.0'
 
     // Navegação atualizada
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.7'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.7.7'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.8.0'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.8.0'
 
     // WorkManager
     implementation 'androidx.work:work-runtime-ktx:2.9.1'
@@ -125,11 +120,13 @@ dependencies {
 
     // Lottie e outros
     implementation "com.airbnb.android:lottie:6.4.1"
-    // implementation 'com.github.takusemba:spotlight:0.6.1'  // Removido temporariamente
 
-    // Pagamentos - Mercado Pago SDK (Alternativa mais estável)
-    // Payment gateway placeholder - substituir por gateway escolhido
-    // implementation 'com.mercadopago:android-sdk:4.38.1' // Removido temporariamente
+    // Mercado Pago SDK removido - usando apenas Custom Tabs
+    // implementation platform('com.mercadopago.android.sdk:sdk-android-bom:0.1.2')
+    // implementation 'com.mercadopago.android.sdk:core-methods'
+    
+    // Para Custom Tabs (conforme documentação oficial)
+    implementation 'androidx.browser:browser:1.4.0'
 
     // Testes
     testImplementation 'junit:junit:4.13.2'

@@ -3,11 +3,20 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven { url "https://artifactory.mercadolibre.com/artifactory/mobile" }  // Oficial para SDK Mercado Pago v8
+        maven { url = uri("https://artifacts.mercadolibre.com/repository/android-releases") }
     }
 }
 
-// Removendo dependencyResolutionManagement para permitir repositórios por módulo
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("https://artifacts.mercadolibre.com/repository/android-releases")
+        }
+    }
+}
 
 rootProject.name = "AplicativoConect"
 include ':app'
