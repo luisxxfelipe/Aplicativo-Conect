@@ -1,7 +1,9 @@
 package com.conect.aplicativoconect.ui.activities
 
+import android.Manifest
 import android.app.Dialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,6 +14,7 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -34,6 +37,10 @@ class ClienteHomeActivity : AppCompatActivity() {
 
     private lateinit var firestore: FirebaseFirestore
     private val clientViewModel: ClientViewModel by viewModels()
+    
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
+    }
     private val clientBookingAdapter: ClientBookingAdapter by lazy {
         ClientBookingAdapter(
             context = this,
@@ -59,6 +66,7 @@ class ClienteHomeActivity : AppCompatActivity() {
         val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
 
         checkAuthentication()
+        checkLocationPermission()
 
         isFromSignup = intent.getBooleanExtra("FROM_SIGNUP", false)
         setupLoadingDialog()
@@ -242,6 +250,81 @@ class ClienteHomeActivity : AppCompatActivity() {
 
     private fun clearLocalCache() {
         getSharedPreferences("business_cache", MODE_PRIVATE).edit().clear().apply()
+    }
+
+    // Verifica e solicita permissão de localização obrigatória
+    private fun checkLocationPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // Permissão já concedida
+                return
+            }
+            
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) -> {
+                // Mostrar explicação sobre porque a permissão é necessária
+                showLocationPermissionExplanation()
+            }
+            
+            else -> {
+                // Solicitar permissão diretamente
+                requestLocationPermission()
+            }
+        }
+    }
+
+    private fun showLocationPermissionExplanation() {
+        AlertDialog.Builder(this)
+            .setTitle("Permissão de Localização Necessária")
+            .setMessage("O Conectx precisa acessar sua localização para mostrar estabelecimentos próximos a você e melhorar sua experiência.")
+            .setPositiveButton("Permitir") { _, _ ->
+                requestLocationPermission()
+            }
+            .setNegativeButton("Agora Não") { _, _ ->
+                // Usuario pode continuar sem localização, mas com funcionalidade limitada
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun requestLocationPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        when (requestCode) {
+            LOCATION_PERMISSION_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() && 
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permissão concedida - o fragment já irá detectar automaticamente
+                } else {
+                    // Permissão negada - informar o usuário
+                    AlertDialog.Builder(this)
+                        .setTitle("Permissão Negada")
+                        .setMessage("Sem a permissão de localização, você verá todos os estabelecimentos, mas não conseguirá filtrar por proximidade.")
+                        .setPositiveButton("OK", null)
+                        .show()
+                }
+            }
+        }
     }
 
     // Intercepta o botão voltar para evitar retorno indesejado à tela de seleção

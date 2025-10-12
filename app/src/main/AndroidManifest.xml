@@ -137,6 +137,9 @@
         <activity
             android:name=".ui.activities.PolicyActivity"
             android:exported="true" />
+        <activity
+            android:name=".ui.activities.ReferralPointsActivity"
+            android:exported="false" />
 
         <meta-data
             android:name="preloaded_fonts"

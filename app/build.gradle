@@ -14,8 +14,8 @@ android {
         applicationId "com.conect.aplicativoconect"
         minSdk 23
         targetSdk 35
-        versionCode 11
-        versionName "11.0"
+        versionCode 12
+        versionName "12.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -66,6 +66,10 @@ configurations.configureEach {
         if (details.requested.group == 'io.grpc') {
             // Força o uso de uma versão específica para todas as dependências do gRPC
             details.useVersion '1.48.0'
+        }
+        // Força versão mais recente do Google Play Billing Library
+        if (details.requested.group == 'com.android.billingclient' && details.requested.name == 'billing') {
+            details.useVersion '7.0.0'
         }
     }
 }
@@ -127,6 +131,9 @@ dependencies {
     
     // Para Custom Tabs (conforme documentação oficial)
     implementation 'androidx.browser:browser:1.4.0'
+
+    // Google Play Billing Library - Versão obrigatória mínima 7.0.0
+    implementation 'com.android.billingclient:billing:7.0.0'
 
     // Testes
     testImplementation 'junit:junit:4.13.2'

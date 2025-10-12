@@ -14,11 +14,27 @@ import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.data.models.Business
 import com.conect.aplicativoconect.utils.ImageHelper
 import com.conect.aplicativoconect.data.models.OperatingHours
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.cos
+import kotlin.math.atan2
+import kotlin.math.sqrt
+
+// 🎯 Extensão para Business com informações de distância
+data class BusinessWithDistance(
+    val business: Business,
+    val distanceKm: Double? = null,
+    val distanceText: String? = null
+)
 
 class BusinessAdapter(
     private val context: Context,
     private val onBusinessClick: (Business) -> Unit
-) : ListAdapter<Business, BusinessAdapter.BusinessViewHolder>(BusinessDiffCallback()) {
+) : ListAdapter<BusinessWithDistance, BusinessAdapter.BusinessViewHolder>(BusinessWithDistanceDiffCallback()) {
+
+    // 🎯 Variáveis para localização do usuário (para cálculo de distância)
+    private var userLat: Double? = null
+    private var userLon: Double? = null
 
     inner class BusinessViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val businessName: TextView = itemView.findViewById(R.id.businessName)
@@ -27,7 +43,14 @@ class BusinessAdapter(
         val businessImage: ImageView = itemView.findViewById(R.id.businessImage)
         val ratingTextView: TextView = itemView.findViewById(R.id.businessAverageRating)
         val bookButton: Button = itemView.findViewById(R.id.bookButton)
-
+        // 🆕 NOVO: TextView para mostrar distância
+        val distanceTextView: TextView? = itemView.findViewById(R.id.businessDistance)
+    }
+    
+    // 🚀 NOVA FUNÇÃO: Definir localização do usuário para cálculos de distância
+    fun setUserLocation(lat: Double?, lon: Double?) {
+        userLat = lat
+        userLon = lon
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BusinessViewHolder {
@@ -37,7 +60,8 @@ class BusinessAdapter(
     }
 
     override fun onBindViewHolder(holder: BusinessViewHolder, position: Int) {
-        val business = getItem(position)
+        val businessWithDistance = getItem(position)
+        val business = businessWithDistance.business
 
         // Atualiza o nome e a categoria
         holder.businessName.text = business.name
@@ -52,14 +76,71 @@ class BusinessAdapter(
         // Formata e exibe a avaliação média
         holder.ratingTextView.text = formatAverageRating(business.averageRating.toFloat())
 
+        // 🆕 NOVO: Mostrar distância se disponível
+        holder.distanceTextView?.let { distanceTV ->
+            businessWithDistance.distanceText?.let { distance ->
+                distanceTV.text = distance
+                distanceTV.visibility = View.VISIBLE
+                // Mostrar o container pai também
+                distanceTV.parent?.let { parent ->
+                    (parent as? View)?.visibility = View.VISIBLE
+                }
+            } ?: run {
+                distanceTV.visibility = View.GONE
+                // Ocultar o container pai também
+                distanceTV.parent?.let { parent ->
+                    (parent as? View)?.visibility = View.GONE
+                }
+            }
+        }
 
         // Configura o botão de agendamento
         holder.bookButton.setOnClickListener { onBusinessClick(business) }
     }
 
-    override fun submitList(list: List<Business>?) {
+    override fun submitList(list: List<BusinessWithDistance>?) {
         // Remove a lógica redundante e permite que o `DiffUtil` cuide das atualizações.
         super.submitList(list?.toList())
+    }
+    
+    // 🎯 FUNÇÃO para converter List<Business> para List<BusinessWithDistance>
+    fun submitBusinessList(businesses: List<Business>) {
+        val businessesWithDistance = businesses.map { business ->
+            val distanceText = if (userLat != null && userLon != null && 
+                                   business.latitude != 0.0 && business.longitude != 0.0) {
+                val distance = calculateDistance(userLat!!, userLon!!, business.latitude, business.longitude)
+                when {
+                    distance < 1.0 -> "${(distance * 1000).toInt()}m"
+                    distance < 10.0 -> String.format("%.1fkm", distance)
+                    else -> "${distance.toInt()}km"
+                }
+            } else null
+            
+            BusinessWithDistance(
+                business = business,
+                distanceKm = if (userLat != null && userLon != null && 
+                                 business.latitude != 0.0 && business.longitude != 0.0) {
+                    calculateDistance(userLat!!, userLon!!, business.latitude, business.longitude)
+                } else null,
+                distanceText = distanceText
+            )
+        }
+        
+        submitList(businessesWithDistance)
+    }
+    
+    // 🎯 Função de cálculo de distância (mesmo algoritmo do Fragment)
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val earthRadius = 6371.0 // Raio da Terra em km
+        
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        
+        val a = sin(dLat / 2).pow(2) + cos(Math.toRadians(lat1)) * 
+                cos(Math.toRadians(lat2)) * sin(dLon / 2).pow(2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        
+        return earthRadius * c
     }
 
     private fun formatOperatingHours(operatingHours: OperatingHours?): String {
@@ -81,4 +162,15 @@ class BusinessAdapter(
     }
 }
 
-// BusinessDiffCallback movido para arquivo separado - BusinessDiffCallback.kt
+// 🎯 NOVO DiffCallback para BusinessWithDistance
+class BusinessWithDistanceDiffCallback : DiffUtil.ItemCallback<BusinessWithDistance>() {
+    override fun areItemsTheSame(oldItem: BusinessWithDistance, newItem: BusinessWithDistance): Boolean {
+        return oldItem.business.ownerId == newItem.business.ownerId
+    }
+
+    override fun areContentsTheSame(oldItem: BusinessWithDistance, newItem: BusinessWithDistance): Boolean {
+        return oldItem.business == newItem.business && 
+               oldItem.distanceKm == newItem.distanceKm &&
+               oldItem.distanceText == newItem.distanceText
+    }
+}

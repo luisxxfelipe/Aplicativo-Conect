@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_background"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Header com ícone e título -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_star"
+            android:tint="@color/roxo"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Programa de Indicações"
+            android:textColor="@color/roxo"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- Título principal -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🚀 Ajude a expandir nossa comunidade!"
+        android:textColor="@color/textPrimary"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Descrição -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ganhe pontos indicando profissionais autônomos para o ConecteX e converta em cupons de desconto!"
+        android:textColor="@color/textSecondary"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Card de benefícios -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/backgroundLight">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="💰 Como funciona:"
+                android:textColor="@color/textPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Cada profissional que se cadastrar = 100 pontos\n• 500 pontos = Cupom de 10% de desconto\n• 1000 pontos = Cupom de 20% de desconto\n• 2000 pontos = Cupom de 50% de desconto"
+                android:textColor="@color/textSecondary"
+                android:textSize="14sp"
+                android:lineSpacingExtra="2dp" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Lista de profissionais para indicar -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="✨ Profissionais que você pode indicar:"
+        android:textColor="@color/textPrimary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="• Cabeleireiros e Barbeiros\n• Manicures e Pedicures\n• Esteticistas e Massoterapeutas\n• Técnicos de Informática\n• Fotógrafos e Videomakers\n• Desenvolvedores de Sites\n• E muito mais!"
+        android:textColor="@color/textSecondary"
+        android:textSize="14sp"
+        android:lineSpacingExtra="2dp"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Botões de ação -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Botão principal - Compartilhar WhatsApp -->
+        <Button
+            android:id="@+id/btnShareWhatsApp"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="📱 Compartilhar no WhatsApp"
+            android:textColor="@color/white"
+            android:background="@drawable/rounded_button"
+            android:backgroundTint="#25D366"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Botão secundário - Ver meus pontos -->
+        <Button
+            android:id="@+id/btnViewPoints"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="⭐ Ver Meus Pontos"
+            android:textColor="@color/roxo"
+            android:background="@drawable/rounded_button_outline"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Botão fechar -->
+        <Button
+            android:id="@+id/btnClose"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="Fechar"
+            android:textColor="@color/textSecondary"
+            android:background="@android:color/transparent"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+</LinearLayout>

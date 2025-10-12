@@ -1,13 +1,16 @@
 package com.conect.aplicativoconect.ui.activities
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.conect.aplicativoconect.R
@@ -27,12 +30,17 @@ class AdminHomeActivity : AppCompatActivity() {
 
     private lateinit var firestore: FirebaseFirestore
     private val MAX_DAILY_ALERTS = 2  // Limite de exibições do alerta por dia
+    
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1002
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_home)
 
         firestore = FirebaseFirestore.getInstance()
+        checkLocationPermission()
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
@@ -206,6 +214,74 @@ class AdminHomeActivity : AppCompatActivity() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()
+    }
+
+    // Verifica e solicita permissão de localização
+    private fun checkLocationPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // Permissão já concedida
+                return
+            }
+            
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) -> {
+                // Mostrar explicação sobre porque a permissão é necessária
+                showLocationPermissionExplanation()
+            }
+            
+            else -> {
+                // Solicitar permissão diretamente
+                requestLocationPermission()
+            }
+        }
+    }
+
+    private fun showLocationPermissionExplanation() {
+        AlertDialog.Builder(this)
+            .setTitle("Permissão de Localização")
+            .setMessage("O Conectx usa sua localização para melhorar os serviços oferecidos e conectar você com clientes próximos.")
+            .setPositiveButton("Permitir") { _, _ ->
+                requestLocationPermission()
+            }
+            .setNegativeButton("Agora Não", null)
+            .setCancelable(true)
+            .show()
+    }
+
+    private fun requestLocationPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        when (requestCode) {
+            LOCATION_PERMISSION_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() && 
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permissão concedida
+                } else {
+                    // Permissão negada - não é crítica para empresas
+                }
+            }
+        }
     }
 
     // Intercepta o botão voltar para evitar retorno indesejado à tela de seleção

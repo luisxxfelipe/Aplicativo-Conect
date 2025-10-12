@@ -19,6 +19,10 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.firestore.FirebaseFirestore
+import com.conect.aplicativoconect.data.repositories.BusinessValidationRepository
+import com.conect.aplicativoconect.data.models.BusinessValidationStatus
+import kotlinx.coroutines.launch
+import android.os.Build
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -27,6 +31,7 @@ class SignupBusinessActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private lateinit var businessValidationRepository: BusinessValidationRepository
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
@@ -41,6 +46,7 @@ class SignupBusinessActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+        businessValidationRepository = BusinessValidationRepository()
 
         emailEditText = findViewById(R.id.emailInput)
         passwordEditText = findViewById(R.id.passwordInput)
@@ -74,19 +80,9 @@ class SignupBusinessActivity : AppCompatActivity() {
 
             if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && nameUser.isNotEmpty() && cpf.isNotEmpty()) {
                 if (password == confirmPassword) {
-                    // Verificar o Android ID antes de criar o usuário
+                    // 🔒 VALIDAÇÃO ANTI-FRAUD ROBUSTA
                     val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
-                    checkIfAndroidIdExists(androidId) { exists ->
-                        if (exists) {
-                            Toast.makeText(
-                                this,
-                                "Este dispositivo já está registrado.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            createBusinessUser(email, password, nameUser, cpf, androidId)
-                        }
-                    }
+                    performBusinessValidation(email, password, nameUser, cpf, androidId)
                 } else {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
@@ -336,5 +332,153 @@ class SignupBusinessActivity : AppCompatActivity() {
                 Log.e("Firebase", "Erro ao verificar Android ID: ${e.message}")
                 callback(false)
             }
+    }
+    
+    // 🔒 ===== SISTEMA ANTI-FRAUD ROBUSTO =====
+    
+    /**
+     * 🔒 VALIDAÇÃO COMPLETA ANTI-FRAUD
+     */
+    private fun performBusinessValidation(
+        email: String,
+        password: String, 
+        nameUser: String,
+        cpf: String,
+        androidId: String
+    ) {
+        lifecycleScope.launch {
+            try {
+                // 🔒 COLETA DE DADOS PARA VALIDAÇÃO
+                val deviceInfo = getDeviceInfo()
+                val ipAddress = getDeviceIP()
+                
+                // 🔒 EXECUTAR VALIDAÇÃO ANTI-FRAUD
+                val validationResult = businessValidationRepository.validateBusinessRegistration(
+                    cpf = cpf,
+                    phone = "", // Será coletado posteriormente
+                    address = "", // Será coletado posteriormente
+                    deviceInfo = deviceInfo,
+                    androidId = androidId,
+                    ipAddress = ipAddress,
+                    latitude = 0.0, // Será coletado posteriormente
+                    longitude = 0.0 // Será coletado posteriormente
+                )
+                
+                // 🔒 PROCESSAR RESULTADO DA VALIDAÇÃO
+                when (validationResult.validationStatus) {
+                    BusinessValidationStatus.APPROVED -> {
+                        // ✅ APROVADO - Prosseguir com cadastro
+                        createBusinessUser(email, password, nameUser, cpf, androidId)
+                    }
+                    
+                    BusinessValidationStatus.UNDER_REVIEW -> {
+                        // ⚠️ REVISÃO MANUAL - Bloquear temporariamente
+                        showValidationDialog(
+                            "Cadastro em Análise",
+                            "Seu cadastro será analisado por nossa equipe. " +
+                            "Você receberá um email em até 24 horas com o resultado.\n\n" +
+                            "Motivo: Verificação de segurança preventiva.\n" +
+                            "Score de segurança: ${validationResult.fraudScore}/100"
+                        )
+                    }
+                    
+                    BusinessValidationStatus.ADDITIONAL_INFO -> {
+                        // 📋 DOCUMENTOS NECESSÁRIOS
+                        showValidationDialog(
+                            "Documentos Necessários",
+                            "Para finalizar seu cadastro, será necessário enviar documentos adicionais:\n\n" +
+                            "• Documento de identidade\n" +
+                            "• Comprovante de endereço\n" +
+                            "• Licença comercial (se aplicável)\n\n" +
+                            "Score de segurança: ${validationResult.fraudScore}/100"
+                        )
+                    }
+                    
+                    BusinessValidationStatus.FRAUD_DETECTED -> {
+                        // 🚫 FRAUDE DETECTADA - Bloquear permanentemente
+                        showValidationDialog(
+                            "Cadastro Bloqueado",
+                            "Não foi possível realizar o cadastro devido a inconsistências detectadas.\n\n" +
+                            "Se você acredita que isso é um erro, entre em contato conosco.\n\n" +
+                            "Motivos: ${validationResult.fraudFlags.joinToString(", ")}"
+                        )
+                    }
+                    
+                    BusinessValidationStatus.REJECTED -> {
+                        // ❌ REJEITADO
+                        showValidationDialog(
+                            "Cadastro Rejeitado",
+                            "Não foi possível validar os dados fornecidos. " +
+                            "Verifique as informações e tente novamente.\n\n" +
+                            "${validationResult.errorMessage ?: "Erro desconhecido"}"
+                        )
+                    }
+                    
+                    else -> {
+                        // Estado não tratado
+                        createBusinessUser(email, password, nameUser, cpf, androidId)
+                    }
+                }
+                
+            } catch (e: Exception) {
+                Log.e("BusinessValidation", "Erro na validação anti-fraud: ${e.message}")
+                
+                // Em caso de erro, usar validação básica como fallback
+                checkIfAndroidIdExists(androidId) { exists ->
+                    if (exists) {
+                        Toast.makeText(
+                            this@SignupBusinessActivity,
+                            "Este dispositivo já está registrado.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        createBusinessUser(email, password, nameUser, cpf, androidId)
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 🔒 COLETA INFORMAÇÕES DO DISPOSITIVO PARA FINGERPRINTING
+     */
+    private fun getDeviceInfo(): String {
+        return buildString {
+            append("Model:${Build.MODEL};")
+            append("Brand:${Build.BRAND};")
+            append("SDK:${Build.VERSION.SDK_INT};")
+            append("Release:${Build.VERSION.RELEASE};")
+            append("Manufacturer:${Build.MANUFACTURER};")
+            append("Hardware:${Build.HARDWARE};")
+            append("Display:${Build.DISPLAY};")
+        }
+    }
+    
+    /**
+     * 🔒 OBTÉM IP DO DISPOSITIVO (APROXIMADO)
+     */
+    private fun getDeviceIP(): String {
+        return try {
+            // Implementação básica - pode ser melhorada com API externa
+            "192.168.1.100" // Placeholder
+        } catch (e: Exception) {
+            "unknown"
+        }
+    }
+    
+    /**
+     * 🔒 DIALOG PARA MOSTRAR RESULTADOS DA VALIDAÇÃO
+     */
+    private fun showValidationDialog(title: String, message: String) {
+        runOnUiThread {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Entendi") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .setCancelable(false)
+                .show()
+        }
     }
 }

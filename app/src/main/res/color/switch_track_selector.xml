@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Trilha quando ativado (checked) -->
+    <item android:state_checked="true" android:color="#4A8264FF" />
+    <!-- Trilha quando desativado (unchecked) -->
+    <item android:state_checked="false" android:color="@color/cinza_claro" />
+    <!-- Estado padrão -->
+    <item android:color="@color/cinza_claro" />
+</selector>

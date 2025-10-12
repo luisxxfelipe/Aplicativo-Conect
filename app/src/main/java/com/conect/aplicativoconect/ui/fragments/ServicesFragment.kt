@@ -51,13 +51,13 @@ class ServicesFragment : Fragment() {
             setupAdapter(services)
         }
         
-        companyViewModel.isLoading.observe(viewLifecycleOwner) { _ ->
-            // ✅ Loading será implementado conforme necessidade futura
+        companyViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            // TODO: Implementar indicador de loading se necessário
         }
         
         companyViewModel.error.observe(viewLifecycleOwner) { error ->
             error?.let {
-                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Erro ao carregar serviços: $it", Toast.LENGTH_LONG).show()
             }
         }
     }

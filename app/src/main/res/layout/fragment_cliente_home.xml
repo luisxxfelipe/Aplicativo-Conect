@@ -75,6 +75,30 @@
                     app:layout_constraintStart_toEndOf="@+id/userImage"
                     app:layout_constraintTop_toBottomOf="@+id/greetingTextView" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/referralButton"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="80dp"
+                    android:minHeight="40dp"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
+                    android:text="Indicar"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="12sp"
+                    app:cornerRadius="20dp"
+                    app:icon="@drawable/ic_pessoas"
+                    app:iconGravity="start"
+                    app:iconPadding="4dp"
+                    app:iconSize="16dp"
+                    app:iconTint="@color/colorPrimary"
+                    app:layout_constraintEnd_toStartOf="@+id/appLogo"
+                    app:layout_constraintTop_toTopOf="@+id/userImage"
+                    app:strokeColor="@color/colorPrimary"
+                    app:strokeWidth="1dp" />
+
                 <ImageView
                     android:id="@+id/appLogo"
                     android:layout_width="40dp"
@@ -209,12 +233,15 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/establishmentsRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="10dp"
+            android:maxHeight="400dp"
             android:nestedScrollingEnabled="false"
+            app:layout_constraintBottom_toTopOf="@id/noEstablishmentsContainer"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/establishmentsTitle" />
+            app:layout_constraintTop_toBottomOf="@id/establishmentsTitle"
+            app:layout_constraintVertical_bias="0.0" />
 
         <!-- 🎨 ESTADO VAZIO: Quando não há estabelecimentos -->
         <LinearLayout
