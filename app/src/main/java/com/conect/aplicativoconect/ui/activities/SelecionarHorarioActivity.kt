@@ -15,6 +15,7 @@ import com.conect.aplicativoconect.data.models.Service
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import com.conect.aplicativoconect.utils.Validator
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -100,8 +101,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
                 )
 
                 if (workingDays.contains(dayOfWeek)) { // Verifica se o dia está nos dias trabalhados
-                    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    selectedDate = dateFormat.format(selectedCalendar.time)
+                    selectedDate = Validator.DATE_FORMAT.format(selectedCalendar.time) // ✅ OTIMIZADO: Formatador central
                     buttonPickDate.text = "Ajustar Data"
                     fetchExistingBookings(selectedDate!!)
                 } else {
@@ -185,11 +185,10 @@ class SelecionarHorarioActivity : AppCompatActivity() {
         val availableSlots = mutableListOf<String>()
 
         // Obter data atual e selecionada
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val currentDateTime = Calendar.getInstance()
-        val currentDate = dateFormat.format(currentDateTime.time)
+        val currentDate = Validator.DATE_FORMAT.format(currentDateTime.time) // ✅ OTIMIZADO: Formatador central
         val selectedCalendar = Calendar.getInstance()
-        selectedCalendar.time = dateFormat.parse(selectedDate!!)
+        selectedCalendar.time = Validator.DATE_FORMAT.parse(selectedDate!!) // ✅ OTIMIZADO: Formatador central
         val selectedDayOfWeek = selectedCalendar.getDisplayName(
             Calendar.DAY_OF_WEEK,
             Calendar.LONG,
@@ -203,8 +202,7 @@ class SelecionarHorarioActivity : AppCompatActivity() {
             return availableSlots // Retorna vazio
         }
 
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val currentTime = timeFormat.format(currentDateTime.time)
+        val currentTime = Validator.TIME_FORMAT.format(currentDateTime.time) // ✅ OTIMIZADO: Formatador central
 
         // Filtrar horários com base na data selecionada
         if (selectedDate == currentDate) {

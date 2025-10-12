@@ -53,7 +53,6 @@ class LoginActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // Dentro do metodo onCreate()
         val recoverPasswordButton: Button = findViewById(R.id.recoverpassword)
 
         recoverPasswordButton.setOnClickListener {
@@ -71,11 +70,26 @@ class LoginActivity : AppCompatActivity() {
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
                     verifyUserType(userId)
                 } else {
-                    Toast.makeText(
-                        this,
-                        "Falha na autenticação. Verifique suas credenciais.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    val exception = task.exception
+                    val errorMessage = when {
+                        exception?.message?.contains("password is invalid") == true || 
+                        exception?.message?.contains("wrong-password") == true -> 
+                            "Senha incorreta. Tente novamente ou use 'Esqueci minha senha'."
+                        
+                        exception?.message?.contains("user not found") == true ||
+                        exception?.message?.contains("no user record") == true -> 
+                            "Email não encontrado. Verifique o email ou cadastre-se."
+                        
+                        exception?.message?.contains("invalid email") == true -> 
+                            "Email inválido. Verifique o formato do email."
+                        
+                        exception?.message?.contains("network error") == true -> 
+                            "Erro de conexão. Verifique sua internet."
+                            
+                        else -> "Falha na autenticação: ${exception?.message ?: "Verifique suas credenciais"}"
+                    }
+                    
+                    Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
     }
@@ -86,10 +100,6 @@ class LoginActivity : AppCompatActivity() {
             .addOnSuccessListener { userDocument ->
                 if (userDocument.exists()) {
                     val userType = userDocument.getString("type") ?: "client"
-                    // TODO: Corrigir lifecycleScope
-                    // lifecycleScope.launch {
-                    //     TokenManager.saveToken("users", userId)
-                    // }
 
                     // Usuário existe na collection "users" - sempre vai para ClienteHome
                     val intent = Intent(this, ClienteHomeActivity::class.java).apply {
@@ -129,81 +139,6 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
-    private fun showExpiredSubscriptionDialog(userId: String) {
-        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
-        val dialog = dialogBuilder.setTitle("Assinatura Expirada")
-            .setMessage("Sua assinatura expirou. Deseja renovar para continuar?")
-            .setPositiveButton("Renovar Assinatura") { _, _ ->
-                initiatePayment(userId)  // Chama o pagamento
-            }
-            .setNegativeButton("Cancelar") { dialog, _ ->
-                dialog.dismiss()
-                // Opcionalmente, você pode redirecionar o usuário para a tela de login novamente
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
-            }
-            .setCancelable(false) // Evita que o usuário feche o diálogo fora das opções dadas
-            .create()
-
-        // Usar setOnShowListener para garantir que os botões existem antes de configurar a cor
-        dialog.setOnShowListener {
-            val positiveButton =
-                dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
-            val negativeButton =
-                dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)
-
-            positiveButton.setTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.roxo
-                )
-            ) // Define a cor roxa
-            negativeButton.setTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.roxo
-                )
-            ) // Define a cor roxa
-        }
-
-        dialog.show()
-    }
-
-
-    private fun initiatePayment(@Suppress("UNUSED_PARAMETER") userId: String) {
-        // Fazendo logout do usuário antes de iniciar o pagamento
-        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-
-        // TODO: Implementar pagamento
-        // kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-            // val paymentService = PaymentService(this@LoginActivity) // Removido
-
-            // Chama a função suspensa createPayment dentro da coroutine
-            // paymentService.createPayment( // Removido
-            //     amount = 25.0f,
-            //     title = "Assinatura Mensal",
-            //     payerEmail = auth.currentUser?.email ?: "",
-            //     onSuccess = {
-            //         // Chama a função para renovar a assinatura após o pagamento
-            //         renewSubscription(userId)
-
-            //         // Agora, reautentica o usuário após o pagamento bem-sucedido
-            //         reAuthenticateAndRedirect(userId)
-            //     },
-            //     onError = { errorMessage ->
-            //         // Caso ocorra um erro no pagamento, mostra a mensagem e retorna para a tela de login
-            //         Toast.makeText(
-            //             this@LoginActivity,
-            //             "Erro no pagamento: $errorMessage",
-            //             Toast.LENGTH_LONG
-            //         ).show()
-            //         startActivity(Intent(this@LoginActivity, LoginActivity::class.java))
-            //         finish()
-            //     }
-            // )
-        // }
-    }
-
     private fun reAuthenticateAndRedirect(userId: String) {
         auth.signInWithEmailAndPassword(
             emailEditText.text.toString().trim(),
@@ -223,56 +158,4 @@ class LoginActivity : AppCompatActivity() {
     }
 
 
-    private fun renewSubscription(userId: String) {
-        db.collection("subscriptions").document(userId).get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val currentEndDate =
-                        document.getTimestamp("endDate")?.toDate() ?: java.util.Date()
-
-                    // Calcula a nova data de expiração adicionando um mês
-                    val calendar = java.util.Calendar.getInstance().apply {
-                        time = currentEndDate
-                        add(java.util.Calendar.MONTH, 1)
-                    }
-                    val newEndDate = calendar.time
-
-                    // Atualiza a assinatura com a nova data de expiração e define como ativa
-                    db.collection("subscriptions").document(userId)
-                        .update("endDate", newEndDate, "isActive", true)
-                }
-            }
-    }
-
-    private fun checkSubscriptionStatus(userId: String, callback: (Boolean) -> Unit) {
-        db.collection("subscriptions").document(userId).get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val endDate = document.getTimestamp("endDate")?.toDate()
-                    val isTrialActive = document.getBoolean("isTrialActive") ?: true
-                    val isActive = document.getBoolean("isActive") ?: false
-
-                    val isSubscriptionValid =
-                        (isTrialActive && endDate?.after(java.util.Date()) == true) || isActive
-
-                    if (isTrialActive && endDate?.before(java.util.Date()) == true) {
-                        db.collection("subscriptions").document(userId)
-                            .update("isTrialActive", false, "isActive", false)
-                            .addOnSuccessListener {
-                                callback(false)
-                            }
-                            .addOnFailureListener { e ->
-                                callback(false)
-                            }
-                    } else {
-                        callback(isSubscriptionValid)
-                    }
-                } else {
-                    callback(false)
-                }
-            }
-            .addOnFailureListener { e ->
-                callback(false)
-            }
-    }
 }

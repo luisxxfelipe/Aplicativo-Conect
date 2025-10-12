@@ -40,7 +40,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
+import com.conect.aplicativoconect.utils.Validator
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -124,10 +124,12 @@ class ClienteHomeFragment : Fragment() {
     }
 
 
-    private fun cacheBusinesses(businesses: List<Business>) {
-        val sharedPreferences =
-            requireContext().getSharedPreferences("business_cache", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putString("cached_businesses", Gson().toJson(businesses)).apply()
+    // ✅ OTIMIZADO: Função consolidada para cache de businesses
+    private fun cacheBusinesses(businesses: List<Business> = businessList) {
+        val sharedPreferences = 
+            requireContext().getSharedPreferences(cacheKey, Context.MODE_PRIVATE)
+        val json = Gson().toJson(businesses)
+        sharedPreferences.edit().putString(cacheKey, json).apply()
     }
 
     private fun loadCachedBusinesses(): List<Business> {
@@ -140,15 +142,6 @@ class ClienteHomeFragment : Fragment() {
         } else {
             emptyList()
         }
-    }
-
-
-    private fun saveBusinessesToCache() {
-        val sharedPreferences =
-            requireContext().getSharedPreferences(cacheKey, Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val json = Gson().toJson(businessList)
-        editor.putString(cacheKey, json).apply()
     }
 
 
@@ -226,20 +219,31 @@ class ClienteHomeFragment : Fragment() {
 
         val normalizedCity = city.trim().lowercase(Locale.getDefault())
 
-        firestore.collection("business")
-            .get()
+        // ✅ OTIMIZAÇÃO: Query direta com filtro no Firestore + limite
+        val query = firestore.collection("business")
+            .whereEqualTo("city", normalizedCity)
+            .limit(PAGE_SIZE.toLong())
+
+        // Aplicar paginação se houver documento anterior
+        lastVisible?.let { query.startAfter(it) }
+
+        query.get()
             .addOnSuccessListener { querySnapshot ->
                 val businesses = querySnapshot.toObjects(Business::class.java)
-                    .filter { business ->
-                        val businessCityNormalized =
-                            business.city.trim().lowercase(Locale.getDefault())
-                        businessCityNormalized == normalizedCity
-                    }
-                businessList.clear()
-                businessList.addAll(businesses)
+                
+                // Atualizar lastVisible para próxima página
+                if (querySnapshot.documents.isNotEmpty()) {
+                    lastVisible = querySnapshot.documents.lastOrNull()
+                }
 
-                saveBusinessesToCache() // Atualiza o cache
-                updateBusinessAdapter(businessList) // Atualiza o adapter após carregar os dados
+                // Se é a primeira busca, limpar a lista
+                if (lastVisible == null) {
+                    businessList.clear()
+                }
+                
+                businessList.addAll(businesses)
+                cacheBusinesses() // ✅ OTIMIZADO: Usa função consolidada
+                updateBusinessAdapter(businessList)
             }
             .addOnFailureListener {
                 Log.e("ClienteHomeFragment", "Erro ao buscar empresas: ${it.message}")
@@ -255,11 +259,28 @@ class ClienteHomeFragment : Fragment() {
             fetchBusinessIdAndOpenDetails(business.name)
         }
 
-        // Configura o RecyclerView
+        // Configura o RecyclerView com scroll infinito
+        val layoutManager = LinearLayoutManager(requireContext())
         binding.establishmentsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
+            this.layoutManager = layoutManager
             setHasFixedSize(true)
-            adapter = businessAdapter // Garante que o adapter seja definido
+            adapter = businessAdapter
+            
+            // ✅ IMPLEMENTAR SCROLL INFINITO
+            addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    
+                    val visibleItemCount = layoutManager.childCount
+                    val totalItemCount = layoutManager.itemCount
+                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+                    
+                    // Carregar mais quando próximo do fim (últimos 3 itens)
+                    if (!isLoading && (visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 3) {
+                        fetchBusinesses(currentCity, false) // Carregar próxima página
+                    }
+                }
+            })
         }
 
         // Configura o RecyclerView de categorias
@@ -278,25 +299,48 @@ class ClienteHomeFragment : Fragment() {
     }
 
 
-    private fun fetchBusinesses(city: String? = currentCity) {
+    private fun fetchBusinesses(city: String? = currentCity, isFirstLoad: Boolean = false) {
         if (isLoading) return
 
         isLoading = true
         lifecycleScope.launch {
             try {
-                val businesses = withContext(Dispatchers.IO) {
-                    val query = firestore.collection("business").limit(PAGE_SIZE.toLong())
-                    if (city != null) query.whereEqualTo("city", city)
-                    lastVisible?.let { query.startAfter(it) }
-                    query.get().await().toObjects(Business::class.java)
+                val querySnapshot = withContext(Dispatchers.IO) {
+                    var query = firestore.collection("business")
+                        .limit(PAGE_SIZE.toLong())
+                    
+                    // Aplicar filtro de cidade se especificado
+                    city?.let { 
+                        query = query.whereEqualTo("city", it.trim().lowercase(Locale.getDefault()))
+                    }
+                    
+                    // Aplicar paginação apenas se não for primeira carga
+                    if (!isFirstLoad) {
+                        lastVisible?.let { query = query.startAfter(it) }
+                    }
+                    
+                    query.get().await()
+                }
+
+                val businesses = querySnapshot.toObjects(Business::class.java)
+                
+                // Atualizar lastVisible para próxima página
+                if (querySnapshot.documents.isNotEmpty()) {
+                    lastVisible = querySnapshot.documents.last()
                 }
 
                 if (businesses.isNotEmpty()) {
+                    // Se é primeira carga, limpar lista
+                    if (isFirstLoad) {
+                        businessList.clear()
+                    }
+                    
+                    // Evitar duplicatas
                     val uniqueBusinesses = businesses.filter { newBusiness ->
                         businessList.none { it.ownerId == newBusiness.ownerId }
                     }
+                    
                     businessList.addAll(uniqueBusinesses)
-                    // Note: lastVisible precisa ser obtido da query original, não dos objetos Business
                     updateBusinessAdapter(businessList)
                     cacheBusinesses(businessList)
                 }
@@ -424,8 +468,7 @@ class ClienteHomeFragment : Fragment() {
         if (date == null || hour == null) return null
         return try {
             val dateTimeString = "$date $hour" // Combina data e hora
-            val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-            format.parse(dateTimeString)
+            Validator.DATE_TIME_FORMAT.parse(dateTimeString) // ✅ OTIMIZADO: Formatador central
         } catch (e: Exception) {
             e.printStackTrace()
             null

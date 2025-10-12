@@ -60,4 +60,11 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 }
             }
     }
+
+    // ✅ Método para o onClick do XML
+    @Suppress("UNUSED_PARAMETER")
+    fun navigateToLogin(view: android.view.View) {
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
+    }
 }

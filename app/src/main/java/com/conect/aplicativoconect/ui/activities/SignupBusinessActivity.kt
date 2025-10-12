@@ -189,20 +189,35 @@ class SignupBusinessActivity : AppCompatActivity() {
                     createBusinessAndSubscription(email, nameUser, cpf, androidId)
                 } else {
                     val exception = task.exception
-                    if (exception is FirebaseAuthWeakPasswordException) {
-                        // Mensagem específica para senha fraca
-                        Toast.makeText(
-                            this,
-                            "A senha é muito fraca. Por favor, escolha uma senha mais forte.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        // Mensagem genérica para outros erros
-                        Toast.makeText(
-                            this,
-                            "Falha ao cadastrar. Tente novamente.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    when {
+                        exception is FirebaseAuthWeakPasswordException -> {
+                            Toast.makeText(
+                                this,
+                                "A senha é muito fraca. Por favor, escolha uma senha mais forte.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        exception?.message?.contains("email address is already in use") == true -> {
+                            Toast.makeText(
+                                this,
+                                "Este email já está cadastrado. Tente fazer login ou use outro email.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        exception?.message?.contains("invalid email") == true -> {
+                            Toast.makeText(
+                                this,
+                                "Email inválido. Verifique o formato do email.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        else -> {
+                            Toast.makeText(
+                                this,
+                                "Erro ao cadastrar empresa: ${exception?.message ?: "Tente novamente"}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
                 }
             }

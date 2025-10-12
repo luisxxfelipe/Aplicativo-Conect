@@ -62,9 +62,8 @@ class ClienteHomeActivity : AppCompatActivity() {
 
         isFromSignup = intent.getBooleanExtra("FROM_SIGNUP", false)
         setupLoadingDialog()
-        if (isFromSignup) {
-            showLoadingDialogWithDelay()
-        }
+        // ✅ OTIMIZAÇÃO: Removido delay desnecessário de 3 segundos
+        // Loading será controlado pelos fragments conforme necessário
 
 
         // Configurar o título inicial do menu
@@ -136,13 +135,8 @@ class ClienteHomeActivity : AppCompatActivity() {
         loadingDialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
-    private fun showLoadingDialogWithDelay() {
-        showLoadingDialog()
-        lifecycleScope.launch {
-            delay(3000) // Aguarda 3 segundos
-            hideLoadingDialog()
-        }
-    }
+    // ✅ FUNÇÃO REMOVIDA: showLoadingDialogWithDelay era desnecessária
+    // Loading agora é controlado dinamicamente pelos dados reais
 
     private fun showLoadingDialog() {
         loadingDialog?.show()

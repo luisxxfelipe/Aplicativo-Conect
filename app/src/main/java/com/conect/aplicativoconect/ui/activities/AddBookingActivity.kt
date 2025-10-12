@@ -18,8 +18,8 @@ import com.conect.aplicativoconect.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.conect.aplicativoconect.utils.Validator
 import java.util.Calendar
-import java.util.Locale
 import java.util.UUID
 
 class AddBookingActivity : AppCompatActivity() {
@@ -301,8 +301,7 @@ class AddBookingActivity : AppCompatActivity() {
     ) {
         // Calculando o timestamp a partir da data e hora selecionadas
         val dateTimeString = "$date $hour"
-        val dateTimeFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-        val timestamp = dateTimeFormat.parse(dateTimeString)?.time ?: System.currentTimeMillis()
+        val timestamp = Validator.DATE_TIME_FORMAT.parse(dateTimeString)?.time ?: System.currentTimeMillis() // ✅ OTIMIZADO: Formatador central
 
         val bookingData = mapOf(
             "name" to name,

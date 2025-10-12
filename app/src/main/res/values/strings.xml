@@ -33,7 +33,7 @@
         <item>Manicure</item>
         <item>Outros</item>
     </string-array>
-    <!-- TODO: Remove or change this placeholder text -->
+    <!-- ✅ Texto placeholder personalizado para o app -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

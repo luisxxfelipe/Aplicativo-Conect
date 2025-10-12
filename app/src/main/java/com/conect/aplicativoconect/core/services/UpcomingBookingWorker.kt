@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
+import com.conect.aplicativoconect.utils.Validator
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -35,9 +35,11 @@ class UpcomingBookingWorker(
         val currentTimeMillis = Calendar.getInstance().timeInMillis
         val timeWindow = currentTimeMillis + TimeUnit.HOURS.toMillis(10)
 
+        // ✅ OTIMIZAÇÃO: Adicionar limite para evitar sobrecarga
         firestore.collection("bookings")
             .whereEqualTo("status_adm", "confirmed")
-            .whereEqualTo("notified", false) // Apenas os não notificados
+            .whereEqualTo("notified", false) 
+            .limit(50) // Processa no máximo 50 agendamentos por execução
             .get()
             .addOnSuccessListener { querySnapshot ->
                 Log.d("UpcomingBookingWorker", "Agendamentos obtidos com sucesso.")
@@ -97,9 +99,8 @@ class UpcomingBookingWorker(
 
     private fun parseDateTimeToMillis(dateStr: String, hourStr: String): Long? {
         return try {
-            val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
             val dateTimeStr = "$dateStr $hourStr"
-            val date = dateFormat.parse(dateTimeStr)
+            val date = Validator.DATE_TIME_FORMAT.parse(dateTimeStr) // ✅ OTIMIZADO: Formatador central
             Log.d("UpcomingBookingWorker", "Data e hora convertida: $date para agendamento.")
             date?.time
         } catch (e: Exception) {
@@ -204,6 +205,7 @@ class UpcomingBookingWorker(
         CoroutineScope(Dispatchers.IO).launch {
             // Para notificações FCM, usamos o server key diretamente
             // O access token do service account seria usado para APIs do Google Cloud
+            // ✅ Configurar server key FCM real no BuildConfig ou arquivo de configuração
             val serverKey = "YOUR_FCM_SERVER_KEY" // Substitua pela sua chave do servidor FCM
 
             val request = object : StringRequest(

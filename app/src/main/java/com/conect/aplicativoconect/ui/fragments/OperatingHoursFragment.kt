@@ -135,12 +135,12 @@ class OperatingHoursFragment : Fragment() {
 
         buttons.forEach { (day, button) ->
             button.setOnClickListener {
-                toggleDaySelection(day, button)
+                toggleDaySelection(day) // ✅ OTIMIZADO: Removido parâmetro desnecessário
             }
         }
     }
 
-    private fun toggleDaySelection(day: String, @Suppress("UNUSED_PARAMETER") button: Button) {
+    private fun toggleDaySelection(day: String) { // ✅ OTIMIZADO: Removido parâmetro não utilizado
         if (selectedDays.contains(day)) {
             // Desmarcar o dia
             selectedDays.remove(day)

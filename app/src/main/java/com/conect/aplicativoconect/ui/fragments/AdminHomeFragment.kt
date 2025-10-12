@@ -25,6 +25,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.ListenerRegistration
+import com.conect.aplicativoconect.utils.AuthHelper
+import com.conect.aplicativoconect.utils.ImageHelper
 import com.google.firebase.firestore.Query
 import java.util.Calendar
 import java.util.Date
@@ -115,13 +117,14 @@ class AdminHomeFragment : Fragment() {
     }
 
     private fun loadBookings() {
-        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val currentUserUid = AuthHelper.getCurrentUserId() ?: return // ✅ OTIMIZADO: Helper centralizado
 
-        // Use um listener em tempo real
+        // ✅ OTIMIZADO: Query com limite para performance
         bookingListener = firestore.collection("bookings")
             .whereEqualTo("companyId", currentUserUid)
             .whereGreaterThanOrEqualTo("timestamp", System.currentTimeMillis())
             .orderBy("timestamp", Query.Direction.ASCENDING)
+            .limit(20) // Limitar para melhor performance
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e("AdminHomeFragment", "Erro ao carregar agendamentos: ${error.message}")
@@ -322,12 +325,13 @@ class AdminHomeFragment : Fragment() {
     }
 
     private fun loadBusinessName() {
-        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+        val currentUserUid = AuthHelper.getCurrentUserId()
+        if (currentUserUid == null) {
             Log.e("AdminHomeFragment", "Usuário não autenticado.")
             binding.userNameBusiness.text = "Usuário não autenticado"
             setGreeting("Usuário") // Saudação mesmo que o usuário não esteja autenticado
             return
-        }
+        } // ✅ OTIMIZADO: Helper centralizado
 
         Log.d("AdminHomeFragment", "Usuário autenticado com UID: $currentUserUid")
 
@@ -366,13 +370,7 @@ class AdminHomeFragment : Fragment() {
     private fun loadProfileImage(imageUrl: String?) {
         // Verificar se o binding ainda está disponível
         _binding?.let { binding ->
-            imageUrl?.let {
-                Glide.with(this)
-                    .load(it)
-                    .placeholder(R.drawable.foto_perfil_generica)
-                    .error(R.drawable.foto_perfil_generica)
-                    .into(binding.userImage)
-            } ?: binding.userImage.setImageResource(R.drawable.foto_perfil_generica)
+            ImageHelper.loadProfileImage(requireContext(), imageUrl, binding.userImage) // ✅ OTIMIZADO: Helper centralizado
         }
     }
 

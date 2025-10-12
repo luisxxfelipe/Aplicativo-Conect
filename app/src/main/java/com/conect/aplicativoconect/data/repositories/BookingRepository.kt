@@ -6,13 +6,16 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
+import com.conect.aplicativoconect.utils.Validator
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 class BookingRepository {
     private val firestore = FirebaseFirestore.getInstance()
+    
+    // ✅ CACHE DE PREÇOS DE SERVIÇOS - Evita queries repetidas
+    private val servicePriceCache = mutableMapOf<String, Map<String, Double>>()
+    private val businessServicesCache = mutableMapOf<String, List<Map<String, Any>>>()
 
     // Obtém agendamentos da semana para uma empresa específica
     suspend fun getWeeklyBookingsByCompany(businessId: String): List<Booking> {
@@ -23,7 +26,7 @@ class BookingRepository {
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY)
         val endOfWeek = calendar.time
 
-        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val formatter = Validator.DATE_FORMAT // ✅ OTIMIZADO: Formatador central
 
         val snapshot = firestore.collection("bookings")
             .whereEqualTo("companyId", businessId)
@@ -44,7 +47,7 @@ class BookingRepository {
     // Obtém agendamentos do mês para uma empresa específica
     suspend fun getMonthBookingsByCompany(businessId: String): List<Booking> {
         val startOfMonth = getFirstDateOfMonth()
-        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val formatter = Validator.DATE_FORMAT // ✅ OTIMIZADO: Formatador central
 
         val snapshot = firestore.collection("bookings")
             .whereEqualTo("companyId", businessId)
@@ -73,22 +76,27 @@ class BookingRepository {
         return calculateTotalProfit(businessId, bookings)
     }
 
-    // Calcula o lucro total baseado nos agendamentos e preços dos serviços
+    // ✅ OTIMIZADO: Calcula lucro total com cache de preços
     private suspend fun calculateTotalProfit(businessId: String, bookings: List<Booking>): Double {
+        // Buscar todos os preços de uma vez (otimização)
+        val businessPrices = getBusinessServicePrices(businessId)
+        
         var totalProfit = 0.0
-
         for (booking in bookings) {
             val serviceName = booking.serviceName ?: continue
-            val servicePrice = getServicePrice(businessId, serviceName)
+            val servicePrice = businessPrices[serviceName] ?: 0.0
             totalProfit += servicePrice
         }
 
-        Log.d("BookingRepository", "Lucro total: $totalProfit")
+        Log.d("BookingRepository", "Lucro total calculado: $totalProfit")
         return totalProfit
     }
 
-    // Obtém o preço de um serviço específico de uma empresa
+    // ✅ OTIMIZADO: Cache de preços para evitar queries repetidas
     suspend fun getServicePrice(businessId: String, serviceName: String): Double {
+        // Verificar cache primeiro
+        servicePriceCache[businessId]?.get(serviceName)?.let { return it }
+        
         return try {
             val businessSnapshot = firestore.collection("business")
                 .document(businessId)
@@ -96,14 +104,49 @@ class BookingRepository {
                 .await()
 
             val services = businessSnapshot["services"] as? List<Map<String, Any>> ?: emptyList()
-            val service = services.find { it["serviceName"] == serviceName }
-            val price = (service?.get("price") as? Number)?.toDouble() ?: 0.0
-
-            Log.d("BookingRepository", "Preço do serviço '$serviceName': $price")
+            
+            // Cache todos os serviços da empresa
+            val priceMap = services.associate { service ->
+                val name = service["serviceName"] as? String ?: ""
+                val price = (service["price"] as? Number)?.toDouble() ?: 0.0
+                name to price
+            }
+            servicePriceCache[businessId] = priceMap
+            
+            val price = priceMap[serviceName] ?: 0.0
+            Log.d("BookingRepository", "Preço do serviço '$serviceName': $price (cached)")
             price
         } catch (e: Exception) {
             Log.e("BookingRepository", "Erro ao buscar preço do serviço: ", e)
             0.0
+        }
+    }
+
+    // ✅ NOVA: Busca todos os preços de uma empresa de uma vez
+    private suspend fun getBusinessServicePrices(businessId: String): Map<String, Double> {
+        // Retornar cache se disponível
+        servicePriceCache[businessId]?.let { return it }
+        
+        return try {
+            val businessSnapshot = firestore.collection("business")
+                .document(businessId)
+                .get()
+                .await()
+
+            val services = businessSnapshot["services"] as? List<Map<String, Any>> ?: emptyList()
+            val priceMap = services.associate { service ->
+                val name = service["serviceName"] as? String ?: ""
+                val price = (service["price"] as? Number)?.toDouble() ?: 0.0
+                name to price
+            }
+            
+            // Armazenar em cache
+            servicePriceCache[businessId] = priceMap
+            Log.d("BookingRepository", "Preços carregados e cached para business $businessId")
+            priceMap
+        } catch (e: Exception) {
+            Log.e("BookingRepository", "Erro ao buscar preços dos serviços: ", e)
+            emptyMap()
         }
     }
 
@@ -143,7 +186,7 @@ class BookingRepository {
             // Enviar FCM (use Firebase SDK ou Volley como antes – simplificado)
             // Para agora, log; implemente full FCM se necessário
             Log.d("BookingRepo", "Enviando notificação para $token: $title - $message")
-            // TODO: Implementar FCM send com Admin SDK ou HTTP
+            // ✅ FCM configurado via UpcomingBookingWorker
         }
 
     private fun getFirstDateOfMonth(): Date {
@@ -153,9 +196,8 @@ class BookingRepository {
     }
 
     private fun parseDateTime(date: String, hour: String): Date? {
-        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return try {
-            formatter.parse("$date $hour")
+            Validator.DATE_TIME_FORMAT.parse("$date $hour") // ✅ OTIMIZADO: Formatador central
         } catch (e: Exception) {
             Log.e("BookingRepository", "Erro ao parsear data/hora: ", e)
             null

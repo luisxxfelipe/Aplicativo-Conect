@@ -42,9 +42,9 @@
             </intent-filter>
         </service>
 
-        <!-- Firebase Instance ID Receiver -->
+        <!-- Boot Completed Receiver -->
         <receiver
-            android:name=".data.repositories.BootReceiver"
+            android:name=".receivers.BootReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

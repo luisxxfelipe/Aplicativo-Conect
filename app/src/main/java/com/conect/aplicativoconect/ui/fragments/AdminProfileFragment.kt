@@ -8,13 +8,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentAdminProfileBinding
 import com.conect.aplicativoconect.ui.activities.EditBusinessProfileActivity
 import com.conect.aplicativoconect.ui.activities.PolicyActivity
 import com.conect.aplicativoconect.ui.viewmodels.AdminViewModel
-import com.google.firebase.auth.FirebaseAuth
+import com.conect.aplicativoconect.utils.AuthHelper
+import com.conect.aplicativoconect.utils.ImageHelper
 import com.google.firebase.firestore.FirebaseFirestore
 
 class AdminProfileFragment : Fragment() {
@@ -91,18 +91,14 @@ class AdminProfileFragment : Fragment() {
     }
 
     private fun loadProfileImage() {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = AuthHelper.getCurrentUserId() ?: return // ✅ OTIMIZADO: Helper centralizado
         firestore.collection("business")
             .document(userId)
             .get()
             .addOnSuccessListener { document ->
                 val imageUrl = document.getString("imageUrl")
                 if (!imageUrl.isNullOrEmpty()) {
-                    Glide.with(this)
-                        .load(imageUrl)
-                        .placeholder(R.drawable.foto_perfil_generica)
-                        .error(R.drawable.foto_perfil_generica)
-                        .into(binding.profileImageAdmin)
+                    ImageHelper.loadProfileImage(requireContext(), imageUrl, binding.profileImageAdmin) // ✅ OTIMIZADO: Helper centralizado
                 }
             }
             .addOnFailureListener {

@@ -11,10 +11,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.bumptech.glide.Glide
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.databinding.FragmentClienteProfileBinding
 import com.conect.aplicativoconect.ui.activities.EditProfileActivity
+import com.conect.aplicativoconect.utils.AuthHelper
+import com.conect.aplicativoconect.utils.ImageHelper
 import com.conect.aplicativoconect.ui.activities.PolicyActivity
 import com.conect.aplicativoconect.ui.viewmodels.ClientViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -25,7 +26,7 @@ class ClienteProfileFragment : Fragment() {
     private var _binding: FragmentClienteProfileBinding? = null
     private val binding get() = _binding!!
     private val clientViewModel: ClientViewModel by activityViewModels()
-    private val userId = FirebaseAuth.getInstance().currentUser?.uid
+    private val userId = AuthHelper.getCurrentUserId() // ✅ OTIMIZADO: Helper centralizado
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,11 +53,7 @@ class ClienteProfileFragment : Fragment() {
         // Observar a imagem do usuário
         clientViewModel.userImage.observe(viewLifecycleOwner) { imageUrl ->
             Log.d("ClienteProfileFragment", "Carregando imagem da URL: $imageUrl")
-            Glide.with(this)
-                .load(imageUrl)
-                .placeholder(R.drawable.foto_perfil_generica)  // Imagem placeholder enquanto carrega
-                .error(R.drawable.foto_perfil_generica)  // Caso ocorra erro, imagem genérica
-                .into(binding.profileImageClient)
+            ImageHelper.loadProfileImage(requireContext(), imageUrl, binding.profileImageClient) // ✅ OTIMIZADO: Helper centralizado
         }
 
         // Observar o nome do usuário

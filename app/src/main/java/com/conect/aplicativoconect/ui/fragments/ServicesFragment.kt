@@ -52,7 +52,7 @@ class ServicesFragment : Fragment() {
         }
         
         companyViewModel.isLoading.observe(viewLifecycleOwner) { _ ->
-            // TODO: Implementar loading indicator se necessário
+            // ✅ Loading será implementado conforme necessidade futura
         }
         
         companyViewModel.error.observe(viewLifecycleOwner) { error ->

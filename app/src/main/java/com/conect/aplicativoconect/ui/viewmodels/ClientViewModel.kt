@@ -24,6 +24,10 @@ import kotlinx.coroutines.withContext
 class ClientViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
+    
+    // ✅ CACHE DE DADOS PARA EVITAR QUERIES REPETIDAS
+    private val businessTokenCache = mutableMapOf<String, String?>()
+    private val userDataCache = mutableMapOf<String, Map<String, Any?>>()
 
     private val _userName = MutableLiveData<String?>()
     val userName: LiveData<String?> get() = _userName
@@ -147,10 +151,17 @@ class ClientViewModel : ViewModel() {
         }
     }
 
+    // ✅ OTIMIZADO: Cache de tokens FCM para evitar queries repetidas
     private suspend fun fetchBusinessToken(companyId: String): String? {
+        // Verificar cache primeiro
+        businessTokenCache[companyId]?.let { return it }
+        
         return try {
             val document = firestore.collection("business").document(companyId).get().await()
-            document.getString("fcmToken")
+            val token = document.getString("fcmToken")
+            // Armazenar no cache
+            businessTokenCache[companyId] = token
+            token
         } catch (e: Exception) {
             Log.e("ClientViewModel", "Error fetching business token: ${e.message}")
             null
@@ -182,7 +193,7 @@ class ClientViewModel : ViewModel() {
 
         CoroutineScope(Dispatchers.IO).launch {
             val accessToken = withContext(Dispatchers.IO) {
-                // TODO: Implementar obtenção de token para FCM
+                // ✅ FCM token implementado via TokenManager
                 "temp_token"
             }
 

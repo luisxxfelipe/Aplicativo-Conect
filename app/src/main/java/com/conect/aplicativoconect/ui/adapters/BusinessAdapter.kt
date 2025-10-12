@@ -10,10 +10,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.data.models.Business
+import com.conect.aplicativoconect.utils.ImageHelper
 import com.conect.aplicativoconect.data.models.OperatingHours
 
 class BusinessAdapter(
@@ -78,18 +77,7 @@ class BusinessAdapter(
     }
 
     private fun loadImage(imageUrl: String?, imageView: ImageView) {
-        if (!imageUrl.isNullOrBlank()) {
-            Glide.with(context)
-                .load(imageUrl)
-                .override(300, 300) // Limita o tamanho da imagem carregada
-                .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .placeholder(R.drawable.foto_perfil_generica) // Placeholder durante o carregamento
-                .error(R.drawable.foto_perfil_generica) // Imagem de fallback em caso de erro
-                .into(imageView)
-        } else {
-            imageView.setImageResource(R.drawable.foto_perfil_generica) // Fallback padrão
-        }
+        ImageHelper.loadBusinessImage(context, imageUrl, imageView, 300, 300) // ✅ OTIMIZADO: Helper centralizado
     }
 }
 

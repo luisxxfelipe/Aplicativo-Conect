@@ -3,24 +3,13 @@ package com.conect.aplicativoconect.ui.activities
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.Gravity
-import android.view.View
-import android.view.animation.DecelerateInterpolator
-import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.ui.fragments.AddServiceDialogFragment
 import com.conect.aplicativoconect.ui.fragments.AdminBookingsFragment
@@ -30,15 +19,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
+import com.conect.aplicativoconect.utils.Validator
 import java.util.Calendar
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class AdminHomeActivity : AppCompatActivity() {
 
     private lateinit var firestore: FirebaseFirestore
-    private var companyId: String? = null  // Armazena o companyId
     private val MAX_DAILY_ALERTS = 2  // Limite de exibições do alerta por dia
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,9 +34,6 @@ class AdminHomeActivity : AppCompatActivity() {
 
         firestore = FirebaseFirestore.getInstance()
 
-        // Verificação de subscription já foi feita no SplashActivity
-        // fetchCompanyIdAndCheckSubscription()
-
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, AdminHomeFragment())
@@ -57,92 +41,7 @@ class AdminHomeActivity : AppCompatActivity() {
         }
 
         setupBottomNavigation()
-
-        // Verifique se veio de RegisterBusiness
-        val fromRegisterBusiness = intent.getBooleanExtra("FROM_REGISTER", false)
-        if (fromRegisterBusiness) {
-            // Tutorial removido temporariamente
-            // showAddServiceTooltip()
-        }
     }
-
-    private fun fetchCompanyIdAndCheckSubscription() {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
-        if (userId != null) {
-            firestore.collection("subscriptions")
-                .whereEqualTo("ownerId", userId)
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    if (!querySnapshot.isEmpty) { // Verifique se a consulta retornou documentos
-                        val document = querySnapshot.documents[0]
-                        companyId = document.id
-                        val endDate = document.getTimestamp("endDate")
-                        val isActive = document.getBoolean("isActive") ?: false
-                        val isTrialActive = document.getBoolean("isTrialActive") ?: false
-
-                        if (endDate == null) {
-                            Toast.makeText(
-                                this,
-                                "Data de término da assinatura ausente. Verifique no Firebase.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@addOnSuccessListener
-                        }
-
-                        // Verifique o período de teste ou assinatura ativa
-                        if (isTrialActive) {
-                            val daysLeftInTrial = daysUntil(endDate)
-                            if (daysLeftInTrial > 0) {
-                                return@addOnSuccessListener
-                            } else {
-                                // Período de teste expirado
-                                firestore.collection("subscriptions").document(companyId!!)
-                                    .update("isTrialActive", false)
-                                Toast.makeText(
-                                    this,
-                                    "Seu período de teste expirou. Adquira uma assinatura para continuar.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                // Abrir tela de pagamento
-                                startActivity(Intent(this, PaymentActivity::class.java))
-                                finish()
-                            }
-                        }
-
-                        // Verifique se a assinatura está ativa
-                        if (!isActive) {
-                            Toast.makeText(
-                                this,
-                                "Sua assinatura expirou. Renove para continuar usando o app.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            // Abrir tela de pagamento
-                            startActivity(Intent(this, PaymentActivity::class.java))
-                            finish()
-                        } else {
-                            val daysUntilExpiry = daysUntil(endDate)
-                            if (daysUntilExpiry <= 2) {
-                                showSubscriptionExpiryAlert(endDate)
-                            }
-                        }
-
-                    } else {
-                        Toast.makeText(
-                            this,
-                            "Assinatura não encontrada. Configure sua assinatura para continuar.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        // Usuário business sem assinatura - direcionar para PaymentActivity
-                        startActivity(Intent(this, PaymentActivity::class.java))
-                        finish()
-                    }
-                }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Erro ao buscar assinatura.", Toast.LENGTH_SHORT).show()
-                }
-        }
-    }
-
 
     private fun daysUntil(endDate: Timestamp): Long {
         val currentDate = Calendar.getInstance().time
@@ -165,8 +64,7 @@ class AdminHomeActivity : AppCompatActivity() {
 
         // Se a quantidade de alertas diários for menor que o máximo, mostramos o alerta
         if (dailyAlertCount < MAX_DAILY_ALERTS) {
-            val endDateFormatted =
-                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate.toDate())
+            val endDateFormatted = Validator.DATE_FORMAT.format(endDate.toDate()) // ✅ OTIMIZADO: Formatador central
 
             val dialog = AlertDialog.Builder(this)
                 .setTitle("Sua assinatura está quase vencendo!")
@@ -265,10 +163,10 @@ class AdminHomeActivity : AppCompatActivity() {
     }
 
     private fun showAddServiceDialog() {
-
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
         val dialog = AddServiceDialogFragment().apply {
             arguments = Bundle().apply {
-                putString("companyId", companyId)
+                putString("companyId", userId)
             }
         }
         dialog.show(supportFragmentManager, "AddServiceDialog")

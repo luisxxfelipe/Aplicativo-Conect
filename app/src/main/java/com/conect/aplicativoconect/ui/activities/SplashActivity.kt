@@ -5,6 +5,9 @@ import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import androidx.appcompat.app.AppCompatActivity
 import com.conect.aplicativoconect.R
 import com.google.firebase.auth.FirebaseAuth
@@ -27,51 +30,52 @@ class SplashActivity : AppCompatActivity() {
         firestore = FirebaseFirestore.getInstance()
     paymentService = PaymentService(this)
 
-        // Navegar para a próxima tela após um delay usando coroutines
+        // ✅ OTIMIZADO: Navegação paralela e mais rápida
         lifecycleScope.launch {
-            delay(2000) // 2 segundos de delay
-            val currentUser = auth.currentUser
+            delay(2000) // 2 segundos de delay para splash
             
+            val currentUser = auth.currentUser
             if (currentUser != null) {
-                // Primeiro, verificar se é um negócio
-                firestore.collection("business").document(currentUser.uid)
-                    .get()
-                    .addOnSuccessListener { businessDocument ->
-                        if (businessDocument.exists()) {
+                try {
+                    // ✅ QUERIES PARALELAS - Muito mais rápido!
+                    val businessDeferred = async(Dispatchers.IO) {
+                        firestore.collection("business").document(currentUser.uid).get().await()
+                    }
+                    val userDeferred = async(Dispatchers.IO) {
+                        firestore.collection("users").document(currentUser.uid).get().await()
+                    }
+
+                    // Executar ambas queries ao mesmo tempo
+                    val businessDoc = businessDeferred.await()
+                    val userDoc = userDeferred.await()
+
+                    when {
+                        businessDoc.exists() -> {
                             // Usuário é um negócio - verificar assinatura
                             checkBusinessSubscription(currentUser.uid)
-                        } else {
-                            // Caso não seja "Business", verificar se é um Cliente
-                            firestore.collection("users").document(currentUser.uid)
-                                .get()
-                                .addOnSuccessListener { userDocument ->
-                                    if (userDocument.exists()) {
-                                        // Usuário é um Cliente - não precisa de assinatura
-                                        startActivity(Intent(this@SplashActivity, ClienteHomeActivity::class.java))
-                                    } else {
-                                        // Documento do usuário não encontrado, redirecionar para a tela de boas-vindas
-                                        startActivity(Intent(this@SplashActivity, WelcomeActivity::class.java))
-                                    }
-                                    finish()
-                                }
-                                .addOnFailureListener { e ->
-                                    // Em caso de erro, redirecionar para a tela de boas-vindas
-                                    startActivity(Intent(this@SplashActivity, WelcomeActivity::class.java))
-                                    finish()
-                                }
+                        }
+                        userDoc.exists() -> {
+                            // Usuário é cliente - ir direto para home
+                            startActivity(Intent(this@SplashActivity, ClienteHomeActivity::class.java))
+                            finish()
+                        }
+                        else -> {
+                            // Nenhum documento encontrado - usuário incompleto
+                            startActivity(Intent(this@SplashActivity, WelcomeActivity::class.java))
+                            finish()
                         }
                     }
-                    .addOnFailureListener { e ->
-                        // Em caso de erro ao verificar negócios, também redirecionar para a tela de boas-vindas
-                        startActivity(Intent(this@SplashActivity, WelcomeActivity::class.java))
-                        finish()
-                    }
+                } catch (e: Exception) {
+                    // Erro nas queries - redirecionar para welcome
+                    startActivity(Intent(this@SplashActivity, WelcomeActivity::class.java))
+                    finish()
+                }
             } else {
-                // Se o usuário não estiver logado, redirecionar para a tela de boas-vindas
+                // Usuário não logado
                 startActivity(Intent(this@SplashActivity, WelcomeActivity::class.java))
                 finish()
             }
-        } // Fim da coroutine
+        }
     }
     
     /**

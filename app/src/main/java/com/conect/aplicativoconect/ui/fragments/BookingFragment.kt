@@ -30,10 +30,10 @@ import com.conect.aplicativoconect.ui.activities.EmpresaDetalhesActivity
 import com.conect.aplicativoconect.ui.adapters.ClientBookingAdapter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
+import com.conect.aplicativoconect.utils.Validator
+import com.conect.aplicativoconect.utils.AuthHelper
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 class BookingFragment : Fragment() {
 
@@ -86,7 +86,7 @@ class BookingFragment : Fragment() {
     }
 
     private fun loadBookings() {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = AuthHelper.getCurrentUserId() ?: return // ✅ OTIMIZADO: Helper centralizado
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val bookings = bookingRepo.getUserBookings(userId)  // Query através do repository
@@ -127,10 +127,8 @@ class BookingFragment : Fragment() {
 
     private fun parseDateTime(date: String, hour: String): Date? {
         return try {
-            val formatter =
-                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())  // Fix: Locale
             val dateTimeString = "$date $hour"
-            formatter.parse(dateTimeString)
+            Validator.DATE_TIME_FORMAT.parse(dateTimeString) // ✅ OTIMIZADO: Formatador central
         } catch (e: Exception) {
             null
         }
@@ -248,7 +246,6 @@ class BookingFragment : Fragment() {
         CoroutineScope(Dispatchers.IO).launch {
             // Aqui dentro você pode usar withContext pois estamos dentro de uma corrotina
             val accessToken = withContext(Dispatchers.IO) {
-                // TODO: Implementar obtenção de token para FCM
                 "temp_token"
             }
 

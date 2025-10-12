@@ -6,12 +6,20 @@ import java.util.Locale
 import java.util.Calendar
 
 object Validator {
+    // ✅ OTIMIZADO: Formatadores centralizados para evitar duplicação
+    val DATE_TIME_FORMAT = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    val DATE_FORMAT = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val TIME_FORMAT = SimpleDateFormat("HH:mm", Locale.getDefault())
     private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$")
-    private val phoneRegex = Regex("^\\(\\\\d{2}\\) \\\\d{4,5}-\\\\d{4}$")  // (11) 99999-9999 ou (11) 9999-9999
+    private val phoneRegex = Regex("^\\(\\d{2}\\) \\d{4,5}-\\d{4}$")  // (11) 99999-9999 ou (11) 9999-9999
 
     fun isValidEmail(email: String): Boolean = emailRegex.matches(email)
 
-    fun isValidPhone(phone: String): Boolean = phoneRegex.matches(phone.replace(" ", "").replace("-", "")) && phone.length >= 14  // Após máscara
+    fun isValidPhone(phone: String): Boolean {
+        // Remover apenas espaços extras, manter formatação da máscara
+        val cleanPhone = phone.trim()
+        return phoneRegex.matches(cleanPhone) && cleanPhone.length >= 14
+    }
 
     fun isValidCPF(cpf: String): Boolean {
         val cleanCpf = cpf.replace(Regex("[^\\d]"), "")
@@ -36,8 +44,7 @@ object Validator {
 
     fun isValidDateTime(date: String, time: String): Boolean {
         return try {
-            val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-            val dateTime = formatter.parse("$date $time")
+            val dateTime = DATE_TIME_FORMAT.parse("$date $time") // ✅ OTIMIZADO: Usa formatador central
             dateTime != null && dateTime.after(Date())  // Deve ser futuro
         } catch (e: Exception) {
             false
