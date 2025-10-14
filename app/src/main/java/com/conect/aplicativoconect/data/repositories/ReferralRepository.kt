@@ -20,7 +20,7 @@ class ReferralRepository {
     companion object {
         const val POINTS_PER_REFERRAL = 100
         const val MAX_REFERRALS_PER_DAY = 5  // 🔒 Limite diário de indicações
-        const val POPUP_COOLDOWN_HOURS = 24  // 🔒 Cooldown do popup (24 horas)
+        const val POPUP_COOLDOWN_HOURS = 12  // 🔒 Cooldown do popup (12 horas - 2x por dia)
         const val REFERRAL_EXPIRY_DAYS = 30  // 🔒 Expiração de indicações pendentes
         
         // Cupons disponíveis
@@ -213,7 +213,7 @@ class ReferralRepository {
             append("• Técnicos (Informática, Eletrônicos)\n")
             append("• Serviços Gerais (Fotografia, Design)\n")
             append("• E muito mais!\n\n")
-            append("📲 *Baixe agora:* [Link do app]\n\n")
+            append("📲 *Baixe agora:* https://play.google.com/store/apps/details?id=com.conect.aplicativoconect\n\n")
             append("_Indicado por: $userName")
         }
     }

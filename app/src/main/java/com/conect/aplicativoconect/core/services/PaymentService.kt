@@ -19,8 +19,8 @@ import java.net.URL
 class PaymentService(private val context: Context) {
     companion object {
         // Planos de assinatura - Valores menores para teste
-        const val MONTHLY_PLAN_PRICE = 1.00  // R$ 1,00 para teste
-        const val ANNUAL_PLAN_PRICE = 10.00  // R$ 10,00 para teste
+        const val MONTHLY_PLAN_PRICE = 27.00
+        const val ANNUAL_PLAN_PRICE = 250.00
         
         const val MONTHLY_PLAN_ID = "monthly_subscription"
         const val ANNUAL_PLAN_ID = "annual_subscription"

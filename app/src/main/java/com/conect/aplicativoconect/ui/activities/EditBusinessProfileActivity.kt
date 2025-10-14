@@ -174,8 +174,6 @@ class EditBusinessProfileActivity : AppCompatActivity() {
         imagePickerLauncher.launch("image/*")
     }
 
-    // Removido onActivityResult deprecated - usando Activity Result API
-
     private fun saveBusinessProfile() {
         val userId = firebaseAuth.currentUser?.uid ?: return
 

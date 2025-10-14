@@ -281,7 +281,7 @@ class ClienteHomeActivity : AppCompatActivity() {
     private fun showLocationPermissionExplanation() {
         AlertDialog.Builder(this)
             .setTitle("Permissão de Localização Necessária")
-            .setMessage("O Conectx precisa acessar sua localização para mostrar estabelecimentos próximos a você e melhorar sua experiência.")
+            .setMessage("O Conectex precisa acessar sua localização para mostrar estabelecimentos próximos a você e melhorar sua experiência.")
             .setPositiveButton("Permitir") { _, _ ->
                 requestLocationPermission()
             }
@@ -332,7 +332,7 @@ class ClienteHomeActivity : AppCompatActivity() {
         // Mostrar dialog de confirmação para sair do app
         AlertDialog.Builder(this)
             .setTitle("Sair do Aplicativo")
-            .setMessage("Deseja realmente sair do Conectx?")
+            .setMessage("Deseja realmente sair do Conectex?")
             .setPositiveButton("Sim") { _, _ ->
                 // Fecha completamente o aplicativo
                 finishAffinity()

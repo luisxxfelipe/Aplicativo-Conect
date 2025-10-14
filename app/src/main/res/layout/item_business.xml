@@ -1,129 +1,206 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Card de Estabelecimento Moderno -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:color/white"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_margin="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="3dp"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingBottom="8dp">
+        android:orientation="vertical">
 
-        <!-- Imagem de Perfil -->
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/businessImage"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginEnd="16dp"
-            android:scaleType="centerCrop" />
-
-        <!-- Informações da Empresa -->
-        <LinearLayout
-            android:layout_width="0dp"
+        <!-- Header com Imagem e Status -->
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:padding="16dp">
 
-            <TextView
-                android:id="@+id/businessName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+            <!-- Imagem do Estabelecimento -->
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/businessImage"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_centerVertical="true"
+                app:civ_border_color="#E5E5E5"
+                app:civ_border_width="2dp" />
 
+            <!-- Informações Principais -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_toEndOf="@id/businessImage"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="32dp"
+                android:layout_centerVertical="true"
+                android:orientation="vertical">
 
-                <!-- Rating Container -->
-                <LinearLayout
-                    android:id="@+id/ratingContainer"
+                <!-- Nome do Estabelecimento -->
+                <TextView
+                    android:id="@+id/businessName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:text="Nome do Estabelecimento"
+                    android:textColor="#1A1A1A"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
 
-                    <ImageView
-                        android:layout_width="15dp"
-                        android:layout_height="15dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_star" />
+                <!-- Categoria -->
+                <TextView
+                    android:id="@+id/businessAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Categoria do Serviço"
+                    android:textColor="#666666"
+                    android:textSize="14sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
 
-                    <TextView
-                        android:id="@+id/businessAverageRating"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:text="0.0"
-                        android:textColor="@color/textSecondary"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <!-- Distance Container -->
+                <!-- Rating e Distância -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    android:layout_marginStart="16dp"
-                    android:visibility="gone">
+                    android:gravity="center_vertical">
 
-                    <ImageView
-                        android:layout_width="15dp"
-                        android:layout_height="15dp"
-                        android:layout_gravity="center"
-                        android:src="@android:drawable/ic_menu_mylocation"
-                        android:tint="@color/textSecondary" />
-
-                    <TextView
-                        android:id="@+id/businessDistance"
+                    <!-- Rating -->
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:text="2.5km"
-                        android:textColor="@color/textSecondary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="#FFF3E0"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_star"
+                            android:layout_gravity="center_vertical" />
+
+                        <TextView
+                            android:id="@+id/businessAverageRating"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="3dp"
+                            android:text="4.5"
+                            android:textColor="#F57C00"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <!-- Distância -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="#E8F5E8"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_maps_foreground"
+                            android:layout_gravity="center_vertical" />
+
+                        <TextView
+                            android:id="@+id/businessDistance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="3dp"
+                            android:text="2.5km"
+                            android:textColor="#2E7D32"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/businessAddress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Categoria do Serviço"
-                android:textColor="@color/textSecondary"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/businessOperatingHours"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Horário de Funcionamento"
-                android:textColor="@color/textSecondary"
-                android:textSize="14sp" />
-
-        </LinearLayout>
-
-        <!-- Botão de Ação -->
-        <Button
-            android:id="@+id/bookButton"
-            android:layout_width="wrap_content"
+            <!-- Favorito -->
+            <ImageView
+                android:id="@+id/favoriteIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@android:drawable/btn_star"
+                android:tint="#DDDDDD"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:padding="4dp" />
+        </RelativeLayout>
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#F0F0F0"
+            android:layout_marginHorizontal="16dp" />
+        <!-- Footer com Status e Botão -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:backgroundTint="@color/roxo"
-            android:text="Conhecer"
-            android:textColor="@android:color/white" />
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+            <!-- Status e Horário -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/businessStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="6dp"
+                    android:text="ABERTO"
+                    android:textColor="@android:color/white"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_status_badge" />
+                <TextView
+                    android:id="@+id/businessOperatingHours"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="08:00 - 18:00"
+                    android:textColor="#888888"
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <!-- Botão de Ação -->
+            <TextView
+                android:id="@+id/bookButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp"
+                android:text="Conhecer"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_book_button" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Linha Divisória com Espaço Extra -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"
-        android:background="@color/cinza_claro" /> <!-- Espaço adicional entre os itens -->
-</LinearLayout>
+</androidx.cardview.widget.CardView>

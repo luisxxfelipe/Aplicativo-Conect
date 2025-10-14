@@ -1,112 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/rounded_background"
+    android:layout_margin="16dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="12dp"
+    app:cardBackgroundColor="@color/white">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="28dp">
 
-    <!-- Header com ícone e título -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
-
-        <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_star"
-            android:tint="@color/roxo"
-            android:layout_marginEnd="8dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Programa de Indicações"
-            android:textColor="@color/roxo"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-    </LinearLayout>
+    <!-- Ícone principal -->
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_share"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:tint="@color/colorPrimary" />
 
     <!-- Título principal -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="🚀 Ajude a expandir nossa comunidade!"
+        android:text="Programa de Indicações"
         android:textColor="@color/textPrimary"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="16dp" />
+        android:textAlignment="center"
+        android:layout_marginBottom="8dp" />
 
-    <!-- Descrição -->
+    <!-- Subtítulo -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ganhe pontos indicando profissionais autônomos para o ConecteX e converta em cupons de desconto!"
-        android:textColor="@color/textSecondary"
+        android:text="Ganhe pontos e descontos"
+        android:textColor="@color/colorPrimary"
         android:textSize="16sp"
-        android:gravity="center"
-        android:layout_marginBottom="20dp" />
+        android:textAlignment="center"
+        android:layout_marginBottom="24dp" />
 
-    <!-- Card de benefícios -->
+    <!-- Card principal de benefícios -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/backgroundLight">
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/background">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
+            <!-- Como funciona -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_gift"
+                    android:layout_marginEnd="12dp"
+                    android:tint="@color/success" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="100 pontos por profissional cadastrado"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Divisor -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/colorDivider"
+                android:layout_marginVertical="12dp" />
+
+            <!-- Recompensas -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="💰 Como funciona:"
+                android:text="🎁 Recompensas disponíveis:"
                 android:textColor="@color/textPrimary"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="• Cada profissional que se cadastrar = 100 pontos\n• 500 pontos = Cupom de 10% de desconto\n• 1000 pontos = Cupom de 20% de desconto\n• 2000 pontos = Cupom de 50% de desconto"
-                android:textColor="@color/textSecondary"
-                android:textSize="14sp"
-                android:lineSpacingExtra="2dp" />
+                android:orientation="vertical"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• 500 pts → Cupom 10% OFF"
+                    android:textColor="@color/textSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• 1000 pts → Cupom 20% OFF"
+                    android:textColor="@color/textSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• 2000 pts → Cupom 50% OFF"
+                    android:textColor="@color/textSecondary"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
 
-    <!-- Lista de profissionais para indicar -->
+    <!-- Descrição rápida -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="✨ Profissionais que você pode indicar:"
-        android:textColor="@color/textPrimary"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="• Cabeleireiros e Barbeiros\n• Manicures e Pedicures\n• Esteticistas e Massoterapeutas\n• Técnicos de Informática\n• Fotógrafos e Videomakers\n• Desenvolvedores de Sites\n• E muito mais!"
+        android:text="Indique profissionais autônomos e ajude nossa comunidade a crescer!"
         android:textColor="@color/textSecondary"
         android:textSize="14sp"
-        android:lineSpacingExtra="2dp"
-        android:layout_marginBottom="24dp" />
+        android:textAlignment="center"
+        android:layout_marginBottom="24dp"
+        android:lineSpacingExtra="4dp" />
 
     <!-- Botões de ação -->
     <LinearLayout
@@ -115,39 +154,49 @@
         android:orientation="vertical">
 
         <!-- Botão principal - Compartilhar WhatsApp -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShareWhatsApp"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="📱 Compartilhar no WhatsApp"
-            android:textColor="@color/white"
-            android:background="@drawable/rounded_button"
-            android:backgroundTint="#25D366"
+            android:layout_height="56dp"
+            android:text="Compartilhar no WhatsApp"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:backgroundTint="#25D366"
+            app:icon="@drawable/ic_whatsapp"
+            app:iconTint="@color/white"
+            app:cornerRadius="28dp"
+            style="@style/Widget.Material3.Button"
             android:layout_marginBottom="12dp" />
 
         <!-- Botão secundário - Ver meus pontos -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnViewPoints"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:text="⭐ Ver Meus Pontos"
-            android:textColor="@color/roxo"
-            android:background="@drawable/rounded_button_outline"
+            android:text="Ver Meus Pontos"
             android:textSize="14sp"
-            android:layout_marginBottom="8dp" />
+            android:textColor="@color/colorPrimary"
+            app:icon="@drawable/ic_star"
+            app:iconTint="@color/colorPrimary"
+            app:cornerRadius="24dp"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_marginBottom="12dp" />
 
         <!-- Botão fechar -->
-        <Button
+        <TextView
             android:id="@+id/btnClose"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="40dp"
             android:text="Fechar"
             android:textColor="@color/textSecondary"
-            android:background="@android:color/transparent"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
 
     </LinearLayout>
 
 </LinearLayout>
+
+</androidx.cardview.widget.CardView>

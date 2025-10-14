@@ -46,6 +46,9 @@ class AdminHomeFragment : Fragment() {
     private var currentTipIndex = 0
     private var startOfWeek: Date? = null
     private var endOfWeek: Date? = null
+    private lateinit var calendarDayAdapter: com.conect.aplicativoconect.ui.adapters.CalendarDayAdapter
+    private var calendarDays: List<Date> = emptyList()
+    private var selectedCalendarDate: Date? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -84,7 +87,7 @@ class AdminHomeFragment : Fragment() {
 
         // Observa mudanças nos ViewModels
         adminViewModel.todayBookingsCount.observe(viewLifecycleOwner) { count ->
-            binding.weekBookingsCount.text = count.toString()
+            binding.todayBookingsCount.text = count.toString()
         }
 
         adminViewModel.monthBookingsCount.observe(viewLifecycleOwner) { count ->
@@ -98,7 +101,59 @@ class AdminHomeFragment : Fragment() {
         adminViewModel.monthProfit.observe(viewLifecycleOwner) { profit ->
             binding.monthProfitTextView.text = String.format(Locale.getDefault(), "R$ %.2f", profit)
         }
+        setupCalendarDaysRecycler()
 
+        // Clique no título Agendamentos para abrir DatePicker
+        binding.tvAgendamentos.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            val datePicker = android.app.DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
+                val selectedCalendar = Calendar.getInstance()
+                selectedCalendar.set(year, month, dayOfMonth, 0, 0, 0)
+                val selectedDateMillis = selectedCalendar.timeInMillis
+                filterBookingsByDate(selectedDateMillis)
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
+            datePicker.show()
+        }
+    }
+    // Filtra agendamentos pela data selecionada
+    private fun filterBookingsByDate(dateMillis: Long) {
+        val currentUserUid = AuthHelper.getCurrentUserId() ?: return
+        val startOfDay = Calendar.getInstance().apply {
+            timeInMillis = dateMillis
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val endOfDay = Calendar.getInstance().apply {
+            timeInMillis = dateMillis
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }.timeInMillis
+
+        firestore.collection("bookings")
+            .whereEqualTo("companyId", currentUserUid)
+            .whereGreaterThanOrEqualTo("timestamp", startOfDay)
+            .whereLessThanOrEqualTo("timestamp", endOfDay)
+            .orderBy("timestamp", Query.Direction.ASCENDING)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val bookings = snapshot.documents.mapNotNull { document ->
+                    document.toObject(Booking::class.java)?.apply { id = document.id }
+                }
+                if (bookings.isEmpty()) {
+                    showNoBookingsMessage(true)
+                    binding.noBookingsMessage.text = "Nenhum agendamento para esta data."
+                } else {
+                    showNoBookingsMessage(false)
+                    setupNearestBookingsAdapter(bookings)
+                }
+            }
+            .addOnFailureListener {
+                showErrorMessage("Erro ao buscar agendamentos da data.")
+            }
     }
 
     private fun setGreeting(name: String) {
@@ -165,17 +220,29 @@ class AdminHomeFragment : Fragment() {
     private fun processBookings(bookings: List<Booking>) {
         if (!isAdded || _binding == null) return
 
-        // Obtém o timestamp do início e fim da semana
-        val startOfWeekMillis = startOfWeek?.time ?: 0
-        val endOfWeekMillis = endOfWeek?.time ?: Long.MAX_VALUE
+        // Obtém o timestamp do início e fim do dia atual
+        val calendarTodayStart = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startOfTodayMillis = calendarTodayStart.timeInMillis
+        val calendarTodayEnd = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        val endOfTodayMillis = calendarTodayEnd.timeInMillis
 
         // Obtém o timestamp do início e fim do mês
         val startOfMonthMillis = startOfMonth().time
         val endOfMonthMillis = endOfMonth().time
 
-        // Filtro para agendamentos dentro da semana atual
-        val weeklyBookings = bookings.filter { booking ->
-            booking.timestamp in startOfWeekMillis..endOfWeekMillis
+        // Filtro para agendamentos de hoje
+        val todayBookings = bookings.filter { booking ->
+            booking.timestamp in startOfTodayMillis..endOfTodayMillis
         }
 
         // Filtro para agendamentos dentro do mês atual
@@ -183,15 +250,15 @@ class AdminHomeFragment : Fragment() {
             booking.timestamp in startOfMonthMillis..endOfMonthMillis
         }
 
-        // Calcula os lucros semanais e mensais
-        val weeklyProfit = calculateProfit(weeklyBookings)
-        val monthlyProfit = calculateProfit(monthBookings)
+        // Calcula os lucros de hoje e do mês
+        val todayProfit = calculateProfit(todayBookings)
+        val monthProfit = calculateProfit(monthBookings)
 
         // Atualiza os valores no ViewModel
-        adminViewModel.setTodayBookingsCount(weeklyBookings.size) // Total semanal
+        adminViewModel.setTodayBookingsCount(todayBookings.size) // Total de hoje
         adminViewModel.setMonthBookingsCount(monthBookings.size) // Total mensal
-        adminViewModel.setTodayProfit(weeklyProfit)
-        adminViewModel.setMonthProfit(monthlyProfit)
+        adminViewModel.setTodayProfit(todayProfit)
+        adminViewModel.setMonthProfit(monthProfit)
 
         // Filtra os agendamentos futuros
         val futureBookings = bookings.filter { isFutureBooking(it) }
@@ -286,8 +353,7 @@ class AdminHomeFragment : Fragment() {
 
     private fun showNoBookingsMessage(show: Boolean) {
         if (isAdded && _binding != null) {  // Verifica se o binding ainda está disponível
-            binding.noBookingsMessage.visibility = if (show) View.VISIBLE else View.GONE
-            binding.noBookingsImage.visibility = if (show) View.VISIBLE else View.GONE
+            binding.noBookingsContainer.visibility = if (show) View.VISIBLE else View.GONE
             binding.todayBookingsRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
         }
     }
@@ -295,8 +361,7 @@ class AdminHomeFragment : Fragment() {
     private fun showErrorMessage(message: String) {
         if (isAdded && _binding != null) {  // Verifica se o binding ainda está disponível
             binding.noBookingsMessage.text = message
-            binding.noBookingsMessage.visibility = View.VISIBLE
-            binding.noBookingsImage.visibility = View.VISIBLE
+            binding.noBookingsContainer.visibility = View.VISIBLE
             binding.todayBookingsRecyclerView.visibility = View.GONE
         }
     }
@@ -371,6 +436,37 @@ class AdminHomeFragment : Fragment() {
         // Verificar se o binding ainda está disponível
         _binding?.let { binding ->
             ImageHelper.loadProfileImage(requireContext(), imageUrl, binding.userImage) // ✅ OTIMIZADO: Helper centralizado
+        }
+    }
+
+    // Configura o RecyclerView horizontal de datas do mês
+    private fun setupCalendarDaysRecycler() {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val daysList = mutableListOf<Date>()
+        for (i in 1..daysInMonth) {
+            calendar.set(Calendar.DAY_OF_MONTH, i)
+            daysList.add(calendar.time)
+        }
+        calendarDays = daysList
+        selectedCalendarDate = Date() // Seleciona o dia atual por padrão
+        calendarDayAdapter = com.conect.aplicativoconect.ui.adapters.CalendarDayAdapter(
+            days = calendarDays,
+            selectedDate = selectedCalendarDate,
+            onDayClick = { date ->
+                if (date == null) {
+                    // Deselecionado: mostrar agendamentos padrão (mais próximos)
+                    loadBookings()
+                } else {
+                    selectedCalendarDate = date
+                    filterBookingsByDate(date.time)
+                }
+            }
+        )
+        binding.rvCalendarDays.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            adapter = calendarDayAdapter
         }
     }
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="backgroundCliente">#F8F9FA</color>
     <color name="roxo">#8264FF</color>
     <color name="azul">#2A9CFF</color>
     <color name="black">#FF000000</color>
@@ -34,5 +35,10 @@
     <color name="divider_color">#EEEEEE</color>
     <color name="background">#F8F9FA</color>
     <color name="backgroundLight">#FFFFFF</color>
+    <color name="success">#4CAF50</color>
+    <color name="colorDivider">#EEEEEE</color>
+    <color name="colorPrimaryLight">#F3F0FF</color>
+    <color name="error">#F44336</color>
+    <color name="warning">#FF9800</color>
 
 </resources>

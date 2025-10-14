@@ -28,20 +28,10 @@ class ReferralPointsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // ✅ SETUP
-        setupToolbar()
         setupViewModel()
         setupRecyclerView()
         setupClickListeners()
         loadUserData()
-    }
-
-    private fun setupToolbar() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.apply {
-            setDisplayHomeAsUpEnabled(true)
-            setDisplayShowHomeEnabled(true)
-            title = "Meus Pontos e Cupons"
-        }
     }
 
     private fun setupViewModel() {
@@ -161,12 +151,22 @@ class ReferralPointsActivity : AppCompatActivity() {
 
     private fun shareReferralMessage() {
         val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-        val userName = currentUser?.displayName ?: "Usuário"
+        val userName = currentUser?.displayName ?: "Usuário ConecteX"
         val appUrl = "https://play.google.com/store/apps/details?id=com.conect.aplicativoconect"
-        val message = "🔥 Olá! Sou $userName e indico o app *Conect*!\n\n" +
-                "📱 Encontre os melhores profissionais da sua região de forma rápida e segura.\n\n" +
-                "✨ Baixe agora: $appUrl\n\n" +
-                "#Conect #Profissionais #Indicação"
+        val message = "Olá! Eu uso o ConecteX para encontrar serviços próximos e queria te indicar.\n\n" +
+                "📱 O que é o ConecteX?\n" +
+                "• App para encontrar profissionais autônomos\n" +
+                "• Agendamento fácil e rápido\n" +
+                "• Avaliações reais dos clientes\n" +
+                "• Profissionais verificados\n\n" +
+                "✨ Se você é um profissional autônomo, pode se cadastrar e ganhar mais clientes!\n\n" +
+                "🎯 Categorias disponíveis:\n" +
+                "• Beleza (Cabeleireiro, Manicure, Estética)\n" +
+                "• Técnicos (Informática, Eletrônicos)\n" +
+                "• Serviços Gerais (Fotografia, Design)\n" +
+                "• E muito mais!\n\n" +
+                "📲 Baixe agora: $appUrl\n\n" +
+                "_Indicado por: $userName"
 
         val whatsappIntent = android.content.Intent().apply {
             action = android.content.Intent.ACTION_SEND
@@ -186,10 +186,5 @@ class ReferralPointsActivity : AppCompatActivity() {
             }
             startActivity(android.content.Intent.createChooser(shareIntent, "Compartilhar indicação"))
         }
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        finish()
-        return true
     }
 }

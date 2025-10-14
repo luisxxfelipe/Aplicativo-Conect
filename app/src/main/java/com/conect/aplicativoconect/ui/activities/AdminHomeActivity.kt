@@ -39,6 +39,9 @@ class AdminHomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_home)
 
+        // Configurar para não sobrepor a barra de status
+        window.statusBarColor = ContextCompat.getColor(this, R.color.white)
+        
         firestore = FirebaseFirestore.getInstance()
         checkLocationPermission()
 
@@ -49,51 +52,6 @@ class AdminHomeActivity : AppCompatActivity() {
         }
 
         setupBottomNavigation()
-    }
-
-    private fun daysUntil(endDate: Timestamp): Long {
-        val currentDate = Calendar.getInstance().time
-        val endDateMillis = endDate.toDate().time
-        val diffMillis = endDateMillis - currentDate.time
-        return TimeUnit.MILLISECONDS.toDays(diffMillis)
-    }
-
-    private fun showSubscriptionExpiryAlert(endDate: Timestamp) {
-        val sharedPreferences = getSharedPreferences("SubscriptionPrefs", Context.MODE_PRIVATE)
-        val today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-        val lastAlertDay = sharedPreferences.getInt("lastAlertDay", -1)
-        val dailyAlertCount = sharedPreferences.getInt("dailyAlertCount", 0)
-
-        // Se o dia mudou, resetamos a contagem de alertas
-        if (lastAlertDay != today) {
-            sharedPreferences.edit().putInt("dailyAlertCount", 0).putInt("lastAlertDay", today)
-                .apply()
-        }
-
-        // Se a quantidade de alertas diários for menor que o máximo, mostramos o alerta
-        if (dailyAlertCount < MAX_DAILY_ALERTS) {
-            val endDateFormatted = Validator.DATE_FORMAT.format(endDate.toDate()) // ✅ OTIMIZADO: Formatador central
-
-            val dialog = AlertDialog.Builder(this)
-                .setTitle("Sua assinatura está quase vencendo!")
-                .setMessage("Sua assinatura vencerá em breve em $endDateFormatted. Garanta sua renovação para continuar aproveitando os serviços.")
-                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                .create()
-
-            dialog.show()
-
-            // Acessando o botão "OK" e alterando a cor do texto para roxo
-            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            positiveButton.setTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.roxo
-                )
-            ) // Cor roxa para o texto
-
-            // Atualizando a contagem de alertas diários
-            sharedPreferences.edit().putInt("dailyAlertCount", dailyAlertCount + 1).apply()
-        }
     }
 
     private fun setupBottomNavigation() {
@@ -245,7 +203,7 @@ class AdminHomeActivity : AppCompatActivity() {
     private fun showLocationPermissionExplanation() {
         AlertDialog.Builder(this)
             .setTitle("Permissão de Localização")
-            .setMessage("O Conectx usa sua localização para melhorar os serviços oferecidos e conectar você com clientes próximos.")
+            .setMessage("O Conectex usa sua localização para melhorar os serviços oferecidos e conectar você com clientes próximos.")
             .setPositiveButton("Permitir") { _, _ ->
                 requestLocationPermission()
             }

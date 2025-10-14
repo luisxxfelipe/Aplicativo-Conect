@@ -169,12 +169,7 @@ class ClienteProfileFragment : Fragment() {
                 }
             )
             
-            // Adicionar ícone visual
-            text = if (isEnabled) {
-                "🔔 Receber Notificações"
-            } else {
-                "🔕 Receber Notificações"
-            }
+            // O texto já está definido no layout XML
         }
     }
     

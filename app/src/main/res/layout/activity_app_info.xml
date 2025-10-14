@@ -19,7 +19,7 @@
         android:id="@+id/appDeveloperText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Desenvolvedor: ConectX"
+        android:text="Desenvolvedor: ConecteX"
         android:textColor="@color/textPrimary"
         android:textSize="18sp" />
 

@@ -1,27 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/background">
-
-    <!-- Toolbar -->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:title="Meus Pontos e Cupons"
-        app:titleTextColor="@color/white" />
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
-
-        <LinearLayout
+    android:fillViewport="true"
+    android:background="@color/background">        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -83,7 +66,7 @@
                         android:layout_height="wrap_content"
                         android:text="0 indicações realizadas"
                         android:textColor="@color/textSecondary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:gravity="center" />
 
                 </LinearLayout>
@@ -134,23 +117,32 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="500 pontos - Cupom 10% OFF"
+                        android:textSize="16sp"
                         android:layout_marginBottom="8dp"
-                        style="@style/Widget.Material3.Button.OutlinedButton" />
+                        android:backgroundTint="@color/roxo"
+                        android:textColor="@color/white"
+                        style="@style/Widget.Material3.Button" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnRedeem20"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="1000 pontos - Cupom 20% OFF"
+                        android:textSize="16sp"
                         android:layout_marginBottom="8dp"
-                        style="@style/Widget.Material3.Button.OutlinedButton" />
+                        android:backgroundTint="@color/roxo"
+                        android:textColor="@color/white"
+                        style="@style/Widget.Material3.Button" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnRedeem50"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="2000 pontos - Cupom 50% OFF"
-                        style="@style/Widget.Material3.Button.OutlinedButton" />
+                        android:textSize="16sp"
+                        android:backgroundTint="@color/roxo"
+                        android:textColor="@color/white"
+                        style="@style/Widget.Material3.Button" />
 
                 </LinearLayout>
 
@@ -208,7 +200,7 @@
                         android:text="Você ainda não possui cupons"
                         android:textAlignment="center"
                         android:textColor="@color/textSecondary"
-                        android:textSize="16sp"
+                        android:textSize="18sp"
                         android:layout_marginTop="20dp"
                         android:layout_marginBottom="20dp"
                         android:visibility="gone" />
@@ -260,7 +252,7 @@
                         android:layout_height="wrap_content"
                         android:text="Compartilhe o Conect com profissionais autônomos e ganhe 100 pontos para cada um que se cadastrar!"
                         android:textColor="@color/textSecondary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:layout_marginBottom="16dp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -268,6 +260,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Compartilhar no WhatsApp"
+                        android:textSize="16sp"
+                        android:textColor="@color/white"
                         app:icon="@drawable/ic_whatsapp"
                         app:iconTint="@color/white"
                         android:backgroundTint="#25D366"
@@ -279,6 +273,4 @@
 
         </LinearLayout>
 
-    </ScrollView>
-
-</LinearLayout>
+</ScrollView>

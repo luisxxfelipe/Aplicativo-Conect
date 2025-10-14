@@ -12,7 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RatingBar
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.TextView
+
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -56,25 +57,17 @@ class ClienteHomeFragment : Fragment() {
     private lateinit var clientBookingAdapter: ClientBookingAdapter
     private val businessList = mutableListOf<Business>()
     
-    // ActivityResultLauncher para permissions
-    private val locationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            fetchUserLocation(false)
-        } else {
-            Log.d("ClienteHomeFragment", "Permissão de localização negada")
-        }
-    }
+    // 📍 LOCALIZAÇÃO: Permissão já solicitada na tela de boas-vindas
     private val clientViewModel: ClientViewModel by activityViewModels()
     private val referralViewModel: ReferralViewModel by activityViewModels()
     private var selectedCategory: String? = null
     private val PAGE_SIZE = 4 // Número de itens por vez
     private var lastVisible: DocumentSnapshot? = null // Último documento carregado
     private var isLoading = false // Controle de carregamento
+    private var hasInitialLoadCompleted = false // 🆕 CONTROLE: Primeira carga completa
     private val cacheKey = "business_cache"
     private var currentCity: String? = null
-    private val LOCATION_PERMISSION_REQUEST_CODE = 1
+
     
     // 🚀 MELHORIAS: Propriedades para filtro por proximidade
     private var currentUserLat: Double? = null
@@ -143,10 +136,8 @@ class ClienteHomeFragment : Fragment() {
             }
             
             if (!isExpired && !locationChanged) {
-                Log.d("ClienteHomeFragment", "Usando cache de estabelecimentos para localização")
                 cache.businesses
             } else {
-                Log.d("ClienteHomeFragment", "Cache expirado ou localização mudou significativamente")
                 null
             }
         } catch (e: Exception) {
@@ -169,7 +160,6 @@ class ClienteHomeFragment : Fragment() {
         val prefs = requireContext().getSharedPreferences("business_location_cache", Context.MODE_PRIVATE)
         prefs.edit().putString("cache_data", Gson().toJson(cache)).apply()
         
-        Log.d("ClienteHomeFragment", "Cache de estabelecimentos salvo para cidade: $city")
     }
     
     // 🎯 FUNÇÃO UTILITÁRIA: Formatar texto de distância
@@ -181,21 +171,16 @@ class ClienteHomeFragment : Fragment() {
         }
     }
     
-    // 🔄 SEGUNDA TENTATIVA: Buscar sem filtro de proximidade
+    // 🔄 TENTATIVA SEM FILTRO DE CIDADE: Buscar todos os estabelecimentos ativos
     private fun makeSecondAttempt(city: String?) {
         lifecycleScope.launch {
             try {
                 val querySnapshot = withContext(Dispatchers.IO) {
-                    var query = firestore.collection("business")
+                    firestore.collection("business")
                         .whereEqualTo("isActive", true)
-                        .limit(20) // Buscar mais estabelecimentos na segunda tentativa
-                    
-                    city?.let { 
-                        val normalizedCity = it.trim().lowercase(Locale.getDefault())
-                        query = query.whereEqualTo("city", normalizedCity)
-                    }
-                    
-                    query.get().await()
+                        .limit(50) // Buscar mais estabelecimentos
+                        .get()
+                        .await()
                 }
 
                 val businesses = querySnapshot.toObjects(Business::class.java)
@@ -204,14 +189,12 @@ class ClienteHomeFragment : Fragment() {
                     businessList.clear()
                     businessList.addAll(businesses)
                     updateBusinessAdapter(businessList)
-                    saveBusinessesCache(businessList, city, currentUserLat, currentUserLon)
-                    Log.d("ClienteHomeFragment", "Segunda tentativa bem-sucedida: ${businesses.size} estabelecimentos encontrados")
+                    cacheBusinesses(businessList)
                 } else {
                     // Nem na segunda tentativa encontrou - mostrar mensagem promocional
                     showPromotionalMessage(city)
                 }
             } catch (e: Exception) {
-                Log.e("ClienteHomeFragment", "Erro na segunda tentativa: ${e.message}")
                 showPromotionalMessage(city)
             } finally {
                 withContext(Dispatchers.Main) {
@@ -223,33 +206,6 @@ class ClienteHomeFragment : Fragment() {
     }
     
     // 🚀 MENSAGENS PROMOCIONAIS para diferentes cenários
-    private fun showLocationPermissionNeeded() {
-        showNoEstablishmentsMessage(true, customMessage = true)
-        binding.noEstablishmentsTitle.text = "Permissão de localização necessária"
-        binding.noEstablishmentsMessage.text = "Para encontrar estabelecimentos próximos a você, precisamos da sua localização.\n\n📍 Ative a localização nas configurações do seu dispositivo."
-        binding.progressBar.visibility = View.GONE
-    }
-    
-    private fun showNoLocationDetected() {
-        showNoEstablishmentsMessage(true, customMessage = true)
-        binding.noEstablishmentsTitle.text = "Localização não detectada"
-        binding.noEstablishmentsMessage.text = "Não conseguimos detectar sua localização automaticamente.\n\n🏠 Tente sair de ambientes fechados ou verificar se o GPS está ativo."
-        binding.progressBar.visibility = View.GONE
-    }
-    
-    private fun showNoLocationAvailable() {
-        showNoEstablishmentsMessage(true, customMessage = true)
-        binding.noEstablishmentsTitle.text = "Localização indisponível"
-        binding.noEstablishmentsMessage.text = "Sua localização não está disponível no momento.\n\n⚙️ Verifique as configurações de localização do dispositivo."
-        binding.progressBar.visibility = View.GONE
-    }
-    
-    private fun showLocationError() {
-        showNoEstablishmentsMessage(true, customMessage = true)
-        binding.noEstablishmentsTitle.text = "Erro de localização"
-        binding.noEstablishmentsMessage.text = "Ocorreu um erro ao acessar sua localização.\n\n🔄 Tente novamente ou verifique as permissões do aplicativo."
-        binding.progressBar.visibility = View.GONE
-    }
     
     private fun showPromotionalMessage(city: String?) {
         showNoEstablishmentsMessage(true, customMessage = true)
@@ -273,7 +229,6 @@ class ClienteHomeFragment : Fragment() {
             val shouldShow = referralViewModel.shouldShowReferralPopup(userId)
             
             if (!shouldShow) {
-                Log.d("ClienteHomeFragment", "Popup bloqueado - cooldown de 24h ativo")
                 return@launch
             }
             
@@ -282,7 +237,7 @@ class ClienteHomeFragment : Fragment() {
                 
                 val btnShareWhatsApp = dialogView.findViewById<Button>(R.id.btnShareWhatsApp)
                 val btnViewPoints = dialogView.findViewById<Button>(R.id.btnViewPoints)
-                val btnClose = dialogView.findViewById<Button>(R.id.btnClose)
+                val btnClose = dialogView.findViewById<TextView>(R.id.btnClose)
 
                 val dialog = AlertDialog.Builder(requireContext())
                     .setView(dialogView)
@@ -302,7 +257,9 @@ class ClienteHomeFragment : Fragment() {
                 }
 
                 btnViewPoints.setOnClickListener {
-                    showUserPointsDialog()
+                    // 🎯 Navegar para a tela dedicada de pontos
+                    val intent = Intent(requireContext(), com.conect.aplicativoconect.ui.activities.ReferralPointsActivity::class.java)
+                    startActivity(intent)
                     dialog.dismiss()
                 }
 
@@ -350,147 +307,65 @@ class ClienteHomeFragment : Fragment() {
         }
     }
     
-    // ⭐ MOSTRAR PONTOS DO USUÁRIO
-    private fun showUserPointsDialog() {
-        // Carregar pontos do usuário
-        referralViewModel.loadUserPoints()
-        
-        // Observar resultado
-        referralViewModel.userPoints.observe(viewLifecycleOwner) { userPoints ->
-            if (userPoints != null) {
-                showPointsDetailDialog(userPoints)
-            }
-        }
-    }
-    
-    // 📊 DIALOG COM DETALHES DOS PONTOS
-    private fun showPointsDetailDialog(userPoints: com.conect.aplicativoconect.data.models.UserPoints) {
-        val message = buildString {
-            append("🏆 *Seus Pontos*\n\n")
-            append("💰 Total de pontos: ${userPoints.totalPoints}\n")
-            append("👥 Indicações realizadas: ${userPoints.referralsCount}\n\n")
-            append("🎟️ *Cupons Disponíveis:*\n")
-            append("• 500 pontos = 10% desconto\n")
-            append("• 1000 pontos = 20% desconto\n")
-            append("• 2000 pontos = 50% desconto\n\n")
-            
-            if (userPoints.totalPoints >= 500) {
-                append("🎉 Você pode resgatar cupons!")
-            } else {
-                val pointsNeeded = 500 - userPoints.totalPoints
-                append("📈 Faltam $pointsNeeded pontos para seu primeiro cupom!")
-            }
-        }
-        
-        AlertDialog.Builder(requireContext())
-            .setTitle("Programa de Indicações")
-            .setMessage(message)
-            .setPositiveButton("Resgatar Cupom") { _, _ ->
-                showCouponRedemptionDialog(userPoints)
-            }
-            .setNegativeButton("Fechar", null)
-            .show()
-    }
-    
-    // 🎟️ DIALOG PARA RESGATAR CUPONS
-    private fun showCouponRedemptionDialog(userPoints: com.conect.aplicativoconect.data.models.UserPoints) {
-        val availableCoupons = com.conect.aplicativoconect.data.repositories.ReferralRepository.AVAILABLE_COUPONS
-            .filter { it.first <= userPoints.totalPoints }
-        
-        if (availableCoupons.isEmpty()) {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Pontos Insuficientes")
-                .setMessage("Você precisa de pelo menos 500 pontos para resgatar um cupom.\n\nContinue indicando profissionais para ganhar mais pontos!")
-                .setPositiveButton("OK", null)
-                .show()
-            return
-        }
-        
-        val couponOptions = availableCoupons.map { (points, discount, _) ->
-            "$discount% de desconto - $points pontos"
-        }.toTypedArray()
-        
-        AlertDialog.Builder(requireContext())
-            .setTitle("Escolha seu Cupom")
-            .setItems(couponOptions) { _, which ->
-                val selectedCoupon = availableCoupons[which]
-                confirmCouponRedemption(selectedCoupon.first, selectedCoupon.second)
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-    
-    // ✅ CONFIRMAR RESGATE DE CUPOM
-    private fun confirmCouponRedemption(pointsCost: Int, discountPercent: Int) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Confirmar Resgate")
-            .setMessage("Deseja resgatar um cupom de $discountPercent% de desconto por $pointsCost pontos?")
-            .setPositiveButton("Confirmar") { _, _ ->
-                referralViewModel.redeemCoupon(pointsCost, discountPercent)
-                
-                // Observar resultado do resgate
-                referralViewModel.couponRedeemed.observe(viewLifecycleOwner) { coupon ->
-                    if (coupon != null) {
-                        showCouponSuccessDialog(coupon)
-                        referralViewModel.clearCouponRedeemed()
-                    }
-                }
-                
-                referralViewModel.error.observe(viewLifecycleOwner) { error ->
-                    if (error != null) {
-                        AlertDialog.Builder(requireContext())
-                            .setTitle("Erro")
-                            .setMessage(error)
-                            .setPositiveButton("OK", null)
-                            .show()
-                        referralViewModel.clearError()
-                    }
-                }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-    
-    // 🎉 MOSTRAR CUPOM RESGATADO
-    private fun showCouponSuccessDialog(coupon: com.conect.aplicativoconect.data.models.Coupon) {
-        val message = buildString {
-            append("🎉 *Cupom Resgatado com Sucesso!*\n\n")
-            append("📋 Código: ${coupon.code}\n")
-            append("💰 Desconto: ${coupon.discountPercent}%\n")
-            append("📅 Válido até: ${java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(coupon.expiresAt))}\n\n")
-            append("Use este código em qualquer agendamento!")
-        }
-        
-        AlertDialog.Builder(requireContext())
-            .setTitle("Parabéns! 🎊")
-            .setMessage(message)
-            .setPositiveButton("Copiar Código") { _, _ ->
-                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                val clip = android.content.ClipData.newPlainText("Cupom Conect", coupon.code)
-                clipboard.setPrimaryClip(clip)
-                
-                android.widget.Toast.makeText(requireContext(), "Código copiado!", android.widget.Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Fechar", null)
-            .show()
-    }
-
-    // 🆕 NOVA FUNÇÃO: Solicitar localização para atualizar cache
+    // 🆕 NOVA FUNÇÃO: Solicitar localização para atualizar cache (SEM INTERRUPÇÃO)
     private fun requestLocationForCacheUpdate(userId: String?) {
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // Sem permissão - mostrar mensagem para permitir localização
-            Log.d("ClienteHomeFragment", "Sem permissão de localização")
+            // 🎯 SEM PERMISSÃO: Carregar estabelecimentos SEM filtro de localização
+            Log.d("ClienteHomeFragment", "📍 Sem permissão de localização - carregando todos os estabelecimentos")
             currentCity = null
             currentUserLat = null
             currentUserLon = null
-            showLocationPermissionNeeded()
+            
+            // Buscar estabelecimentos sem filtro de cidade
+            fetchBusinessesWithoutLocation()
         } else {
             // Com permissão - buscar localização
             fetchUserLocationAndUpdate(userId)
+        }
+    }
+    
+    // 🆕 NOVA FUNÇÃO: Buscar estabelecimentos sem localização
+    private fun fetchBusinessesWithoutLocation() {
+        lifecycleScope.launch {
+            try {
+                val querySnapshot = withContext(Dispatchers.IO) {
+                    firestore.collection("business")
+                        .whereEqualTo("isActive", true)
+                        .limit(20) // Mais estabelecimentos já que não tem filtro de cidade
+                        .get()
+                        .await()
+                }
+
+                val businesses = querySnapshot.toObjects(Business::class.java)
+                
+                if (businesses.isNotEmpty()) {
+                    businessList.clear()
+                    businessList.addAll(businesses)
+                    updateBusinessAdapter(businessList)
+                    cacheBusinesses(businessList)
+                    
+                    Log.d("ClienteHomeFragment", "✅ Carregados ${businesses.size} estabelecimentos sem filtro de localização")
+                } else {
+                    showNoEstablishmentsMessage(true, customMessage = true)
+                    binding.noEstablishmentsTitle.text = "Nenhum estabelecimento encontrado"
+                    binding.noEstablishmentsMessage.text = "Não encontramos estabelecimentos disponíveis no momento."
+                }
+            } catch (e: Exception) {
+                Log.e("ClienteHomeFragment", "Erro ao buscar estabelecimentos: ${e.message}")
+                showNoEstablishmentsMessage(true, customMessage = true)
+                binding.noEstablishmentsTitle.text = "Erro ao carregar"
+                binding.noEstablishmentsMessage.text = "Ocorreu um erro ao carregar os estabelecimentos. Tente novamente."
+            } finally {
+                withContext(Dispatchers.Main) {
+                    isLoading = false
+                    hasInitialLoadCompleted = true
+                    binding.progressBar.visibility = View.GONE
+                }
+            }
         }
     }
 
@@ -523,38 +398,35 @@ class ClienteHomeFragment : Fragment() {
                                 updateBusinessAdapter(cachedBusinesses)
                                 businessList.clear()
                                 businessList.addAll(cachedBusinesses)
-                                Log.d("ClienteHomeFragment", "Estabelecimentos carregados do cache")
                             } else {
                                 // Cache vazio ou expirado - buscar do Firestore
                                 fetchBusinessesWithProximity(city, currentUserLat, currentUserLon, true)
                             }
                             
-                            Log.d("ClienteHomeFragment", "Localização atualizada: $city (${currentUserLat}, ${currentUserLon})")
                         } else {
-                            // Falha na detecção - mostrar mensagem explicativa
-                            Log.d("ClienteHomeFragment", "Falha na detecção de cidade")
                             currentCity = null
                             currentUserLat = null
                             currentUserLon = null
-                            showNoLocationDetected()
+                            // 🎯 Fallback: Buscar estabelecimentos sem localização
+                            fetchBusinessesWithoutLocation()
                         }
                     }
                 }
             } else {
-                // Localização indisponível - mostrar mensagem explicativa
-                Log.d("ClienteHomeFragment", "Localização indisponível")
                 currentCity = null
                 currentUserLat = null
                 currentUserLon = null
-                showNoLocationAvailable()
+                // 🎯 Fallback: Buscar estabelecimentos sem localização
+                fetchBusinessesWithoutLocation()
             }
         }.addOnFailureListener { exception ->
-            // Erro ao obter localização - mostrar mensagem explicativa
+            // Erro ao obter localização - fallback sem interromper o usuário
             Log.e("ClienteHomeFragment", "Erro ao obter localização: ${exception.message}")
             currentCity = null
             currentUserLat = null
             currentUserLon = null
-            showLocationError()
+            // 🎯 Fallback: Buscar estabelecimentos sem localização
+            fetchBusinessesWithoutLocation()
         }
     }
 
@@ -562,12 +434,6 @@ class ClienteHomeFragment : Fragment() {
     private fun saveUserCityToFirebase(userId: String, city: String) {
         firestore.collection("users").document(userId)
             .update("city", city, "cityUpdatedAt", System.currentTimeMillis())
-            .addOnSuccessListener {
-                Log.d("ClienteHomeFragment", "Cidade salva no Firebase: $city")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("ClienteHomeFragment", "Erro ao salvar cidade no Firebase: ${exception.message}")
-            }
     }
 
 
@@ -579,6 +445,47 @@ class ClienteHomeFragment : Fragment() {
         return _binding!!.root
     }
 
+    private fun setupReferralButton() {
+        binding.referralButton.setOnClickListener {
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val userName = currentUser?.displayName ?: "Usuário ConecteX"
+            val appUrl = "https://play.google.com/store/apps/details?id=com.conect.aplicativoconect"
+            val message = "Olá! Eu uso o ConecteX para encontrar serviços próximos e queria te indicar.\n\n" +
+                    "📱 O que é o ConecteX?\n" +
+                    "• App para encontrar profissionais autônomos\n" +
+                    "• Agendamento fácil e rápido\n" +
+                    "• Avaliações reais dos clientes\n" +
+                    "• Profissionais verificados\n\n" +
+                    "✨ Se você é um profissional autônomo, pode se cadastrar e ganhar mais clientes!\n\n" +
+                    "🎯 Categorias disponíveis:\n" +
+                    "• Beleza (Cabeleireiro, Manicure, Estética)\n" +
+                    "• Técnicos (Informática, Eletrônicos)\n" +
+                    "• Serviços Gerais (Fotografia, Design)\n" +
+                    "• E muito mais!\n\n" +
+                    "📲 Baixe agora: $appUrl\n\n" +
+                    "_Indicado por: $userName"
+
+            val whatsappIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, message)
+                setPackage("com.whatsapp")
+            }
+
+            try {
+                startActivity(whatsappIntent)
+            } catch (e: Exception) {
+                // Fallback para compartilhamento geral
+                val shareIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, message)
+                }
+                startActivity(Intent.createChooser(shareIntent, "Compartilhar indicação"))
+            }
+        }
+    }
+
     // No metodo onViewCreated, inicie o carregamento imediato dos dados
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -586,17 +493,7 @@ class ClienteHomeFragment : Fragment() {
         firestore = FirebaseFirestore.getInstance()
 
         setupAdapters()
-
-        // Carregar cache
-        val cachedBusinesses = loadCachedBusinesses()
-        if (cachedBusinesses.isNotEmpty()) {
-            updateBusinessAdapter(cachedBusinesses)
-        } else {
-            // 🎨 MOSTRAR estado vazio inicial se não há cache
-            binding.noEstablishmentsContainer.visibility = View.VISIBLE
-            binding.establishmentsRecyclerView.visibility = View.GONE
-        }
-
+        setupReferralButton()
         setupSearchView()
 
         binding.progressBar.visibility = View.VISIBLE
@@ -610,7 +507,7 @@ class ClienteHomeFragment : Fragment() {
         // Receber a flag para forçar atualização
         val forceUpdate = requireActivity().intent.getBooleanExtra("FORCE_UPDATE", false)
 
-        // 🚀 ESTRATÉGIA INTELIGENTE: Cache primeiro, renovação automática
+        // 🚀 ESTRATÉGIA CONTROLADA: Cache primeiro, busca apenas se necessário
         val cachedCity = getCachedUserCity()
         if (cachedCity != null && !forceUpdate) {
             // Verificar cache inteligente de estabelecimentos primeiro
@@ -620,20 +517,22 @@ class ClienteHomeFragment : Fragment() {
                 updateBusinessAdapter(smartCache)
                 businessList.clear()
                 businessList.addAll(smartCache)
-                Log.d("ClienteHomeFragment", "Usando cache inteligente para cidade: $cachedCity")
-                binding.progressBar.visibility = View.GONE
+                hasInitialLoadCompleted = true // 🆕 MARCAR: Cache como carga inicial completa
+                 binding.progressBar.visibility = View.GONE
             } else {
                 // Cache de estabelecimentos vazio - buscar localização atual
                 requestLocationForCacheUpdate(userId)
             }
         } else {
             // Cache expirado ou forçar update - pedir localização
-            Log.d("ClienteHomeFragment", "Cache expirado, solicitando nova localização")
-            requestLocationForCacheUpdate(userId)
+           requestLocationForCacheUpdate(userId)
         }
 
 
         observeUserData()
+        
+        // ❤️ Carregar favoritos do usuário
+        loadUserFavorites()
     }
 
 
@@ -660,9 +559,21 @@ class ClienteHomeFragment : Fragment() {
 
 
     private fun fetchUserLocation(forceUpdate: Boolean = false) {
-        // 🔄 FUNÇÃO LEGADA: Usar nova implementação
+        // 🎯 LOCALIZAÇÃO: Tenta usar se tiver permissão, senão funciona sem filtro
         val userId = FirebaseAuth.getInstance().currentUser?.uid
-        fetchUserLocationAndUpdate(userId)
+        
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            // Com permissão - usar localização
+            fetchUserLocationAndUpdate(userId)
+        } else {
+            // Sem permissão - funcionar sem localização (já foi pedida na tela de boas-vindas)
+            Log.d("ClienteHomeFragment", "📍 Sem permissão de localização - usando busca geral")
+            fetchBusinessesWithoutLocation()
+        }
     }
 
 
@@ -693,13 +604,17 @@ class ClienteHomeFragment : Fragment() {
         }
     }
 
-    // ⚠️ REMOVIDO: fetchBusinessesByCity - usar apenas fetchBusinesses para evitar duplicação
-
     private fun setupAdapters() {
-        // Inicializa o adapter
-        businessAdapter = BusinessAdapter(requireContext()) { business ->
-            fetchBusinessIdAndOpenDetails(business.name)
-        }
+        // Inicializa o adapter com callback de favoritos
+        businessAdapter = BusinessAdapter(
+            context = requireContext(),
+            onBusinessClick = { business ->
+                fetchBusinessIdAndOpenDetails(business.name)
+            },
+            onFavoriteClick = { business, isFavorite ->
+                handleFavoriteClick(business, isFavorite)
+            }
+        )
 
         // Configura o RecyclerView com scroll infinito
         val layoutManager = LinearLayoutManager(requireContext())
@@ -717,8 +632,10 @@ class ClienteHomeFragment : Fragment() {
                     val totalItemCount = layoutManager.itemCount
                     val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
                     
-                    // Carregar mais quando próximo do fim (últimos 3 itens)
-                    if (!isLoading && (visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 3) {
+                    // 🔒 SCROLL INFINITO CONTROLADO: Carregar mais apenas se necessário
+                    if (!isLoading && hasInitialLoadCompleted && totalItemCount > 0 && 
+                        (visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 1) {
+                        
                         // 🚀 Usar função com proximidade se temos coordenadas
                         if (currentUserLat != null && currentUserLon != null) {
                             fetchBusinessesWithProximity(currentCity, currentUserLat, currentUserLon, false)
@@ -747,9 +664,18 @@ class ClienteHomeFragment : Fragment() {
 
 
     private fun fetchBusinesses(city: String? = currentCity, isFirstLoad: Boolean = false) {
-        if (isLoading) return
+        // 🔒 BLOQUEIO INTELIGENTE: Evitar múltiplas chamadas desnecessárias
+        if (isLoading) {
+            return
+        }
+        
+        // 🔒 BLOQUEIO: Se já carregou dados e não é primeira carga, e tem dados, não recarregar
+        if (!isFirstLoad && hasInitialLoadCompleted && businessList.isNotEmpty()) {
+           return
+        }
 
         isLoading = true
+        binding.progressBar.visibility = View.VISIBLE
         lifecycleScope.launch {
             try {
                 val querySnapshot = withContext(Dispatchers.IO) {
@@ -757,10 +683,11 @@ class ClienteHomeFragment : Fragment() {
                         .whereEqualTo("isActive", true) // 🚀 Filtro otimizado primeiro
                         .limit(PAGE_SIZE.toLong())
                     
-                    // Aplicar filtro de cidade se especificado
-                    city?.let { 
-                        val normalizedCity = it.trim().lowercase(Locale.getDefault())
-                        query = query.whereEqualTo("city", normalizedCity)
+                    // Aplicar filtro de cidade - tentar ambos os casos
+                    city?.let { cityName ->
+                        val trimmedCity = cityName.trim()
+                        // Primeiro tentar com a capitalização original
+                        query = query.whereEqualTo("city", trimmedCity)
                     }
                     
                     // Aplicar paginação apenas se não for primeira carga
@@ -771,14 +698,47 @@ class ClienteHomeFragment : Fragment() {
                     query.get().await()
                 }
 
-                val businesses = querySnapshot.toObjects(Business::class.java)
+                var businesses = querySnapshot.toObjects(Business::class.java)
                 
+                // Se não encontrou nada e tem cidade, tentar com diferentes capitalizações
+                if (businesses.isEmpty() && !city.isNullOrBlank()) {
+                    val cityVariations = listOf(
+                        city.trim().toLowerCase(),
+                        city.trim().toUpperCase(), 
+                        city.trim().capitalize()
+                    )
+                    
+                    for (variation in cityVariations) {
+                        if (variation != city.trim()) {
+                            val altQuery = firestore.collection("business")
+                                .whereEqualTo("isActive", true)
+                                .whereEqualTo("city", variation)
+                                .limit(PAGE_SIZE.toLong())
+                            val altSnapshot = altQuery.get().await()
+                            businesses = altSnapshot.toObjects(Business::class.java)
+                            
+                            if (businesses.isNotEmpty()) {
+                                break
+                            }
+                        }
+                    }
+                }
+                
+                // Se ainda não encontrou, tentar sem filtro de cidade
+                if (businesses.isEmpty() && !city.isNullOrBlank()) {
+                    val noFilterQuery = firestore.collection("business")
+                        .whereEqualTo("isActive", true)
+                        .limit(50)
+                    val noFilterSnapshot = noFilterQuery.get().await()
+                    businesses = noFilterSnapshot.toObjects(Business::class.java)
+                }
                 // Atualizar lastVisible para próxima página
                 if (querySnapshot.documents.isNotEmpty()) {
                     lastVisible = querySnapshot.documents.last()
                 }
 
                 if (businesses.isNotEmpty()) {
+                    
                     // Se é primeira carga, limpar lista
                     if (isFirstLoad) {
                         businessList.clear()
@@ -790,6 +750,7 @@ class ClienteHomeFragment : Fragment() {
                     }
                     
                     businessList.addAll(uniqueBusinesses)
+                    
                     updateBusinessAdapter(businessList)
                     cacheBusinesses(businessList)
                 }
@@ -807,6 +768,9 @@ class ClienteHomeFragment : Fragment() {
             } finally {
                 withContext(Dispatchers.Main) {
                     isLoading = false
+                    if (isFirstLoad) {
+                        hasInitialLoadCompleted = true // 🆕 MARCAR: Primeira carga completa
+                    }
                     binding.progressBar.visibility = View.GONE
                 }
             }
@@ -821,7 +785,15 @@ class ClienteHomeFragment : Fragment() {
         isFirstLoad: Boolean = false,
         radiusKm: Double = DEFAULT_RADIUS_KM
     ) {
-        if (isLoading) return
+        // 🔒 BLOQUEIO INTELIGENTE: Evitar múltiplas chamadas
+        if (isLoading) {
+            return
+        }
+        
+        // 🔒 BLOQUEIO: Se já carregou dados e não é primeira carga, e tem dados, não recarregar
+        if (!isFirstLoad && hasInitialLoadCompleted && businessList.isNotEmpty()) {
+            return
+        }
 
         isLoading = true
         lifecycleScope.launch {
@@ -841,9 +813,9 @@ class ClienteHomeFragment : Fragment() {
                     
                     // Aplicar filtro de cidade se não temos coordenadas do usuário
                     if (userLat == null || userLon == null) {
-                        city?.let { 
-                            val normalizedCity = it.trim().lowercase(Locale.getDefault())
-                            query = query.whereEqualTo("city", normalizedCity)
+                        city?.let { cityName ->
+                            val trimmedCity = cityName.trim()
+                            query = query.whereEqualTo("city", trimmedCity)
                         }
                     }
                     
@@ -856,17 +828,14 @@ class ClienteHomeFragment : Fragment() {
                 }
 
                 var businesses = querySnapshot.toObjects(Business::class.java)
-                Log.d("ClienteHomeFragment", "Encontrados ${businesses.size} estabelecimentos antes do filtro")
                 
                 // 🎯 FILTRAR POR PROXIMIDADE se temos localização do usuário
                 if (userLat != null && userLon != null) {
-                    Log.d("ClienteHomeFragment", "Aplicando filtro de proximidade - raio: ${radiusKm}km")
                     businesses = businesses.filter { business ->
                         // Incluir estabelecimentos com coordenadas válidas dentro do raio
                         if (business.latitude != 0.0 && business.longitude != 0.0) {
                             val distance = calculateDistance(userLat, userLon, business.latitude, business.longitude)
                             val isWithinRadius = distance <= radiusKm
-                            Log.d("ClienteHomeFragment", "Estabelecimento ${business.name}: distância ${distance}km, dentro do raio: $isWithinRadius")
                             isWithinRadius
                         } else {
                             // Incluir estabelecimentos sem coordenadas da mesma cidade
@@ -886,7 +855,6 @@ class ClienteHomeFragment : Fragment() {
                     // Limitar ao PAGE_SIZE após filtro de proximidade
                     businesses = businesses.take(PAGE_SIZE)
                     
-                    Log.d("ClienteHomeFragment", "Filtrados ${businesses.size} estabelecimentos dentro de ${radiusKm}km")
                 }
                 
                 // Atualizar lastVisible para próxima página
@@ -895,20 +863,16 @@ class ClienteHomeFragment : Fragment() {
                 }
 
                 if (businesses.isNotEmpty()) {
-                    Log.d("ClienteHomeFragment", "Processando ${businesses.size} estabelecimentos encontrados")
-                    
+                   
                     // Se é primeira carga, limpar lista
                     if (isFirstLoad) {
                         businessList.clear()
-                        Log.d("ClienteHomeFragment", "Lista limpa para primeira carga")
                     }
                     
                     // Evitar duplicatas
                     val uniqueBusinesses = businesses.filter { newBusiness ->
                         businessList.none { it.ownerId == newBusiness.ownerId }
                     }
-                    
-                    Log.d("ClienteHomeFragment", "Adicionando ${uniqueBusinesses.size} estabelecimentos únicos")
                     businessList.addAll(uniqueBusinesses)
                     updateBusinessAdapter(businessList)
                     
@@ -916,12 +880,10 @@ class ClienteHomeFragment : Fragment() {
                     saveBusinessesCache(businessList, city, userLat, userLon)
                 } else if (isFirstLoad) {
                     // Se primeira carga e não encontrou nada, fazer segunda tentativa sem filtro de proximidade
-                    Log.d("ClienteHomeFragment", "Nenhum estabelecimento encontrado no raio de ${radiusKm}km, fazendo segunda tentativa")
                     makeSecondAttempt(city)
                     return@launch
                 }
             } catch (e: Exception) {
-                Log.e("ClienteHomeFragment", "Erro ao buscar empresas com proximidade: ${e.message}")
                 
                 // Fallback para busca tradicional por cidade
                 if (isFirstLoad) {
@@ -942,7 +904,6 @@ class ClienteHomeFragment : Fragment() {
                     
                     // 🎯 SEMPRE MOSTRAR POPUP DE INDICAÇÕES (independente se tem estabelecimentos)
                     if (isFirstLoad) {
-                        Log.d("ClienteHomeFragment", "Mostrando popup de indicações")
                         showReferralPopup(city)
                     }
                 }
@@ -1075,14 +1036,20 @@ class ClienteHomeFragment : Fragment() {
     }
 
     private fun filterBusinessesByCategory(category: String) {
+        
         if (selectedCategory == category) {
             // Se a mesma categoria for clicada novamente, desfaz o filtro
             selectedCategory = null
+            Log.d("ClienteHomeFragment", "🔄 Removendo filtro, mostrando ${businessList.size} estabelecimentos")
             updateBusinessAdapter(businessList) // Mostra todas as empresas
         } else {
             // Aplica o filtro pela nova categoria
             selectedCategory = category
             val filteredBusinesses = businessList.filter { it.serviceType == category }
+            Log.d("ClienteHomeFragment", "🎯 Filtrando por '$category', encontrou ${filteredBusinesses.size} estabelecimentos")
+            filteredBusinesses.forEach { business ->
+                Log.d("ClienteHomeFragment", "✅ Filtrado: ${business.name} - Tipo: ${business.serviceType}")
+            }
             updateBusinessAdapter(filteredBusinesses)
         }
     }
@@ -1148,15 +1115,27 @@ class ClienteHomeFragment : Fragment() {
     }
 
     private fun updateBusinessAdapter(filteredBusinesses: List<Business>) {
+        
         if (::businessAdapter.isInitialized) {
             // 🚀 Atualizar localização do usuário no adapter
             businessAdapter.setUserLocation(currentUserLat, currentUserLon)
             
+            // ⭐ ORDENAR: Favoritos primeiro, depois por distância
+            val sortedBusinesses = sortBusinessesByFavorites(filteredBusinesses)
+            
             // 🎯 Usar nova função que calcula distâncias automaticamente
-            businessAdapter.submitBusinessList(filteredBusinesses)
+            businessAdapter.submitBusinessList(sortedBusinesses)
             binding.establishmentsRecyclerView.adapter = businessAdapter // Garante o vínculo
             
-            showNoEstablishmentsMessage(filteredBusinesses.isEmpty())
+            val shouldShowMessage = filteredBusinesses.isEmpty()
+            showNoEstablishmentsMessage(shouldShowMessage)
+            
+            // Forçar atualização da interface
+            binding.establishmentsRecyclerView.post {
+                businessAdapter.notifyDataSetChanged()
+            }
+        } else {
+            Log.e("ClienteHomeFragment", "❌ businessAdapter não inicializado!")
         }
     }
 
@@ -1220,6 +1199,116 @@ class ClienteHomeFragment : Fragment() {
         }
     }
 
+
+    // ❤️ GERENCIAMENTO DE FAVORITOS
+    private fun handleFavoriteClick(business: Business, isFavorite: Boolean) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        
+        if (isFavorite) {
+            // Adicionar aos favoritos
+            addToFavorites(userId, business.ownerId)
+            android.widget.Toast.makeText(
+                requireContext(), 
+                "${business.name} adicionado aos favoritos!", 
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        } else {
+            // Remover dos favoritos
+            removeFromFavorites(userId, business.ownerId)
+            android.widget.Toast.makeText(
+                requireContext(), 
+                "${business.name} removido dos favoritos", 
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    
+    private fun addToFavorites(userId: String, businessId: String) {
+        firestore.collection("users").document(userId)
+            .collection("favorites").document(businessId)
+            .set(mapOf(
+                "businessId" to businessId,
+                "addedAt" to System.currentTimeMillis()
+            ))
+            .addOnSuccessListener {
+                Log.d("ClienteHomeFragment", "✅ Favorito adicionado: $businessId")
+                
+                // 🔄 Atualizar lista local e reordenar
+                userFavoriteIds.add(businessId)
+                if (businessList.isNotEmpty()) {
+                    updateBusinessAdapter(businessList)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("ClienteHomeFragment", "❌ Erro ao adicionar favorito: ${e.message}")
+            }
+    }
+    
+    private fun removeFromFavorites(userId: String, businessId: String) {
+        firestore.collection("users").document(userId)
+            .collection("favorites").document(businessId)
+            .delete()
+            .addOnSuccessListener {
+                Log.d("ClienteHomeFragment", "✅ Favorito removido: $businessId")
+                
+                // 🔄 Atualizar lista local e reordenar
+                userFavoriteIds.remove(businessId)
+                if (businessList.isNotEmpty()) {
+                    updateBusinessAdapter(businessList)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("ClienteHomeFragment", "❌ Erro ao remover favorito: ${e.message}")
+            }
+    }
+    
+    // ⭐ NOVA FUNÇÃO: Ordenar estabelecimentos com favoritos no topo
+    private val userFavoriteIds = mutableSetOf<String>()
+    
+    private fun sortBusinessesByFavorites(businesses: List<Business>): List<Business> {
+        return businesses.sortedWith(compareBy<Business> { business ->
+            // Favoritos primeiro (false = 0, true = 1, então favoritos vêm primeiro)
+            !userFavoriteIds.contains(business.ownerId)
+        }.thenBy { business ->
+            // Depois ordenar por distância se disponível
+            if (currentUserLat != null && currentUserLon != null && 
+                business.latitude != 0.0 && business.longitude != 0.0) {
+                calculateDistance(currentUserLat!!, currentUserLon!!, business.latitude, business.longitude)
+            } else {
+                Double.MAX_VALUE
+            }
+        })
+    }
+    
+    private fun loadUserFavorites() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        
+        firestore.collection("users").document(userId)
+            .collection("favorites")
+            .get()
+            .addOnSuccessListener { documents ->
+                val favoriteIds = documents.map { it.id }.toSet()
+                
+                // 🎯 Atualizar conjunto local de favoritos
+                userFavoriteIds.clear()
+                userFavoriteIds.addAll(favoriteIds)
+                
+                if (::businessAdapter.isInitialized) {
+                    businessAdapter.setFavoriteBusinesses(favoriteIds)
+                    
+                    // 🔄 Reordenar lista atual se houver estabelecimentos
+                    if (businessList.isNotEmpty()) {
+                        updateBusinessAdapter(businessList)
+                    }
+                }
+                Log.d("ClienteHomeFragment", "✅ Carregados ${favoriteIds.size} favoritos")
+            }
+            .addOnFailureListener { e ->
+                Log.e("ClienteHomeFragment", "❌ Erro ao carregar favoritos: ${e.message}")
+                // 🔧 Se houver erro, usar cache local vazio
+                userFavoriteIds.clear()
+            }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
