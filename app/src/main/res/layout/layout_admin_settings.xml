@@ -59,7 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Valor: R$ 25,00"
+                android:text="Valor: R$ 27,00"
                 android:textColor="@color/textSecondary"
                 android:textSize="16sp" />
         </LinearLayout>

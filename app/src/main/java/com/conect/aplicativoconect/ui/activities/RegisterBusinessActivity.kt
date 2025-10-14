@@ -460,7 +460,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
         val builder = AlertDialog.Builder(this)
         val dialog = builder.setTitle("Parabéns por começar a usar o Conectex")
             .setMessage(
-                "Como responsável pelo estabelecimento, você terá 1 mês gratuito para explorar todas as funcionalidades. Após esse período, será cobrado R$ 25,00 por mês para continuar o uso. Lembre-se: para os clientes, " +
+                "Como responsável pelo estabelecimento, você terá 1 mês gratuito para explorar todas as funcionalidades. Após esse período, será cobrado R$ 27,00 por mês para continuar o uso. Lembre-se: para os clientes, " +
                         "o uso do app é totalmente gratuito! Aproveite e conte com a gente para ajudar seu negócio a crescer!"
             )
             .setPositiveButton("Continuar") { dialog, _ ->

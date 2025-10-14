@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 import java.util.regex.Pattern
 
 /**
- * 🔒 REPOSITÓRIO ANTI-FRAUD PARA ESTABELECIMENTOS
+ * REPOSITÓRIO ANTI-FRAUD PARA ESTABELECIMENTOS
  * Sistema robusto de validação e prevenção de fraudes em cadastros empresariais
  */
 class BusinessValidationRepository {
@@ -19,20 +19,20 @@ class BusinessValidationRepository {
     private val auth = FirebaseAuth.getInstance()
     
     companion object {
-        // 🔒 LIMITES DE SEGURANÇA
+        // LIMITES DE SEGURANÇA
         const val MAX_BUSINESSES_PER_CPF = 3
         const val MAX_BUSINESSES_PER_DEVICE = 2
         const val MAX_BUSINESSES_PER_ADDRESS = 5
         const val VALIDATION_EXPIRY_DAYS = 7
         const val FRAUD_SCORE_THRESHOLD = 70
         
-        // 🔒 PADRÕES DE VALIDAÇÃO
+        // PADRÕES DE VALIDAÇÃO
         val CPF_PATTERN = Pattern.compile("\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}")
         val PHONE_PATTERN = Pattern.compile("\\(\\d{2}\\)\\s\\d{4,5}-\\d{4}")
     }
     
     /**
-     * 🔒 VALIDAÇÃO COMPLETA ANTI-FRAUD DO NEGÓCIO
+     * VALIDAÇÃO COMPLETA ANTI-FRAUD DO NEGÓCIO
      */
     suspend fun validateBusinessRegistration(
         cpf: String,
@@ -64,54 +64,54 @@ class BusinessValidationRepository {
             var fraudScore = 0
             val fraudFlags = mutableListOf<String>()
             
-            // 🔒 VALIDAÇÃO 1: Verificar CPF duplicado
+            // VALIDAÇÃO 1: Verificar CPF duplicado
             val cpfCount = checkCPFUsage(cpf)
             if (cpfCount >= MAX_BUSINESSES_PER_CPF) {
                 fraudFlags.add(BusinessFraudFlag.DUPLICATE_CPF.name)
                 fraudScore += 40
             }
             
-            // 🔒 VALIDAÇÃO 2: Verificar telefone duplicado
+            // VALIDAÇÃO 2: Verificar telefone duplicado
             val phoneCount = checkPhoneUsage(phone)
             if (phoneCount >= 2) { // Máximo 2 empresas por telefone
                 fraudFlags.add(BusinessFraudFlag.DUPLICATE_PHONE.name)
                 fraudScore += 30
             }
             
-            // 🔒 VALIDAÇÃO 3: Verificar endereço duplicado
+            // VALIDAÇÃO 3: Verificar endereço duplicado
             val addressCount = checkAddressUsage(address)
             if (addressCount >= MAX_BUSINESSES_PER_ADDRESS) {
                 fraudFlags.add(BusinessFraudFlag.DUPLICATE_ADDRESS.name)
                 fraudScore += 25
             }
             
-            // 🔒 VALIDAÇÃO 4: Verificar dispositivo suspeito
+            // VALIDAÇÃO 4: Verificar dispositivo suspeito
             val deviceCount = checkDeviceUsage(androidId)
             if (deviceCount >= MAX_BUSINESSES_PER_DEVICE) {
                 fraudFlags.add(BusinessFraudFlag.SUSPICIOUS_DEVICE.name)
                 fraudScore += 35
             }
             
-            // 🔒 VALIDAÇÃO 5: Verificar padrão temporal
+            // VALIDAÇÃO 5: Verificar padrão temporal
             val temporalRisk = checkTemporalPattern(androidId, ipAddress)
             if (temporalRisk > 0.7) {
                 fraudFlags.add(BusinessFraudFlag.SUSPICIOUS_TIMING.name)
                 fraudScore += 20
             }
             
-            // 🔒 VALIDAÇÃO 6: Validar CPF formato
+            // VALIDAÇÃO 6: Validar CPF formato
             if (!isValidCPFFormat(cpf)) {
                 fraudScore += 15
             }
             
-            // 🔒 VALIDAÇÃO 7: Verificar IP de alto risco
+            // VALIDAÇÃO 7: Verificar IP de alto risco
             val ipRisk = checkIPRisk(ipAddress)
             if (ipRisk > 0.8) {
                 fraudFlags.add(BusinessFraudFlag.HIGH_RISK_IP.name)
                 fraudScore += 25
             }
             
-            // 🔒 DECISÃO FINAL
+            // DECISÃO FINAL
             val validationStatus = when {
                 fraudScore >= FRAUD_SCORE_THRESHOLD -> BusinessValidationStatus.FRAUD_DETECTED
                 fraudScore >= 50 -> BusinessValidationStatus.UNDER_REVIEW
@@ -126,8 +126,7 @@ class BusinessValidationRepository {
                 lastValidationAt = System.currentTimeMillis()
             )
             
-            // 🔒 SALVAR RESULTADO DA VALIDAÇÃO
-            saveValidationResult(validationResult)
+            // NÃO SALVAR AQUI - Será salvo após autenticação bem-sucedida
             
             Log.d("BusinessValidation", "Validação concluída - Score: $fraudScore, Status: $validationStatus")
             
@@ -137,7 +136,8 @@ class BusinessValidationRepository {
                 fraudScore = fraudScore,
                 fraudFlags = fraudFlags,
                 requiresReview = validationStatus == BusinessValidationStatus.UNDER_REVIEW,
-                requiresDocuments = validationStatus == BusinessValidationStatus.ADDITIONAL_INFO
+                requiresDocuments = validationStatus == BusinessValidationStatus.ADDITIONAL_INFO,
+                validationData = validationResult // Retornar os dados para salvar depois
             )
             
         } catch (e: Exception) {
@@ -151,7 +151,7 @@ class BusinessValidationRepository {
     }
     
     /**
-     * 🔒 VERIFICAÇÕES ESPECÍFICAS DE DUPLICAÇÃO
+     * VERIFICAÇÕES ESPECÍFICAS DE DUPLICAÇÃO
      */
     private suspend fun checkCPFUsage(cpf: String): Int {
         return db.collection("business")
@@ -182,31 +182,29 @@ class BusinessValidationRepository {
     }
     
     /**
-     * 🔒 ANÁLISE TEMPORAL DE PADRÕES SUSPEITOS
+     * ANÁLISE TEMPORAL DE PADRÕES SUSPEITOS
      */
     private suspend fun checkTemporalPattern(androidId: String, ipAddress: String): Double {
         val last24h = System.currentTimeMillis() - (24 * 60 * 60 * 1000)
-        
+
         // Verificar registros recentes do mesmo dispositivo/IP
         val recentRegistrations = db.collection("businessValidation")
+            .whereEqualTo("androidId", androidId)
             .whereGreaterThan("createdAt", last24h)
-            .whereIn("androidId", listOf(androidId))
             .get().await().size()
-        
+
         val ipRegistrations = db.collection("businessValidation")
-            .whereGreaterThan("createdAt", last24h)
             .whereEqualTo("ipAddress", ipAddress)
+            .whereGreaterThan("createdAt", last24h)
             .get().await().size()
-        
+
         return when {
             recentRegistrations > 3 || ipRegistrations > 5 -> 0.9 // Alto risco
             recentRegistrations > 1 || ipRegistrations > 2 -> 0.6 // Médio risco
             else -> 0.2 // Baixo risco
         }
-    }
-    
-    /**
-     * 🔒 VALIDAÇÕES DE FORMATO E QUALIDADE
+    }    /**
+     * VALIDAÇÕES DE FORMATO E QUALIDADE
      */
     private fun isValidCPFFormat(cpf: String): Boolean {
         return CPF_PATTERN.matcher(cpf).matches() && isValidCPFDigits(cpf)
@@ -230,7 +228,7 @@ class BusinessValidationRepository {
     }
     
     /**
-     * 🔒 ANÁLISE DE RISCO DE IP
+     * ANÁLISE DE RISCO DE IP
      */
     private suspend fun checkIPRisk(ipAddress: String): Double {
         // TODO: Integrar com serviços de geolocalização e blacklists
@@ -243,16 +241,16 @@ class BusinessValidationRepository {
     }
     
     /**
-     * 🔒 GERAR FINGERPRINT DO DISPOSITIVO
+     * GERAR FINGERPRINT DO DISPOSITIVO
      */
     private fun generateDeviceFingerprint(deviceInfo: String): String {
         return "${deviceInfo.hashCode()}_${System.currentTimeMillis()}".take(32)
     }
     
     /**
-     * 🔒 SALVAR RESULTADO DA VALIDAÇÃO
+     * SALVAR RESULTADO DA VALIDAÇÃO
      */
-    private suspend fun saveValidationResult(validation: BusinessValidation) {
+    suspend fun saveValidationResult(validation: BusinessValidation) {
         val validationId = "${validation.ownerId}_${System.currentTimeMillis()}"
         
         db.collection("businessValidation")
@@ -262,7 +260,7 @@ class BusinessValidationRepository {
     }
     
     /**
-     * 🔒 LIMPEZA DE VALIDAÇÕES EXPIRADAS
+     * LIMPEZA DE VALIDAÇÕES EXPIRADAS
      */
     suspend fun cleanExpiredValidations() = withContext(Dispatchers.IO) {
         val expiryTime = System.currentTimeMillis() - (VALIDATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000)
@@ -281,7 +279,7 @@ class BusinessValidationRepository {
 }
 
 /**
- * 🔒 RESULTADO DA VALIDAÇÃO ANTI-FRAUD
+ * RESULTADO DA VALIDAÇÃO ANTI-FRAUD
  */
 data class BusinessValidationResult(
     val isValid: Boolean,
@@ -291,5 +289,6 @@ data class BusinessValidationResult(
     val requiresReview: Boolean = false,
     val requiresDocuments: Boolean = false,
     val errorMessage: String? = null,
-    val nextSteps: List<String> = emptyList()
+    val nextSteps: List<String> = emptyList(),
+    val validationData: BusinessValidation? = null // Dados para salvar após autenticação
 )

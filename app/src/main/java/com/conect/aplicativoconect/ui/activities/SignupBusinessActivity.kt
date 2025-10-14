@@ -80,7 +80,7 @@ class SignupBusinessActivity : AppCompatActivity() {
 
             if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && nameUser.isNotEmpty() && cpf.isNotEmpty()) {
                 if (password == confirmPassword) {
-                    // 🔒 VALIDAÇÃO ANTI-FRAUD ROBUSTA
+                    // VALIDAÇÃO ANTI-FRAUD ROBUSTA
                     val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
                     performBusinessValidation(email, password, nameUser, cpf, androidId)
                 } else {
@@ -177,12 +177,13 @@ class SignupBusinessActivity : AppCompatActivity() {
         password: String,
         nameUser: String,
         cpf: String,
-        androidId: String
+        androidId: String,
+        validationResult: com.conect.aplicativoconect.data.repositories.BusinessValidationResult
     ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    createBusinessAndSubscription(email, nameUser, cpf, androidId)
+                    createBusinessAndSubscription(email, nameUser, cpf, androidId, validationResult)
                 } else {
                     val exception = task.exception
                     when {
@@ -223,7 +224,8 @@ class SignupBusinessActivity : AppCompatActivity() {
         email: String,
         nameUser: String,
         cpf: String,
-        androidId: String
+        androidId: String,
+        validationResult: com.conect.aplicativoconect.data.repositories.BusinessValidationResult
     ) {
         val userId = auth.currentUser?.uid ?: return
 
@@ -231,7 +233,7 @@ class SignupBusinessActivity : AppCompatActivity() {
         createInitialSubscription(userId, cpf)
 
         // Criar dados do negócio com o Android ID
-        createBusinessData(email, nameUser, cpf, androidId)
+        createBusinessData(email, nameUser, cpf, androidId, validationResult)
     }
 
 
@@ -240,7 +242,8 @@ class SignupBusinessActivity : AppCompatActivity() {
         email: String,
         nameUser: String,
         cpf: String,
-        androidId: String
+        androidId: String,
+        validationResult: com.conect.aplicativoconect.data.repositories.BusinessValidationResult
     ) {
         val businessId = auth.currentUser?.uid
 
@@ -266,6 +269,19 @@ class SignupBusinessActivity : AppCompatActivity() {
                         "CreateBusinessData",
                         "Dados do negócio salvos com sucesso: $businessData"
                     )
+                    
+                    // SALVAR RESULTADO DA VALIDAÇÃO APÓS AUTENTICAÇÃO
+                    validationResult.validationData?.let { validationData ->
+                        lifecycleScope.launch {
+                            try {
+                                businessValidationRepository.saveValidationResult(validationData)
+                                Log.d("BusinessValidation", "Resultado da validação salvo com sucesso")
+                            } catch (e: Exception) {
+                                Log.e("BusinessValidation", "Erro ao salvar resultado da validação: ${e.message}")
+                            }
+                        }
+                    }
+                    
                     Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT)
                         .show()
 
@@ -334,10 +350,10 @@ class SignupBusinessActivity : AppCompatActivity() {
             }
     }
     
-    // 🔒 ===== SISTEMA ANTI-FRAUD ROBUSTO =====
+    // ===== SISTEMA ANTI-FRAUD ROBUSTO =====
     
     /**
-     * 🔒 VALIDAÇÃO COMPLETA ANTI-FRAUD
+     * VALIDAÇÃO COMPLETA ANTI-FRAUD
      */
     private fun performBusinessValidation(
         email: String,
@@ -348,11 +364,11 @@ class SignupBusinessActivity : AppCompatActivity() {
     ) {
         lifecycleScope.launch {
             try {
-                // 🔒 COLETA DE DADOS PARA VALIDAÇÃO
+                // COLETA DE DADOS PARA VALIDAÇÃO
                 val deviceInfo = getDeviceInfo()
                 val ipAddress = getDeviceIP()
                 
-                // 🔒 EXECUTAR VALIDAÇÃO ANTI-FRAUD
+                // EXECUTAR VALIDAÇÃO ANTI-FRAUD
                 val validationResult = businessValidationRepository.validateBusinessRegistration(
                     cpf = cpf,
                     phone = "", // Será coletado posteriormente
@@ -364,15 +380,15 @@ class SignupBusinessActivity : AppCompatActivity() {
                     longitude = 0.0 // Será coletado posteriormente
                 )
                 
-                // 🔒 PROCESSAR RESULTADO DA VALIDAÇÃO
+                // PROCESSAR RESULTADO DA VALIDAÇÃO
                 when (validationResult.validationStatus) {
                     BusinessValidationStatus.APPROVED -> {
-                        // ✅ APROVADO - Prosseguir com cadastro
-                        createBusinessUser(email, password, nameUser, cpf, androidId)
+                        // APROVADO - Prosseguir com cadastro
+                        createBusinessUser(email, password, nameUser, cpf, androidId, validationResult)
                     }
                     
                     BusinessValidationStatus.UNDER_REVIEW -> {
-                        // ⚠️ REVISÃO MANUAL - Bloquear temporariamente
+                        // REVISÃO MANUAL - Bloquear temporariamente
                         showValidationDialog(
                             "Cadastro em Análise",
                             "Seu cadastro será analisado por nossa equipe. " +
@@ -416,7 +432,7 @@ class SignupBusinessActivity : AppCompatActivity() {
                     
                     else -> {
                         // Estado não tratado
-                        createBusinessUser(email, password, nameUser, cpf, androidId)
+                        createBusinessUser(email, password, nameUser, cpf, androidId, validationResult)
                     }
                 }
                 
@@ -424,6 +440,12 @@ class SignupBusinessActivity : AppCompatActivity() {
                 Log.e("BusinessValidation", "Erro na validação anti-fraud: ${e.message}")
                 
                 // Em caso de erro, usar validação básica como fallback
+                val fallbackValidationResult = com.conect.aplicativoconect.data.repositories.BusinessValidationResult(
+                    isValid = true,
+                    validationStatus = com.conect.aplicativoconect.data.models.BusinessValidationStatus.APPROVED,
+                    fraudScore = 0,
+                    errorMessage = "Validação fallback devido a erro: ${e.message}"
+                )
                 checkIfAndroidIdExists(androidId) { exists ->
                     if (exists) {
                         Toast.makeText(
@@ -432,7 +454,7 @@ class SignupBusinessActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {
-                        createBusinessUser(email, password, nameUser, cpf, androidId)
+                        createBusinessUser(email, password, nameUser, cpf, androidId, fallbackValidationResult)
                     }
                 }
             }
@@ -440,7 +462,7 @@ class SignupBusinessActivity : AppCompatActivity() {
     }
     
     /**
-     * 🔒 COLETA INFORMAÇÕES DO DISPOSITIVO PARA FINGERPRINTING
+     * COLETA INFORMAÇÕES DO DISPOSITIVO PARA FINGERPRINTING
      */
     private fun getDeviceInfo(): String {
         return buildString {
@@ -455,7 +477,7 @@ class SignupBusinessActivity : AppCompatActivity() {
     }
     
     /**
-     * 🔒 OBTÉM IP DO DISPOSITIVO (APROXIMADO)
+     * OBTÉM IP DO DISPOSITIVO (APROXIMADO)
      */
     private fun getDeviceIP(): String {
         return try {
@@ -467,7 +489,7 @@ class SignupBusinessActivity : AppCompatActivity() {
     }
     
     /**
-     * 🔒 DIALOG PARA MOSTRAR RESULTADOS DA VALIDAÇÃO
+     * DIALOG PARA MOSTRAR RESULTADOS DA VALIDAÇÃO
      */
     private fun showValidationDialog(title: String, message: String) {
         runOnUiThread {
