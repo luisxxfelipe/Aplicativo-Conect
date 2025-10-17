@@ -41,6 +41,14 @@ class SignupBusinessActivity : AppCompatActivity() {
     private lateinit var loginTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+    // Preencher campos com dados do Google se vierem via Intent
+    val googleName = intent.getStringExtra("GOOGLE_NAME") ?: ""
+    val googleEmail = intent.getStringExtra("GOOGLE_EMAIL") ?: ""
+    if (googleName.isNotEmpty()) nameUserEditText.setText(googleName)
+        if (googleEmail.isNotEmpty()) {
+            emailEditText.setText(googleEmail)
+            emailEditText.isEnabled = false
+        }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup_business)
 

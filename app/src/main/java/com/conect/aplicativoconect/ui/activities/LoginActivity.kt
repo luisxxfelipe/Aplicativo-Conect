@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -12,16 +13,33 @@ import androidx.lifecycle.lifecycleScope
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.utils.TokenManager
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.GoogleAuthProvider
+
 class LoginActivity : AppCompatActivity() {
+    private var userType: String = "client"
 
     private lateinit var auth: com.google.firebase.auth.FirebaseAuth
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var loginButton: Button
-    private lateinit var signUpButton: Button
+    private lateinit var signUpButton: android.widget.TextView
+    private lateinit var rememberMeCheckBox: android.widget.CheckBox
     private val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
 
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private val RC_SIGN_IN = 9001
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Recupera tipo do usuário (Intent ou SharedPreferences)
+        userType = intent.getStringExtra("USER_TYPE") ?: run {
+            val sharedPref = getSharedPreferences("userTypePrefs", MODE_PRIVATE)
+            sharedPref.getString("USER_TYPE", "client") ?: "client"
+        }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
@@ -31,6 +49,41 @@ class LoginActivity : AppCompatActivity() {
         passwordEditText = findViewById(R.id.passwordInput)
         loginButton = findViewById(R.id.loginButton)
         signUpButton = findViewById(R.id.signupButton)
+        rememberMeCheckBox = findViewById(R.id.rememberMe)
+
+        // SharedPreferences para lembrar login
+        val sharedPref = getSharedPreferences("loginPrefs", MODE_PRIVATE)
+        val isRemembered = sharedPref.getBoolean("rememberMe", false)
+        if (isRemembered) {
+            emailEditText.setText(sharedPref.getString("email", ""))
+            passwordEditText.setText(sharedPref.getString("password", ""))
+            rememberMeCheckBox.isChecked = true
+        }
+
+        rememberMeCheckBox.setOnCheckedChangeListener { _, isChecked ->
+            val editor = sharedPref.edit()
+            if (isChecked) {
+                editor.putBoolean("rememberMe", true)
+                editor.putString("email", emailEditText.text.toString())
+                editor.putString("password", passwordEditText.text.toString())
+            } else {
+                editor.clear()
+            }
+            editor.apply()
+        }
+
+        // Configuração do Google Sign-In
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        val googleLoginButton: ImageButton = findViewById(R.id.googleLoginButton)
+        googleLoginButton.setOnClickListener {
+            val signInIntent = googleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
 
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
@@ -53,14 +106,68 @@ class LoginActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        val recoverPasswordButton: Button = findViewById(R.id.recoverpassword)
+        val forgotPasswordText: android.widget.TextView = findViewById(R.id.forgotPassword)
 
-        recoverPasswordButton.setOnClickListener {
-            // Ao clicar no botão "Esqueci minha senha", vamos abrir a tela de recuperação
+        forgotPasswordText.setOnClickListener {
+            // Ao clicar no texto "Esqueceu a senha?", vamos abrir a tela de recuperação
             val intent = Intent(this, ForgotPasswordActivity::class.java)
             startActivity(intent)
         }
 
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                firebaseAuthWithGoogle(account)
+            } catch (e: ApiException) {
+                Toast.makeText(this, "Falha no login com Google: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun firebaseAuthWithGoogle(acct: GoogleSignInAccount?) {
+        if (acct == null) {
+            Toast.makeText(this, "Conta Google inválida.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+                    // Verifica se existe na coleção correta
+                    val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    val collection = if (userType == "client") "users" else "business"
+                    db.collection(collection).document(userId).get()
+                        .addOnSuccessListener { document ->
+                            if (document.exists()) {
+                                verifyUserType(userId)
+                            } else {
+                                // Redireciona para cadastro correto, preenchendo dados do Google
+                                val intent = if (userType == "client") {
+                                    Intent(this, SignupClientActivity::class.java)
+                                } else {
+                                    Intent(this, SignupBusinessActivity::class.java)
+                                }
+                                intent.putExtra("GOOGLE_NAME", acct.displayName ?: "")
+                                intent.putExtra("GOOGLE_EMAIL", acct.email ?: "")
+                                intent.putExtra("GOOGLE_PHOTO", acct.photoUrl?.toString() ?: "")
+                                intent.putExtra("USER_TYPE", userType)
+                                startActivity(intent)
+                                finish()
+                            }
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Erro ao verificar usuário.", Toast.LENGTH_SHORT).show()
+                        }
+                } else {
+                    Toast.makeText(this, "Falha na autenticação Google.", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 
     private fun loginUser(email: String, password: String) {
@@ -69,6 +176,15 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
                     verifyUserType(userId)
+                    // Salva login se lembrar-me estiver marcado
+                    if (rememberMeCheckBox.isChecked) {
+                        val sharedPref = getSharedPreferences("loginPrefs", MODE_PRIVATE)
+                        sharedPref.edit()
+                            .putBoolean("rememberMe", true)
+                            .putString("email", email)
+                            .putString("password", password)
+                            .apply()
+                    }
                 } else {
                     val exception = task.exception
                     val errorMessage = when {

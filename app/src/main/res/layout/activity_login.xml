@@ -4,176 +4,210 @@
     android:layout_height="match_parent"
     android:background="@color/roxo">
 
-    <!-- Logo com espaçamento adequado -->
+    <!-- Logo centralizada -->
     <ImageView
         android:id="@+id/logoImageView"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_width="180dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="100dp"
         android:contentDescription="Logo do Aplicativo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/logo" />
+        app:srcCompat="@drawable/ic_logo_escrito_branco" />
 
-    <!-- Imagem das Profissões -->
-    <ImageView
-        android:id="@+id/headerIllustration"
-        android:layout_width="250dp"
-        android:layout_height="140dp"
-        android:layout_marginTop="16dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/logoImageView"
-        app:srcCompat="@drawable/profissoes" />
 
-    <!-- Container Branco com bordas arredondadas apenas na parte superior -->
-    <androidx.cardview.widget.CardView
+    <!-- Card central (MESMO id) - mais alto e com respiro extra -->
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/containerCard"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="-30dp"
-        android:layout_marginBottom="0dp"
-        app:cardBackgroundColor="@android:color/white"
-        app:cardCornerRadius="32dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="24dp"
+        android:minHeight="460dp"
         app:cardElevation="8dp"
-        app:cardPreventCornerOverlap="false"
+        app:cardBackgroundColor="@color/card_background"
         app:cardUseCompatPadding="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/headerIllustration">
+        app:layout_constraintTop_toBottomOf="@id/logoImageView"
+        app:shapeAppearanceOverlay="@style/Shape.Round28">
 
+        <!-- Conteúdo do card -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:paddingStart="20dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="32dp">
 
-            <!-- Texto de Boas-Vindas -->
-            <TextView
-                android:id="@+id/welcomeText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="8dp"
-                android:text="Bem vindo de volta!"
-                android:textColor="@android:color/black"
-                android:textSize="24sp"
-                android:textStyle="bold" />
 
-            <!-- Mensagem abaixo do texto de boas-vindas -->
-            <TextView
-                android:id="@+id/loginMessage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="16dp"
-                android:gravity="center"
-                android:text="Faça login para agendar os melhores serviços disponíveis."
-                android:textColor="@android:color/darker_gray"
-                android:textSize="14sp" />
-
-            <!-- Campo de Email -->
+            <!-- Campo Email/Telefone - SOMENTE LINHA INFERIOR -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:hint="Email"
-                app:boxBackgroundMode="outline"
-                app:boxStrokeColor="@color/roxo"
-                app:boxStrokeWidth="1dp"
+                android:hint="Email ou telefone"
+                app:boxBackgroundMode="none"
+                android:layout_marginTop="20dp"
                 app:hintTextColor="@color/roxo">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/emailInput"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/transparent"
-                    android:inputType="textEmailAddress"
-                    android:minHeight="48dp"
-                    android:padding="12dp"
-                    android:textColor="@color/black" />
+                    android:layout_height="56dp"
+                    android:background="@drawable/et_underline"
+                    android:drawablePadding="8dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="#222222"
+                    android:tint="@color/roxo" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Campo Senha - SOMENTE LINHA INFERIOR + toggle -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp"
+                android:layout_marginTop="12dp"
                 android:hint="Senha"
-                app:boxBackgroundMode="outline"
-                app:boxStrokeColor="@color/roxo"
-                app:boxStrokeWidth="1dp"
+                app:boxBackgroundMode="none"
                 app:endIconMode="password_toggle"
+                app:endIconTint="@color/roxo"
                 app:hintTextColor="@color/roxo">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordInput"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/transparent"
+                    android:layout_height="56dp"
                     android:inputType="textPassword"
-                    android:minHeight="48dp"
-                    android:padding="12dp"
-                    android:textColor="@color/black" />
-
+                    android:background="@drawable/et_underline"
+                    android:drawablePadding="8dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="#222222"
+                    android:tint="@color/roxo" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Botão de Entrar -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/loginButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:backgroundTint="@color/roxo"
-                android:text="Entrar"
-                android:textColor="@android:color/white"
-                app:cornerRadius="8dp" />
-
-            <!-- Texto 'ou' entre os dois botões -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="8dp"
-                android:text="ou"
-                android:textColor="@android:color/black"
-                android:textSize="16sp" />
-
-            <!-- LinearLayout para os dois botões lado a lado -->
+            <!-- Lembrar e Esqueceu -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/rememberMe"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:buttonTint="@color/roxo"
+                    android:text="Lembrar-me"
+                    android:textColor="@color/roxo"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/forgotPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Esqueceu a senha?"
+                    android:textColor="@color/roxo"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Botão Entrar (pill) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/loginButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
                 android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:text="Entrar"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/roxo"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="24dp" />
+
+            <!-- Divider "Ou entre com" -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#E6E6E6" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="Ou entre com"
+                    android:textColor="#222222"
+                    android:textSize="13sp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#E6E6E6" />
+            </LinearLayout>
+
+            <!-- Botão social (Google) circular -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:gravity="center"
                 android:orientation="horizontal">
 
-                <!-- Botão de Recuperar Senha -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/recoverpassword"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@android:color/darker_gray"
-                    android:text="Recuperar senha"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
+                <ImageButton
+                    android:id="@+id/googleLoginButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_social_circle"
+                    android:contentDescription="Entrar com Google"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/ic_logo_google" />
+            </LinearLayout>
 
-                <!-- Botão de Cadastro -->
-                <com.google.android.material.button.MaterialButton
+            <!-- Rodapé cadastro -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Não tem uma conta? "
+                    android:textColor="#222222"
+                    android:textSize="13sp" />
+
+                <TextView
                     android:id="@+id/signupButton"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:backgroundTint="#8163FD"
-                    android:text="Cadastrar"
-                    android:textColor="@android:color/white" />
-
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="Cadastre-se agora"
+                    android:textColor="@color/roxo"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

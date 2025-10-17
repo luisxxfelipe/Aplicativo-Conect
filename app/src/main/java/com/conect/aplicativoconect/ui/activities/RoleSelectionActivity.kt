@@ -91,6 +91,9 @@ class RoleSelectionActivity : AppCompatActivity() {
     }
 
     private fun navigateToLogin(userType: String) {
+        // Salva o tipo em SharedPreferences
+        val sharedPref = getSharedPreferences("userTypePrefs", MODE_PRIVATE)
+        sharedPref.edit().putString("USER_TYPE", userType).apply()
         val intent = Intent(this, LoginActivity::class.java).apply {
             putExtra("USER_TYPE", userType)
         }

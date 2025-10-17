@@ -1,4 +1,5 @@
 <resources>
+    <string name="default_web_client_id">546906599068-t73bdqvl46l97t71a5tfrisfa9pruej9.apps.googleusercontent.com</string>
     <string name="app_name">Aplicativo Conect</string>
     <string name="Title_bem_vindo">Seja bem vindo ao Conect</string>
     <string name="objetivo">Nosso objetivo é conectar todas as pessoas em um só lugar. Queremos fazer a diferença</string>

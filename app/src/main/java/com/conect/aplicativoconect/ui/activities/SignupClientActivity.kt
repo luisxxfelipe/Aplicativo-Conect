@@ -64,6 +64,44 @@ class SignupClientActivity : AppCompatActivity() {
         applyPhoneMask(phoneEditText)
         signUpButton = findViewById(R.id.signupButton)
         loginTextView = findViewById(R.id.loginTextView)
+        profileImageView = findViewById(R.id.profileImageView)
+        uploadProfileButton = findViewById(R.id.uploadButton)
+
+        // Preencher campos com dados do Google se vierem via Intent
+        val googleName = intent.getStringExtra("GOOGLE_NAME") ?: ""
+        val googleEmail = intent.getStringExtra("GOOGLE_EMAIL") ?: ""
+        val googlePhoto = intent.getStringExtra("GOOGLE_PHOTO") ?: ""
+        if (googleName.isNotEmpty()) nameEditText.setText(googleName)
+        if (googleEmail.isNotEmpty()) {
+            emailEditText.setText(googleEmail)
+            emailEditText.isEnabled = false
+        }
+        if (googlePhoto.isNotEmpty()) {
+            // Exibir foto do Google automaticamente
+            try {
+                com.bumptech.glide.Glide.with(this).load(googlePhoto).into(profileImageView)
+                profileImageView.visibility = View.VISIBLE
+                findViewById<ImageView>(R.id.uploadIcon).visibility = View.GONE
+                imageUri = Uri.parse(googlePhoto) // Para salvar depois
+            } catch (e: Exception) {
+                Log.e("SignupClient", "Erro ao carregar foto do Google: ${e.message}")
+            }
+        }
+
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
+        storage = FirebaseStorage.getInstance()
+
+        setupProgressDialog() // Inicializa o progresso
+
+        emailEditText = findViewById(R.id.emailInput)
+        passwordEditText = findViewById(R.id.passwordInput)
+        confirmPasswordEditText = findViewById(R.id.confirmPasswordInput)
+        nameEditText = findViewById(R.id.nameInput)
+        phoneEditText = findViewById(R.id.phoneInput)
+        applyPhoneMask(phoneEditText)
+        signUpButton = findViewById(R.id.signupButton)
+        loginTextView = findViewById(R.id.loginTextView)
         profileImageView = findViewById(R.id.profileImageView) // Adicione o ImageView no seu layout
         uploadProfileButton = findViewById(R.id.uploadButton) // Adicione o botão de upload
 
@@ -210,10 +248,18 @@ class SignupClientActivity : AppCompatActivity() {
                         "type" to "client"
                     )
 
-                    // Fazer upload da imagem de perfil se houver
-                    imageUri?.let {
-                        uploadProfileImage(it, userId, userData)
-                    } ?: run {
+                    // Se veio foto do Google, salva a URL direto no Firestore
+                    val googlePhoto = intent.getStringExtra("GOOGLE_PHOTO") ?: ""
+                    if (googlePhoto.isNotEmpty()) {
+                        userData["imageUrl"] = googlePhoto
+                        saveUserToFirestore(userId, userData) {
+                            // FCM token será implementado em versão futura
+                        }
+                    } else if (imageUri != null) {
+                        // Se não veio foto do Google, faz upload da imagem selecionada
+                        uploadProfileImage(imageUri!!, userId, userData)
+                    } else {
+                        // Sem foto, salva sem imageUrl
                         saveUserToFirestore(userId, userData) {
                             // FCM token será implementado em versão futura
                         }
