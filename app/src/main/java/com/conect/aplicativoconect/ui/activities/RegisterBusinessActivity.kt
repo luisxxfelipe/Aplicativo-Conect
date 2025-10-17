@@ -81,6 +81,12 @@ class RegisterBusinessActivity : AppCompatActivity(),
         val phoneInput = findViewById<TextInputEditText>(R.id.phoneInput)
         val registerBusinessButton = findViewById<MaterialButton>(R.id.registerBusinessButton)
 
+        // Preencher nome automaticamente se vier do Google
+        val googleName = intent.getStringExtra("GOOGLE_NAME") ?: ""
+        if (googleName.isNotEmpty()) {
+            businessNameInput.setText(googleName)
+        }
+
         // Adicionando a máscara de telefone
         phoneInput.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {}

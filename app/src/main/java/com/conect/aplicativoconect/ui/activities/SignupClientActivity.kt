@@ -45,6 +45,9 @@ class SignupClientActivity : AppCompatActivity() {
     private lateinit var progressDialog: AlertDialog
     private var imageUri: Uri? = null
     private lateinit var getContent: ActivityResultLauncher<Intent>
+    private var isFromGoogle: Boolean = false
+    private lateinit var passwordInputLayout: com.google.android.material.textfield.TextInputLayout
+    private lateinit var confirmPasswordInputLayout: com.google.android.material.textfield.TextInputLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,10 +70,15 @@ class SignupClientActivity : AppCompatActivity() {
         profileImageView = findViewById(R.id.profileImageView)
         uploadProfileButton = findViewById(R.id.uploadButton)
 
+        // Inicializar TextInputLayout
+        passwordInputLayout = findViewById(R.id.passwordInputLayout)
+        confirmPasswordInputLayout = findViewById(R.id.confirmPasswordInputLayout)
+
         // Preencher campos com dados do Google se vierem via Intent
         val googleName = intent.getStringExtra("GOOGLE_NAME") ?: ""
         val googleEmail = intent.getStringExtra("GOOGLE_EMAIL") ?: ""
         val googlePhoto = intent.getStringExtra("GOOGLE_PHOTO") ?: ""
+        isFromGoogle = googleEmail.isNotEmpty()
         if (googleName.isNotEmpty()) nameEditText.setText(googleName)
         if (googleEmail.isNotEmpty()) {
             emailEditText.setText(googleEmail)
@@ -86,6 +94,12 @@ class SignupClientActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e("SignupClient", "Erro ao carregar foto do Google: ${e.message}")
             }
+        }
+
+        // Ocultar campos de senha se veio do Google
+        if (isFromGoogle) {
+            passwordInputLayout.visibility = View.GONE
+            confirmPasswordInputLayout.visibility = View.GONE
         }
 
         auth = FirebaseAuth.getInstance()
@@ -149,9 +163,16 @@ class SignupClientActivity : AppCompatActivity() {
                 phoneEditText.error = "Telefone inválido (ex: (11) 99999-9999)"
                 return@setOnClickListener
             }
-            if (password.length < 6) {
-                passwordEditText.error = "Senha deve ter pelo menos 6 caracteres"
-                return@setOnClickListener
+            // Validar senha apenas se não veio do Google
+            if (!isFromGoogle) {
+                if (password.length < 6) {
+                    passwordEditText.error = "Senha deve ter pelo menos 6 caracteres"
+                    return@setOnClickListener
+                }
+                if (password != confirmPassword) {
+                    Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
             }
             
             // 🔧 OBRIGATÓRIO: Verificar se foto foi selecionada
@@ -160,17 +181,23 @@ class SignupClientActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && name.isNotEmpty() && phone.isNotEmpty()) {
-
-                if (password == confirmPassword) {
-                    progressDialog.show() // Mostrar progresso
-                    createUser(email, password, name, phone)
-                } else {
-                    Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
-                }
+            progressDialog.show() // Mostrar progresso
+            if (isFromGoogle) {
+                // Para Google, salvar diretamente no Firestore (usuário já logado)
+                saveUserFromGoogle(email, name, phone)
             } else {
-                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT)
-                    .show()
+                // Para manual, criar usuário com senha
+                if (password.isNotEmpty() && confirmPassword.isNotEmpty()) {
+                    if (password == confirmPassword) {
+                        createUser(email, password, name, phone)
+                    } else {
+                        progressDialog.dismiss()
+                        Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -228,6 +255,34 @@ class SignupClientActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_PICK)
         intent.type = "image/*"
         getContent.launch(intent)
+    }
+
+    private fun saveUserFromGoogle(email: String, name: String, phone: String) {
+        val userId = auth.currentUser?.uid ?: return
+        val userData: HashMap<String, Any> = hashMapOf(
+            "userId" to userId,
+            "email" to email,
+            "name" to name,
+            "phoneCliente" to phone,
+            "isActive" to true,
+            "type" to "client"
+        )
+
+        val googlePhoto = intent.getStringExtra("GOOGLE_PHOTO") ?: ""
+        if (googlePhoto.isNotEmpty()) {
+            userData["imageUrl"] = googlePhoto
+            saveUserToFirestore(userId, userData) {
+                // Sucesso
+            }
+        } else if (imageUri != null) {
+            // Usuário selecionou imagem própria
+            uploadProfileImage(imageUri!!, userId, userData)
+        } else {
+            // Sem foto
+            saveUserToFirestore(userId, userData) {
+                // Sucesso
+            }
+        }
     }
 
     private fun createUser(email: String, password: String, name: String, phone: String) {
@@ -309,6 +364,7 @@ class SignupClientActivity : AppCompatActivity() {
         userId?.let {
             db.collection("users").document(it).set(userData)
                 .addOnSuccessListener {
+                    progressDialog.dismiss() // Fechar progresso
                     Toast.makeText(this, "Cadastro bem-sucedido!", Toast.LENGTH_SHORT).show()
                     lifecycleScope.launch {
                         TokenManager.saveTokenForUser(it.toString()) // Convertendo para String
@@ -321,6 +377,7 @@ class SignupClientActivity : AppCompatActivity() {
                     finish()
                 }
                 .addOnFailureListener { e ->
+                    progressDialog.dismiss() // Fechar progresso em caso de erro
                     Log.e("Firestore", "Erro ao salvar o usuário: ${e.message}")
                     Toast.makeText(
                         this,

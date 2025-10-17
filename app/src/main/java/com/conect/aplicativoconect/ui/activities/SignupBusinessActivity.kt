@@ -6,6 +6,7 @@ import android.provider.Settings.Secure
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -39,30 +40,47 @@ class SignupBusinessActivity : AppCompatActivity() {
     private lateinit var cpfEditText: EditText
     private lateinit var signUpButton: Button
     private lateinit var loginTextView: TextView
+    private var isFromGoogle: Boolean = false
+    private lateinit var passwordInputLayout: com.google.android.material.textfield.TextInputLayout
+    private lateinit var confirmPasswordInputLayout: com.google.android.material.textfield.TextInputLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
     // Preencher campos com dados do Google se vierem via Intent
     val googleName = intent.getStringExtra("GOOGLE_NAME") ?: ""
     val googleEmail = intent.getStringExtra("GOOGLE_EMAIL") ?: ""
+    isFromGoogle = googleEmail.isNotEmpty()
+
+    setContentView(R.layout.activity_signup_business)
+
+    auth = FirebaseAuth.getInstance()
+    db = FirebaseFirestore.getInstance()
+    businessValidationRepository = BusinessValidationRepository()
+
+    emailEditText = findViewById(R.id.emailInput)
+    passwordEditText = findViewById(R.id.passwordInput)
+    confirmPasswordEditText = findViewById(R.id.confirmPasswordInput)
+    cpfEditText = findViewById(R.id.cpfInput)
+    nameUserEditText = findViewById(R.id.nameUser)
+    signUpButton = findViewById(R.id.signupButton)
+    loginTextView = findViewById(R.id.loginTextView)
+
+    // Inicializar TextInputLayout
+    passwordInputLayout = findViewById(R.id.passwordInputLayout)
+    confirmPasswordInputLayout = findViewById(R.id.confirmPasswordInputLayout)
+
     if (googleName.isNotEmpty()) nameUserEditText.setText(googleName)
-        if (googleEmail.isNotEmpty()) {
-            emailEditText.setText(googleEmail)
-            emailEditText.isEnabled = false
-        }
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_signup_business)
+    if (googleEmail.isNotEmpty()) {
+        emailEditText.setText(googleEmail)
+        emailEditText.isEnabled = false
+    }
 
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
-        businessValidationRepository = BusinessValidationRepository()
-
-        emailEditText = findViewById(R.id.emailInput)
-        passwordEditText = findViewById(R.id.passwordInput)
-        confirmPasswordEditText = findViewById(R.id.confirmPasswordInput)
-        cpfEditText = findViewById(R.id.cpfInput)
-        nameUserEditText = findViewById(R.id.nameUser)
-        signUpButton = findViewById(R.id.signupButton)
-        loginTextView = findViewById(R.id.loginTextView)
+    // Ocultar campos de senha se veio do Google
+    if (isFromGoogle) {
+        passwordInputLayout.visibility = View.GONE
+        confirmPasswordInputLayout.visibility = View.GONE
+    }
 
         applyCpfMask()
 
@@ -81,22 +99,38 @@ class SignupBusinessActivity : AppCompatActivity() {
                 emailEditText.error = "Email inválido"
                 return@setOnClickListener
             }
-            if (!Validator.isValidCPF(cpf)) {
+            if (!isValidCpf(cpf)) {
                 cpfEditText.error = "CPF inválido"
                 return@setOnClickListener
             }
 
-            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && nameUser.isNotEmpty() && cpf.isNotEmpty()) {
-                if (password == confirmPassword) {
-                    // VALIDAÇÃO ANTI-FRAUD ROBUSTA
-                    val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
-                    performBusinessValidation(email, password, nameUser, cpf, androidId)
-                } else {
+            // Validar senha apenas se não veio do Google
+            if (!isFromGoogle) {
+                if (password.length < 6) {
+                    passwordEditText.error = "Senha deve ter pelo menos 6 caracteres"
+                    return@setOnClickListener
+                }
+                if (password != confirmPassword) {
                     Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            }
+
+            if (email.isNotEmpty() && nameUser.isNotEmpty() && cpf.isNotEmpty()) {
+                if (isFromGoogle) {
+                    // Para Google, salvar diretamente sem senha
+                    saveBusinessFromGoogle(email, nameUser, cpf)
+                } else {
+                    if (password == confirmPassword) {
+                        // VALIDAÇÃO ANTI-FRAUD ROBUSTA
+                        val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
+                        performBusinessValidation(email, password, nameUser, cpf, androidId)
+                    } else {
+                        Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } else {
-                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Por favor, preencha todos os campos", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -104,6 +138,60 @@ class SignupBusinessActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
+    }
+
+    private fun saveBusinessFromGoogle(email: String, nameUser: String, cpf: String) {
+        val androidId = Secure.getString(contentResolver, Secure.ANDROID_ID)
+        // Para Google, fazer validação anti-fraud sem senha
+        performBusinessValidationFromGoogle(email, nameUser, cpf, androidId)
+    }
+
+    private fun performBusinessValidationFromGoogle(email: String, nameUser: String, cpf: String, androidId: String) {
+        lifecycleScope.launch {
+            try {
+                val deviceInfo = getDeviceInfo()
+                val ipAddress = getDeviceIP()
+
+                val validationResult = businessValidationRepository.validateBusinessRegistration(
+                    cpf = cpf,
+                    phone = "",
+                    address = "",
+                    deviceInfo = deviceInfo,
+                    androidId = androidId,
+                    ipAddress = ipAddress,
+                    latitude = 0.0,
+                    longitude = 0.0
+                )
+
+                when (validationResult.validationStatus) {
+                    BusinessValidationStatus.APPROVED -> {
+                        createBusinessFromGoogle(email, nameUser, cpf, androidId, validationResult)
+                    }
+                    else -> {
+                        showValidationDialog(
+                            "Validação Necessária",
+                            "Seu cadastro precisa de validação adicional. Entre em contato conosco."
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // Em caso de erro, aprovar por padrão
+                val fallbackResult = com.conect.aplicativoconect.data.repositories.BusinessValidationResult(
+                    isValid = true,
+                    validationStatus = BusinessValidationStatus.APPROVED,
+                    fraudScore = 0,
+                    errorMessage = "Erro na validação: ${e.message}"
+                )
+                createBusinessFromGoogle(email, nameUser, cpf, androidId, fallbackResult)
+            }
+        }
+    }
+
+    private fun createBusinessFromGoogle(email: String, nameUser: String, cpf: String, androidId: String, validationResult: com.conect.aplicativoconect.data.repositories.BusinessValidationResult) {
+        val userId = auth.currentUser?.uid ?: return
+
+        createInitialSubscription(userId, cpf)
+        createBusinessData(email, nameUser, cpf, androidId, validationResult)
     }
 
     fun isValidCpf(cpf: String): Boolean {
@@ -293,11 +381,15 @@ class SignupBusinessActivity : AppCompatActivity() {
                     Toast.makeText(this, "Cadastro de negócio bem-sucedido!", Toast.LENGTH_SHORT)
                         .show()
 
-                    // Redireciona para a tela de carregamento
+                    // Redireciona para a tela de completar cadastro do negócio
                     val intent = Intent(this, RegisterBusinessActivity::class.java)
                     intent.putExtra("EMAIL_KEY", email) // Passando o email para a próxima Activity
+                    if (isFromGoogle) {
+                        intent.putExtra("GOOGLE_NAME", intent.getStringExtra("GOOGLE_NAME") ?: "")
+                    }
                     startActivity(intent)
-                    finish() // Finaliza a atividade atual
+                    finish()
+
                     lifecycleScope.launch {
                         TokenManager.saveTokenForBusiness(businessId)
                     }

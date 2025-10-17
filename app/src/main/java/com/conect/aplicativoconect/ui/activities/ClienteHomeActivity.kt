@@ -126,11 +126,6 @@ class ClienteHomeActivity : AppCompatActivity() {
         bottomNavigation.itemTextColor = colorStateList
     }
 
-    private fun redirectToLogin() {
-        startActivity(Intent(this, WelcomeActivity::class.java))
-        finish()
-    }
-
     private fun setupLoadingDialog() {
         loadingDialog = Dialog(this)
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_loading, null)
@@ -238,11 +233,28 @@ class ClienteHomeActivity : AppCompatActivity() {
         }
     }
 
+    private fun redirectToLogin() {
+        startActivity(Intent(this, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
+        finish()
+    }
+
     private fun logout() {
         FirebaseAuth.getInstance().signOut()
         clearLocalCache() // Limpa o cache local
 
-        val intent = Intent(this, WelcomeActivity::class.java)
+        // Verificar se há userType salvo para ir direto para Login
+        val sharedPref = getSharedPreferences("userTypePrefs", MODE_PRIVATE)
+        val savedUserType = sharedPref.getString("USER_TYPE", null)
+
+        val intent = if (savedUserType != null) {
+            Intent(this, LoginActivity::class.java).apply {
+                putExtra("USER_TYPE", savedUserType)
+            }
+        } else {
+            Intent(this, WelcomeActivity::class.java)
+        }
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
