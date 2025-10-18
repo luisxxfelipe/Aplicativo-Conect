@@ -70,7 +70,10 @@ class SignupBusinessActivity : AppCompatActivity() {
     passwordInputLayout = findViewById(R.id.passwordInputLayout)
     confirmPasswordInputLayout = findViewById(R.id.confirmPasswordInputLayout)
 
-    if (googleName.isNotEmpty()) nameUserEditText.setText(googleName)
+    if (googleName.isNotEmpty()) {
+        nameUserEditText.setText(googleName)
+        nameUserEditText.isEnabled = false // Desabilitar edição se veio do Google
+    }
     if (googleEmail.isNotEmpty()) {
         emailEditText.setText(googleEmail)
         emailEditText.isEnabled = false
@@ -82,7 +85,7 @@ class SignupBusinessActivity : AppCompatActivity() {
         confirmPasswordInputLayout.visibility = View.GONE
     }
 
-        applyCpfMask()
+    applyCpfMask()
 
         signUpButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()

@@ -5,12 +5,13 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.data.models.Service
 import com.conect.aplicativoconect.ui.activities.SelecionarHorarioActivity
+import com.google.android.material.button.MaterialButton
 import java.io.Serializable
 
 class ServicesAdapter(
@@ -35,11 +36,21 @@ class ServicesAdapter(
     inner class ServiceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val serviceName: TextView = itemView.findViewById(R.id.serviceName)
         private val servicePrice: TextView = itemView.findViewById(R.id.servicePrice)
-        private val bookButton: Button = itemView.findViewById(R.id.bookButton)
+        private val serviceDuration: TextView = itemView.findViewById(R.id.serviceDuration)
+        private val bookButton: MaterialButton = itemView.findViewById(R.id.bookButton)
 
         fun bind(service: Service) {
             serviceName.text = service.name
             servicePrice.text = "R$ ${service.price}"
+
+            // Duração estimada
+            val durationText = when {
+                service.duration <= 0 -> "30 min"
+                service.duration < 60 -> "${service.duration} min"
+                service.duration == 60 -> "1h"
+                else -> "${service.duration / 60}h ${service.duration % 60}min"
+            }
+            serviceDuration.text = durationText
 
             // Configura o clique do botão Agendar
             bookButton.setOnClickListener {

@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -221,10 +222,11 @@ class EmpresaDetalhesActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.companyOperatingHours).text = operatingHours
 
         val addressTextView = findViewById<TextView>(R.id.address)
-        addressTextView.text = "Endereço: $address"
+        val addressContainer = findViewById<LinearLayout>(R.id.addressContainer)
+        addressTextView.text = address
 
-        // Adiciona o OnClickListener para abrir o Google Maps
-        addressTextView.setOnClickListener {
+        // Adiciona o OnClickListener ao container completo
+        addressContainer.setOnClickListener {
             openGoogleMaps(address)
         }
 

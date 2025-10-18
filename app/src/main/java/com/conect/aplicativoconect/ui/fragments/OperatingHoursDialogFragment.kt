@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.ui.fragments
 
+import android.app.AlertDialog
 import android.app.Dialog
 import android.app.TimePickerDialog
 import android.os.Bundle
@@ -11,6 +12,7 @@ import android.widget.TimePicker
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.conect.aplicativoconect.R
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import java.util.Calendar
 
@@ -30,20 +32,14 @@ class OperatingHoursDialogFragment : DialogFragment() {
     private lateinit var closingHoursInput: TextInputEditText
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        return dialog
-    }
+        val builder = AlertDialog.Builder(requireContext())
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_operating_hours, null)
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.dialog_operating_hours, container, false)
+        builder.setView(view)
 
         openingHoursInput = view.findViewById(R.id.openingHoursInput)
         closingHoursInput = view.findViewById(R.id.closingHoursInput)
-        val saveButton = view.findViewById<Button>(R.id.saveButton)
+        val saveButton = view.findViewById<MaterialButton>(R.id.saveButton)
 
         openingHoursInput.setOnClickListener {
             showTimePicker { time ->
@@ -61,16 +57,27 @@ class OperatingHoursDialogFragment : DialogFragment() {
             val opening = openingHoursInput.text.toString()
             val closing = closingHoursInput.text.toString()
 
-            // Verificação se os horários estão preenchidos
-            if (opening.isEmpty() || closing.isEmpty()) {
-                Toast.makeText(context, "Por favor, insira os horários", Toast.LENGTH_SHORT).show()
-            } else {
+            if (opening.isNotEmpty() && closing.isNotEmpty()) {
                 listener?.onHoursSelected(opening, closing)
                 dismiss()
+            } else {
+                Toast.makeText(requireContext(), "Por favor, selecione ambos os horários", Toast.LENGTH_SHORT).show()
             }
         }
 
-        return view
+        val dialog = builder.create()
+        dialog.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+            setDimAmount(0.5f) // Fundo semi-transparente
+        }
+        return dialog
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return null // Não precisamos desta implementação já que estamos usando onCreateDialog
     }
 
     private fun showTimePicker(onTimeSelected: (String) -> Unit) {
@@ -78,7 +85,7 @@ class OperatingHoursDialogFragment : DialogFragment() {
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val minute = calendar.get(Calendar.MINUTE)
 
-        TimePickerDialog(
+        val timePickerDialog = TimePickerDialog(
             requireContext(),
             { _: TimePicker, selectedHour: Int, selectedMinute: Int ->
                 val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
@@ -87,6 +94,8 @@ class OperatingHoursDialogFragment : DialogFragment() {
             hour,
             minute,
             true
-        ).show()
+        )
+
+        timePickerDialog.show()
     }
 }

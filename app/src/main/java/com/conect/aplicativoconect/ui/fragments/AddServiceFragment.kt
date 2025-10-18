@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,7 +30,7 @@ class AddServiceFragment : Fragment() {
     private lateinit var editTextPrice: EditText
     private lateinit var editTextServiceName: EditText
     private lateinit var editTextDuration: EditText
-    private lateinit var buttonSave: Button
+    private lateinit var emptyStateContainer: LinearLayout
     private lateinit var buttonAdd: Button
 
     override fun onCreateView(
@@ -43,7 +44,7 @@ class AddServiceFragment : Fragment() {
         editTextPrice = view.findViewById(R.id.editTextPrice)
         editTextServiceName = view.findViewById(R.id.editTextServiceName)
         editTextDuration = view.findViewById(R.id.editTextDuration) // Campo para duração
-        buttonSave = view.findViewById(R.id.buttonSaveServices)
+        emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
         buttonAdd = view.findViewById(R.id.buttonAddService)
 
         // Configurar RecyclerView
@@ -53,7 +54,6 @@ class AddServiceFragment : Fragment() {
 
         // Configurar botões
         buttonAdd.setOnClickListener { addCustomService() }
-        buttonSave.setOnClickListener { saveServices() }
 
         // Buscar serviços existentes
         fetchExistingServices()
@@ -98,25 +98,23 @@ class AddServiceFragment : Fragment() {
 
     private fun addCustomService() {
         val serviceName = editTextServiceName.text.toString().trim()
-        val price = editTextPrice.text.toString().toDoubleOrNull()
-        val duration = editTextDuration.text.toString().toIntOrNull()
+        val priceText = editTextPrice.text.toString().trim()
+        val durationText = editTextDuration.text.toString().trim()
 
         if (serviceName.isEmpty()) {
             Toast.makeText(requireContext(), "Digite o nome do serviço.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (price == null) {
-            Toast.makeText(requireContext(), "Digite um preço válido.", Toast.LENGTH_SHORT).show()
+        val price = priceText.toDoubleOrNull()
+        if (price == null || price <= 0) {
+            Toast.makeText(requireContext(), "Digite um preço válido maior que zero.", Toast.LENGTH_SHORT).show()
             return
         }
 
+        val duration = durationText.toIntOrNull()
         if (duration == null || duration <= 0) {
-            Toast.makeText(
-                requireContext(),
-                "Digite uma duração válida em minutos.",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(), "Digite uma duração válida em minutos.", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -124,8 +122,9 @@ class AddServiceFragment : Fragment() {
         addedServices.add(Triple(ServiceType(serviceName), price, duration))
         updateAddedServicesRecyclerView()
 
-        // Recalcular a média e salvar no Firestore
+        // Recalcular a média e salvar no Firestore automaticamente
         updateAverageDuration()
+        saveServicesAutomatically()
 
         // Limpar os campos
         editTextServiceName.text.clear()
@@ -133,6 +132,8 @@ class AddServiceFragment : Fragment() {
         editTextDuration.text.clear()
         hideKeyboard()
         updateUI()
+
+        Toast.makeText(requireContext(), "Serviço adicionado com sucesso ao fim da lista, role para baixo!", Toast.LENGTH_SHORT).show()
     }
 
     private fun updateAddedServicesRecyclerView() {
@@ -150,8 +151,9 @@ class AddServiceFragment : Fragment() {
         addedServices.removeAt(position)
         updateAddedServicesRecyclerView()
 
-        // Recalcular a média e salvar no Firestore
+        // Recalcular a média e salvar no Firestore automaticamente
         updateAverageDuration()
+        saveServicesAutomatically()
 
         updateUI()
     }
@@ -198,7 +200,7 @@ class AddServiceFragment : Fragment() {
     }
 
 
-    private fun saveServices() {
+    private fun saveServicesAutomatically() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
             val serviceData = addedServices.map { service ->
@@ -212,25 +214,22 @@ class AddServiceFragment : Fragment() {
             firestore.collection("business").document(userId)
                 .update("services", serviceData)
                 .addOnSuccessListener {
-                    Toast.makeText(
-                        requireContext(),
-                        "Serviços salvos com sucesso!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    navigateToAdminHome()
+                    Log.d("AddServiceFragment", "Serviços salvos automaticamente com sucesso!")
                 }
                 .addOnFailureListener { e ->
-                    Toast.makeText(
-                        requireContext(),
-                        "Erro ao salvar serviços: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Log.e("AddServiceFragment", "Erro ao salvar serviços automaticamente: ${e.message}")
                 }
         }
     }
 
     private fun updateUI() {
-        buttonSave.visibility = if (addedServices.isEmpty()) View.GONE else View.VISIBLE
+        if (addedServices.isEmpty()) {
+            emptyStateContainer.visibility = View.VISIBLE
+            addedServicesRecyclerView.visibility = View.GONE
+        } else {
+            emptyStateContainer.visibility = View.GONE
+            addedServicesRecyclerView.visibility = View.VISIBLE
+        }
     }
 
     private fun hideKeyboard() {
@@ -238,11 +237,5 @@ class AddServiceFragment : Fragment() {
             requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         val view = requireActivity().currentFocus
         view?.let { imm.hideSoftInputFromWindow(it.windowToken, 0) }
-    }
-
-    private fun navigateToAdminHome() {
-        requireActivity().supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, AdminHomeFragment())
-            .commit()
     }
 }

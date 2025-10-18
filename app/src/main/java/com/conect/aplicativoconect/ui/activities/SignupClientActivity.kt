@@ -41,9 +41,8 @@ class SignupClientActivity : AppCompatActivity() {
     private lateinit var signUpButton: Button
     private lateinit var loginTextView: TextView
     private lateinit var profileImageView: ImageView
-    private lateinit var uploadProfileButton: Button
-    private lateinit var progressDialog: AlertDialog
     private var imageUri: Uri? = null
+    private lateinit var progressDialog: AlertDialog
     private lateinit var getContent: ActivityResultLauncher<Intent>
     private var isFromGoogle: Boolean = false
     private lateinit var passwordInputLayout: com.google.android.material.textfield.TextInputLayout
@@ -52,6 +51,11 @@ class SignupClientActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup_client)
+
+        // Configurar textos de boas-vindas
+        val welcomeTitle = findViewById<android.widget.TextView>(R.id.welcomeTitle)
+        val welcomeSubtitle = findViewById<android.widget.TextView>(R.id.welcomeSubtitle)
+        welcomeSubtitle.text = "Junte-se à nossa comunidade"
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
@@ -68,7 +72,6 @@ class SignupClientActivity : AppCompatActivity() {
         signUpButton = findViewById(R.id.signupButton)
         loginTextView = findViewById(R.id.loginTextView)
         profileImageView = findViewById(R.id.profileImageView)
-        uploadProfileButton = findViewById(R.id.uploadButton)
 
         // Inicializar TextInputLayout
         passwordInputLayout = findViewById(R.id.passwordInputLayout)
@@ -116,8 +119,7 @@ class SignupClientActivity : AppCompatActivity() {
         applyPhoneMask(phoneEditText)
         signUpButton = findViewById(R.id.signupButton)
         loginTextView = findViewById(R.id.loginTextView)
-        profileImageView = findViewById(R.id.profileImageView) // Adicione o ImageView no seu layout
-        uploadProfileButton = findViewById(R.id.uploadButton) // Adicione o botão de upload
+        profileImageView = findViewById(R.id.profileImageView)
 
         // Inicializando o ActivityResultLauncher
         getContent =
@@ -134,13 +136,9 @@ class SignupClientActivity : AppCompatActivity() {
                 }
             }
 
-        // Abrir galeria para selecionar imagem ao clicar no ImageView
-        profileImageView.setOnClickListener {
-            openGallery()
-        }
-
-        // Abrir galeria para selecionar imagem ao clicar no botão de upload
-        uploadProfileButton.setOnClickListener {
+        // Abrir galeria para selecionar imagem ao clicar no ícone de upload
+        val uploadIcon = findViewById<ImageView>(R.id.uploadIcon)
+        uploadIcon.setOnClickListener {
             openGallery()
         }
 
@@ -252,7 +250,8 @@ class SignupClientActivity : AppCompatActivity() {
     }
 
     private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK)
+        // Usar ACTION_GET_CONTENT que não requer permissão específica
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.type = "image/*"
         getContent.launch(intent)
     }

@@ -1,5 +1,6 @@
 package com.conect.aplicativoconect.ui.adapters
 
+import android.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +11,7 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.data.models.ServiceType
+import com.google.android.material.button.MaterialButton
 
 class AddedServicesAdapter(
     private val addedServices: MutableList<Triple<ServiceType, Double, Int>>,
@@ -22,7 +24,7 @@ class AddedServicesAdapter(
             itemView.findViewById(R.id.editTextServicePrice)
         private val serviceDurationEditText: EditText =
             itemView.findViewById(R.id.editTextServiceDuration)
-        private val removeServiceButton: ImageButton =
+        private val removeServiceButton: MaterialButton =
             itemView.findViewById(R.id.buttonRemoveService)
 
         fun bind(service: Triple<ServiceType, Double, Int>, position: Int) {
@@ -30,9 +32,16 @@ class AddedServicesAdapter(
             servicePriceEditText.setText(service.second.toString())
             serviceDurationEditText.setText(service.third.toString())
 
-            // Define um listener para o botão de remoção
+            // Define um listener para o botão de remoção com confirmação
             removeServiceButton.setOnClickListener {
-                onRemoveService(position) // Notifica a remoção
+                AlertDialog.Builder(itemView.context)
+                    .setTitle("Confirmar remoção")
+                    .setMessage("Tem certeza que deseja remover o serviço \"${service.first.name}\"?")
+                    .setPositiveButton("Remover") { _, _ ->
+                        onRemoveService(position)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
             }
 
             // Valida e atualiza o preço quando o campo perde o foco

@@ -17,6 +17,19 @@ class CalendarDayAdapter(
 
     private var selectedPosition = -1
 
+    init {
+        // Inicializa selectedPosition baseado na selectedDate
+        if (selectedDate != null) {
+            selectedPosition = days.indexOfFirst { date ->
+                val calendar1 = Calendar.getInstance().apply { time = date }
+                val calendar2 = Calendar.getInstance().apply { time = selectedDate }
+                calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR) &&
+                calendar1.get(Calendar.MONTH) == calendar2.get(Calendar.MONTH) &&
+                calendar1.get(Calendar.DAY_OF_MONTH) == calendar2.get(Calendar.DAY_OF_MONTH)
+            }
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_calendar_day, parent, false)

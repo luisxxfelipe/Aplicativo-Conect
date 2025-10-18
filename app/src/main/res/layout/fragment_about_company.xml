@@ -36,30 +36,51 @@
         android:text="Horário: 8:00 - 18:00"
         android:textSize="14sp" />
 
+    <!-- Endereço clicável para Maps -->
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:id="@+id/addressContainer"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="4dp"
-        android:orientation="horizontal">
+        android:layout_marginTop="12dp"
+        android:layout_marginLeft="32dp"
+        android:layout_marginRight="32dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:background="@drawable/rounded_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:backgroundTint="#F5F5F5"
+        android:elevation="1dp">
+
+        <!-- Ícone do Google Maps no início -->
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="Localização"
+            app:srcCompat="@drawable/ic_maps_foreground" />
 
         <!-- TextView para o endereço -->
         <TextView
             android:id="@+id/address"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="Endereço"
+            android:layout_weight="1"
+            android:text="Endereço não informado"
+            android:textColor="#222222"
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <!-- Ícone do Google Maps -->
+        <!-- Ícone atrativo de direcionamento -->
         <ImageView
-            android:id="@+id/googleMapsIcon"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:contentDescription="Abrir no Google Maps"
-            app:srcCompat="@drawable/ic_maps_foreground" />
+            android:layout_marginStart="8dp"
+            android:contentDescription="Abrir no Maps"
+            android:src="@android:drawable/ic_menu_send"
+            app:tint="@color/colorPrimary" />
+
     </LinearLayout>
 
 

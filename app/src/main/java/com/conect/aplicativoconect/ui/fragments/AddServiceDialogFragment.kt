@@ -9,7 +9,7 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.conect.aplicativoconect.R
@@ -48,10 +48,10 @@ class AddServiceDialogFragment : DialogFragment() {
         // Buscar serviços da empresa
         loadCompanyServices(companyId!!)
 
-        // Configurar botões
-        val addServiceButton: Button = view.findViewById(R.id.btn_adicionar_servicos)
-        val adjustHoursButton: Button = view.findViewById(R.id.btn_ajustar_horario)
-        val btnPublicarFotos: Button = view.findViewById(R.id.btn_publicar_fotos)
+        // Configurar botões (agora são LinearLayout)
+        val addServiceButton: LinearLayout = view.findViewById(R.id.btn_adicionar_servicos)
+        val adjustHoursButton: LinearLayout = view.findViewById(R.id.btn_ajustar_horario)
+        val btnPublicarFotos: LinearLayout = view.findViewById(R.id.btn_publicar_fotos)
 
         addServiceButton.setOnClickListener {
             val fragment = AddServiceFragment().apply {
@@ -129,7 +129,7 @@ class AddServiceDialogFragment : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        dialog?.window?.setLayout(dpToPx(330), dpToPx(320))
+        dialog?.window?.setLayout(dpToPx(350), dpToPx(400))
     }
 
     private fun dpToPx(dp: Int): Int {

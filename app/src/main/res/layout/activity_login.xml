@@ -16,6 +16,33 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_logo_escrito_branco" />
 
+    <!-- Texto de boas-vindas -->
+    <TextView
+        android:id="@+id/welcomeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Bem-vindo de volta"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logoImageView" />
+
+    <TextView
+        android:id="@+id/welcomeSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Encontre os melhores serviços próximos a você"
+        android:textColor="#B3FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/welcomeTitle" />
+
 
     <!-- Card central (MESMO id) - mais alto e com respiro extra -->
     <com.google.android.material.card.MaterialCardView
@@ -32,7 +59,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/logoImageView"
+        app:layout_constraintTop_toBottomOf="@id/welcomeSubtitle"
         app:shapeAppearanceOverlay="@style/Shape.Round28">
 
         <!-- Conteúdo do card -->
@@ -46,49 +73,61 @@
             android:paddingBottom="32dp">
 
 
-            <!-- Campo Email/Telefone - SOMENTE LINHA INFERIOR -->
+            <!-- Campo Email/Telefone - FILLED BOX com ícone -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Email ou telefone"
-                app:boxBackgroundMode="none"
-                android:layout_marginTop="20dp"
-                app:hintTextColor="@color/roxo">
+                app:boxBackgroundMode="filled"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxStrokeColor="@color/roxo"
+                app:hintTextColor="@color/roxo"
+                app:startIconDrawable="@drawable/ic_email"
+                app:startIconTint="@color/roxo"
+                android:layout_marginTop="20dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/emailInput"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:background="@drawable/et_underline"
-                    android:drawablePadding="8dp"
-                    android:paddingStart="12dp"
+                    android:paddingStart="48dp"
                     android:paddingEnd="12dp"
                     android:textColor="#222222"
-                    android:tint="@color/roxo" />
+                    android:textColorHint="#666666"
+                    android:backgroundTint="@android:color/transparent" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Campo Senha - SOMENTE LINHA INFERIOR + toggle -->
+            <!-- Campo Senha - FILLED BOX com ícone e toggle -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:hint="Senha"
-                app:boxBackgroundMode="none"
+                app:boxBackgroundMode="filled"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxStrokeColor="@color/roxo"
                 app:endIconMode="password_toggle"
                 app:endIconTint="@color/roxo"
-                app:hintTextColor="@color/roxo">
+                app:hintTextColor="@color/roxo"
+                app:startIconDrawable="@drawable/ic_senha"
+                app:startIconTint="@color/roxo">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordInput"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:inputType="textPassword"
-                    android:background="@drawable/et_underline"
-                    android:drawablePadding="8dp"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
+                    android:paddingStart="48dp"
+                    android:paddingEnd="48dp"
                     android:textColor="#222222"
-                    android:tint="@color/roxo" />
+                    android:textColorHint="#666666"
+                    android:backgroundTint="@android:color/transparent" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Lembrar e Esqueceu -->

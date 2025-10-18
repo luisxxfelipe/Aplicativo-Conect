@@ -43,6 +43,21 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+        // Configurar textos de boas-vindas baseado no userType
+        val welcomeTitle = findViewById<android.widget.TextView>(R.id.welcomeTitle)
+        val welcomeSubtitle = findViewById<android.widget.TextView>(R.id.welcomeSubtitle)
+        when (userType) {
+            "client" -> {
+                welcomeSubtitle.text = "Encontre os melhores serviços próximos a você"
+            }
+            "business" -> {
+                welcomeSubtitle.text = "Gerencie seu negócio com facilidade"
+            }
+            else -> {
+                welcomeSubtitle.text = "Bem-vindo ao Conectex"
+            }
+        }
+
         auth = com.google.firebase.auth.FirebaseAuth.getInstance()
 
         emailEditText = findViewById(R.id.emailInput)

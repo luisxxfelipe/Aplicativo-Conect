@@ -1,21 +1,74 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="@drawable/gradient_background">
 
+    <!-- Logo centralizada -->
+    <ImageView
+        android:id="@+id/logoImageView"
+        android:layout_width="180dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="60dp"
+        android:contentDescription="Logo do Aplicativo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_logo_escrito_branco" />
+
+    <!-- Texto de boas-vindas -->
     <TextView
+        android:id="@+id/welcomeTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:text="Crie agora o seu negócio"
-        android:textColor="@color/black"
+        android:layout_marginTop="16dp"
+        android:text="Cadastre seu negócio"
+        android:textColor="@android:color/white"
         android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logoImageView" />
+
+    <TextView
+        android:id="@+id/welcomeSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Comece sua jornada empreendedora conosco"
+        android:textColor="#B3FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/welcomeTitle" />
+
+    <!-- Card central -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/containerCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="24dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="@color/card_background"
+        app:cardUseCompatPadding="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/welcomeSubtitle"
+        app:shapeAppearanceOverlay="@style/Shape.Round28">
+
+        <!-- Conteúdo do card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="32dp">
 
     <!-- Nome do Negócio -->
     <com.google.android.material.textfield.TextInputLayout
@@ -23,19 +76,26 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="Nome completo"
-        app:boxBackgroundMode="outline"
+        app:boxBackgroundMode="filled"
+        app:boxCornerRadiusTopStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusBottomEnd="8dp"
         app:boxStrokeColor="@color/roxo"
-        app:boxStrokeWidth="1dp"
-        app:hintTextColor="@color/roxo">
+        app:hintTextColor="@color/roxo"
+        app:startIconDrawable="@drawable/ic_perfil"
+        app:startIconTint="#666666">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/nameUser"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
+            android:layout_height="56dp"
             android:inputType="text"
-            android:padding="12dp"
-            android:textColor="@color/black" />
+            android:paddingStart="48dp"
+            android:paddingEnd="12dp"
+            android:textColor="#222222"
+            android:textColorHint="#666666"
+            android:backgroundTint="@android:color/transparent" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Email -->
@@ -44,19 +104,26 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="Email"
-        app:boxBackgroundMode="outline"
+        app:boxBackgroundMode="filled"
+        app:boxCornerRadiusTopStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusBottomEnd="8dp"
         app:boxStrokeColor="@color/roxo"
-        app:boxStrokeWidth="1dp"
-        app:hintTextColor="@color/roxo">
+        app:hintTextColor="@color/roxo"
+        app:startIconDrawable="@drawable/ic_email"
+        app:startIconTint="#666666">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/emailInput"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
+            android:layout_height="56dp"
             android:inputType="textEmailAddress"
-            android:padding="12dp"
-            android:textColor="@color/black" />
+            android:paddingStart="48dp"
+            android:paddingEnd="12dp"
+            android:textColor="#222222"
+            android:textColorHint="#666666"
+            android:backgroundTint="@android:color/transparent" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- CPF -->
@@ -65,85 +132,112 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="CPF"
-        app:boxBackgroundMode="outline"
+        app:boxBackgroundMode="filled"
+        app:boxCornerRadiusTopStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusBottomEnd="8dp"
         app:boxStrokeColor="@color/roxo"
-        app:boxStrokeWidth="1dp"
-        app:hintTextColor="@color/roxo">
+        app:hintTextColor="@color/roxo"
+        app:startIconDrawable="@drawable/ic_dadospessoais"
+        app:startIconTint="#666666">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/cpfInput"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
+            android:layout_height="56dp"
             android:inputType="number"
-            android:padding="12dp"
-            android:textColor="@color/black" />
+            android:paddingStart="48dp"
+            android:paddingEnd="12dp"
+            android:textColor="#222222"
+            android:textColorHint="#666666"
+            android:backgroundTint="@android:color/transparent" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Senha -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/passwordInputLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Senha"
-        app:boxBackgroundMode="outline"
-        app:boxStrokeColor="@color/roxo"
-        app:boxStrokeWidth="1dp"
-        app:endIconMode="password_toggle"
-        app:hintTextColor="@color/roxo">
+            <!-- Senha -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/passwordInputLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Senha"
+                app:boxBackgroundMode="filled"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxStrokeColor="@color/roxo"
+                app:endIconMode="password_toggle"
+                app:endIconTint="@color/roxo"
+                app:hintTextColor="@color/roxo"
+                app:startIconDrawable="@drawable/ic_senha"
+                app:startIconTint="#666666">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/passwordInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
-            android:inputType="textPassword"
-            android:padding="12dp"
-            android:textColor="@color/black" />
-    </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/passwordInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="textPassword"
+                    android:paddingStart="48dp"
+                    android:paddingEnd="48dp"
+                    android:textColor="#222222"
+                    android:textColorHint="#666666"
+                    android:backgroundTint="@android:color/transparent" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Confirmar Senha -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/confirmPasswordInputLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="Confirmar Senha"
-        app:boxBackgroundMode="outline"
-        app:boxStrokeColor="@color/roxo"
-        app:boxStrokeWidth="1dp"
-        app:endIconMode="password_toggle"
-        app:hintTextColor="@color/roxo">
+            <!-- Confirmar Senha -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/confirmPasswordInputLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Confirmar Senha"
+                app:boxBackgroundMode="filled"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxStrokeColor="@color/roxo"
+                app:endIconMode="password_toggle"
+                app:endIconTint="@color/roxo"
+                app:hintTextColor="@color/roxo"
+                app:startIconDrawable="@drawable/ic_senha"
+                app:startIconTint="#666666">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/confirmPasswordInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@android:color/transparent"
-            android:inputType="textPassword"
-            android:padding="12dp"
-            android:textColor="@color/black" />
-    </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/confirmPasswordInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="textPassword"
+                    android:paddingStart="48dp"
+                    android:paddingEnd="48dp"
+                    android:textColor="#222222"
+                    android:textColorHint="#666666"
+                    android:backgroundTint="@android:color/transparent" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Botão de Cadastro -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/signupButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="@color/colorPrimary"
-        android:text="Cadastrar"
-        android:textColor="@android:color/white"
-        app:cornerRadius="8dp" />
+            <!-- Botão de Cadastro -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/signupButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="Cadastrar"
+                android:textColor="@android:color/white"
+                app:cornerRadius="8dp" />
 
-    <!-- Link para Login -->
-    <TextView
-        android:id="@+id/loginTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:text="Já tem uma conta? Faça login"
-        android:textColor="@color/colorPrimary" />
-</LinearLayout>
+            <!-- Link para Login -->
+            <TextView
+                android:id="@+id/loginTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="Já tem uma conta? Faça login"
+                android:textColor="@color/colorPrimary" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

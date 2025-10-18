@@ -1,118 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:layout_margin="6dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="@android:color/white">
 
-    <!-- Cabeçalho -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingRight="30dp"
-        android:paddingBottom="8dp"
-        android:weightSum="4">
-
-        <TextView
-            android:id="@+id/headerServiceName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:text="Nome"
-            android:textAlignment="viewStart"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/headerServicePrice"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Preço"
-            android:textAlignment="center"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/headerServiceDuration"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Tempo"
-            android:textAlignment="center"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/headerServiceAction"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textAlignment="center"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Linha do Serviço -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:divider="?android:attr/dividerHorizontal"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:showDividers="middle"
-        android:weightSum="4">
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <!-- Nome do Serviço -->
-        <TextView
-            android:id="@+id/textViewServiceName"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Serviço"
-            android:textAlignment="viewStart"
-            android:textSize="16sp" />
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical">
 
-        <!-- Preço do Serviço -->
-        <EditText
-            android:id="@+id/editTextServicePrice"
-            android:layout_width="0dp"
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_service"
+                app:tint="@color/colorPrimary" />
+
+            <TextView
+                android:id="@+id/textViewServiceName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nome do Serviço"
+                android:textColor="#222222"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+        </LinearLayout>
+
+        <!-- Linha com Preço e Duração -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/white"
-            android:gravity="center"
-            android:hint="R$"
-            android:inputType="numberDecimal" />
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical">
 
-        <!-- Duração do Serviço -->
-        <EditText
-            android:id="@+id/editTextServiceDuration"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/white"
-            android:gravity="center"
-            android:hint="Min"
-            android:inputType="number" />
+            <!-- Preço -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <!-- Botão para Remover Serviço -->
-        <ImageButton
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R$"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="4dp" />
+
+                <EditText
+                    android:id="@+id/editTextServicePrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="#F5F5F5"
+                    android:gravity="center"
+                    android:hint="0.00"
+                    android:inputType="numberDecimal"
+                    android:padding="4dp"
+                    android:textColor="#222222"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+            <!-- Duração -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_clock"
+                    app:tint="#666666" />
+
+                <EditText
+                    android:id="@+id/editTextServiceDuration"
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="#F5F5F5"
+                    android:gravity="center"
+                    android:hint="30"
+                    android:inputType="number"
+                    android:padding="4dp"
+                    android:textColor="#222222"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Botão Remover -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonRemoveService"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/rounded_button"
-            android:contentDescription="Remover serviço"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_delete" />
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="end"
+            android:backgroundTint="#DC3545"
+            android:text="Remover"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            app:cornerRadius="6dp"
+            app:icon="@drawable/ic_delete"
+            app:iconTint="@android:color/white"
+            app:iconSize="14dp"
+            app:iconGravity="textStart" />
+
     </LinearLayout>
-</LinearLayout>
+</androidx.cardview.widget.CardView>

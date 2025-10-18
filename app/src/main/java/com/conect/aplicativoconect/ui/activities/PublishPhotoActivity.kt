@@ -1,9 +1,7 @@
 package com.conect.aplicativoconect.ui.activities
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -12,8 +10,6 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.conect.aplicativoconect.R
@@ -35,7 +31,6 @@ class PublishPhotoActivity : AppCompatActivity() {
 
     companion object {
         private const val PHOTO_PICKER_REQUEST_CODE = 1001
-        private const val STORAGE_PERMISSION_CODE = 1002
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,33 +49,17 @@ class PublishPhotoActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         recyclerView = findViewById(R.id.recyclerViewSelectedPhotos)
 
-        // Configuração do RecyclerView para mostrar fotos em duas colunas
+        // Configuração do RecyclerView para mostrar fotos em três colunas
         recyclerView.layoutManager = GridLayoutManager(this, 3)
         adapter = PhotoAdapter(selectedPhotoUris)
         recyclerView.adapter = adapter
 
-        findViewById<FloatingActionButton>(R.id.buttonAddPhoto).setOnClickListener { checkStoragePermission() }
+        findViewById<FloatingActionButton>(R.id.buttonAddPhoto).setOnClickListener { openGallery() }
         findViewById<Button>(R.id.buttonSavePhoto).setOnClickListener { uploadPhotosWithCaption() }
     }
 
-    private fun checkStoragePermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                STORAGE_PERMISSION_CODE
-            )
-        } else {
-            selectPhoto()
-        }
-    }
-
-    private fun selectPhoto() {
-        val intent = Intent(Intent.ACTION_PICK).apply {
+    private fun openGallery() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
             type = "image/*"
         }
         startActivityForResult(intent, PHOTO_PICKER_REQUEST_CODE)
@@ -95,23 +74,6 @@ class PublishPhotoActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged()  // Atualiza o RecyclerView
                 findViewById<Button>(R.id.buttonSavePhoto).isEnabled = true
             }
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == STORAGE_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            selectPhoto()
-        } else {
-            Toast.makeText(
-                this,
-                "Permissão de armazenamento é necessária para selecionar uma foto.",
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 

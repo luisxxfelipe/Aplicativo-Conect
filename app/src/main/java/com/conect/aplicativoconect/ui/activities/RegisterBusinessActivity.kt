@@ -1,27 +1,27 @@
 package com.conect.aplicativoconect.ui.activities
 
-import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.conect.aplicativoconect.R
 import com.conect.aplicativoconect.data.models.OperatingHours
 import com.conect.aplicativoconect.ui.fragments.OperatingHoursDialogFragment
@@ -45,9 +45,8 @@ class RegisterBusinessActivity : AppCompatActivity(),
     private lateinit var selectedServiceType: String
     private lateinit var operatingHoursInput: TextInputEditText
     private lateinit var businessImageView: ImageView
-    private lateinit var uploadIcon: MaterialButton
+    private lateinit var uploadIcon: ImageView
     private var imageUri: Uri? = null
-    private val storagePermissionCode = 101
     private lateinit var email: String
     private lateinit var storage: FirebaseStorage
     private lateinit var selectedOperatingHours: OperatingHours
@@ -76,6 +75,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
         val businessDescriptionInput =
             findViewById<TextInputEditText>(R.id.businessDescriptionInput)
         val serviceTypeSpinner = findViewById<Spinner>(R.id.serviceTypeSpinner)
+        val dropdownIcon = findViewById<ImageView>(R.id.dropdownIcon)
         val addressInput = findViewById<TextInputEditText>(R.id.addressInput)
         operatingHoursInput = findViewById(R.id.operatingHoursInput)
         val phoneInput = findViewById<TextInputEditText>(R.id.phoneInput)
@@ -107,7 +107,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
 
         // Referenciar o ImageView
         businessImageView = findViewById(R.id.businessImageView)
-        uploadIcon = findViewById(R.id.uploadButton)
+        uploadIcon = findViewById(R.id.uploadIcon)
 
         // Configurar o Spinner com opções de serviços
         val serviceTypes =
@@ -118,7 +118,7 @@ class RegisterBusinessActivity : AppCompatActivity(),
 
         serviceTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
-                parent: AdapterView<*>,
+                parent: AdapterView<*>?,
                 view: View?,
                 position: Int,
                 id: Long
@@ -126,9 +126,14 @@ class RegisterBusinessActivity : AppCompatActivity(),
                 selectedServiceType = serviceTypes[position]
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>) {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
                 selectedServiceType = "Cabeleireiro"
             }
+        }
+
+        // Fazer o ícone de dropdown também abrir o spinner
+        dropdownIcon.setOnClickListener {
+            serviceTypeSpinner.performClick()
         }
 
         // Configurar o clique para abrir o diálogo de horários de funcionamento
@@ -136,11 +141,6 @@ class RegisterBusinessActivity : AppCompatActivity(),
             val dialog = OperatingHoursDialogFragment()
             dialog.setOnHoursSelectedListener(this)
             dialog.show(supportFragmentManager, "OperatingHoursDialog")
-        }
-
-        // Verifica a permissão ao iniciar a Activity
-        if (!checkStoragePermission()) {
-            requestStoragePermission()
         }
 
         // Inicializando o ActivityResultLauncher
@@ -159,14 +159,14 @@ class RegisterBusinessActivity : AppCompatActivity(),
                 }
             }
 
-        // Configurar o clique para selecionar imagem no ImageView
-        businessImageView.setOnClickListener {
+        // Configurar o clique para selecionar imagem no ícone de upload
+        uploadIcon.setOnClickListener {
             openGallery()
         }
 
-        // Configurar o clique para o botão de upload
-        uploadIcon.setOnClickListener {
-            openGallery() // Abre a galeria ao clicar no ícone de upload
+        // Configurar o clique para selecionar imagem no ImageView (opcional)
+        businessImageView.setOnClickListener {
+            openGallery()
         }
 
         registerBusinessButton.setOnClickListener {
@@ -485,24 +485,9 @@ class RegisterBusinessActivity : AppCompatActivity(),
     }
 
     private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK)
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.type = "image/*"
-        getContent.launch(intent) // Usando o ActivityResultLauncher
-    }
-
-    private fun checkStoragePermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestStoragePermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-            storagePermissionCode
-        )
+        getContent.launch(intent)
     }
 
     override fun onHoursSelected(opening: String, closing: String) {
